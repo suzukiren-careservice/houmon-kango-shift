@@ -319,6 +319,7 @@ createApp({
     return {
       showModal: false,
       appPassword: '',
+      adminPassword: '',
       authenticated: false,
       pwdInput: '',
       pwdError: false,
@@ -330,12 +331,15 @@ createApp({
   },
 
   async mounted() {
-    const { data } = await db.from('settings').select('value').eq('key', 'app_password').single();
-    this.appPassword = data?.value || '';
-    const storedAuth = localStorage.getItem('app_auth');
-    if (storedAuth && storedAuth === this.appPassword) {
+    const [{ data: appPwd }, { data: adminPwd }] = await Promise.all([
+      db.from('settings').select('value').eq('key', 'app_password').single(),
+      db.from('settings').select('value').eq('key', 'admin_password').single(),
+    ]);
+    this.appPassword   = appPwd?.value   || '';
+    this.adminPassword = adminPwd?.value || '';
+    const storedAdminAuth = localStorage.getItem('admin_auth');
+    if (storedAdminAuth && storedAdminAuth === this.adminPassword) {
       this.authenticated = true;
-      // 現在ログイン中のスタッフIDを取得（管理者判定用）
       const saved = localStorage.getItem('incident_staff');
       if (saved) {
         try { this.currentAdminId = JSON.parse(saved).id; } catch {}
@@ -359,8 +363,8 @@ createApp({
 
     async checkPassword() {
       if (!this.pwdInput) return;
-      if (this.pwdInput === this.appPassword) {
-        localStorage.setItem('app_auth', this.appPassword);
+      if (this.pwdInput === this.adminPassword) {
+        localStorage.setItem('admin_auth', this.adminPassword);
         this.authenticated = true;
         this.pwdError = false;
         this.pwdInput = '';
