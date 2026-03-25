@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>インシデント報告システム</title>
+  <link rel="stylesheet" href="incident-styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="../config.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== ローディング ========== -->
+  <div v-if="loading" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p style="color:#546E7A;font-size:13px">読み込み中...</p>
+  </div>
+
+  <!-- ========== ログイン画面 ========== -->
+  <div v-else-if="!currentStaff" class="login-screen">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-icon">🏥</div>
+        <h1>インシデント報告</h1>
+        <p>訪問看護ステーション</p>
+      </div>
+      <div class="login-divider">
+        <div class="login-divider-line"></div>
+        <span class="login-prompt">スタッフを選択</span>
+        <div class="login-divider-line"></div>
+      </div>
+      <div class="staff-grid">
+        <button
+          v-for="s in staffList"
+          :key="s.id"
+          class="staff-select-btn"
+          :style="{ '--staff-color': s.color }"
+          @click="selectStaff(s)"
+        >
+          <span class="staff-avatar" :style="{ background: s.color }">
+            {{ s.name.charAt(0) }}
+          </span>
+          <span>{{ s.name }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== メインアプリ ========== -->
+  <template v-else>
+
+    <!-- ヘッダー -->
+    <header class="app-header">
+      <h1 class="app-title">インシデント報告</h1>
+      <div class="header-user">
+        <span class="user-dot" :style="{ background: currentStaff.color }"></span>
+        <span class="user-name">{{ currentStaff.name }}</span>
+        <button class="change-btn" @click="logout">変更</button>
+      </div>
+    </header>
+
+    <!-- コンテンツ -->
+    <main class="main-content">
+
+      <!-- ===== 報告フォーム ===== -->
+      <div v-if="currentTab === 'report'" class="form-view">
+
+        <div v-if="submitSuccess" class="success-banner">
+          ✅ 報告書を送信しました
+        </div>
+
+        <div class="report-paper">
+          <!-- タイトル -->
+          <div class="paper-title">【インシデント報告書】</div>
+
+          <!-- 基本情報 -->
+          <div class="info-section">
+            <div class="info-row">
+              <span class="star-label">★報告日</span>
+              <input type="date" v-model="form.reportDate" class="info-input" style="max-width:150px" />
+              <span class="star-label">★報告者</span>
+              <span class="reporter-name">{{ currentStaff.name }}</span>
+            </div>
+            <div class="info-row">
+              <span class="star-label">★発生日</span>
+              <input type="date" v-model="form.incidentDate" class="info-input" style="max-width:150px" />
+              <span class="star-label">時間</span>
+              <input type="time" v-model="form.incidentTime" class="info-input" style="max-width:110px" />
+            </div>
+            <div class="info-row">
+              <span class="star-label">★対象者</span>
+              <input type="text" v-model="form.targetPerson" class="info-input" placeholder="利用者名" />
+            </div>
+            <div class="info-row">
+              <span class="star-label">★分類</span>
+              <select v-model="form.classification" class="info-input">
+                <option value="">— 選択 —</option>
+                <option value="ヒヤリハット">ヒヤリハット</option>
+                <option value="インシデント">インシデント</option>
+                <option value="アクシデント">アクシデント</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 内容 -->
+          <div class="content-header">▲内容</div>
+          <div class="category-table">
+            <div
+              v-for="cat in CATEGORIES"
+              :key="cat.id"
+              class="category-row"
+              :class="{ selected: isCatSelected(cat.id) }"
+            >
+              <!-- カテゴリ名（タップで選択） -->
+              <div class="category-name" @click="toggleCat(cat.id)">
+                <span class="cat-checkbox">{{ isCatSelected(cat.id) ? '☑' : '☐' }}</span>
+                <span>{{ cat.name }}</span>
+                <span v-if="isCatSelected(cat.id) && cat.sections.length" class="cat-expand">▲</span>
+                <span v-else-if="cat.sections.length" class="cat-expand">▼</span>
+              </div>
+
+              <!-- サブオプション -->
+              <div v-if="isCatSelected(cat.id) && cat.sections.length" class="cat-options">
+                <div v-for="sec in cat.sections" :key="sec.key" class="option-section">
+                  <div v-if="sec.label" class="opt-section-label">{{ sec.label }}</div>
+
+                  <!-- チェックボックス（チップ形式） -->
+                  <div v-if="sec.type === 'checkbox'" class="checkbox-group">
+                    <label
+                      v-for="opt in sec.options"
+                      :key="opt"
+                      class="opt-chip"
+                      :class="{ 'opt-checked': form.selections[cat.id][sec.key].includes(opt) }"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="opt"
+                        v-model="form.selections[cat.id][sec.key]"
+                      />
+                      {{ opt }}
+                    </label>
+                  </div>
+
+                  <!-- テキスト入力 -->
+                  <div v-else-if="sec.type === 'text'" class="text-group">
+                    <span class="text-label">{{ sec.label }}：</span>
+                    <input
+                      type="text"
+                      v-model="form.selections[cat.id][sec.key]"
+                      class="cat-text-input"
+                      :placeholder="sec.placeholder"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- テキストエリア -->
+          <div class="text-sections">
+            <div class="text-area-pair">
+              <div class="text-area-box">
+                <div class="text-area-label">▲具体的内容、原因</div>
+                <textarea
+                  v-model="form.details"
+                  class="text-area"
+                  rows="5"
+                  placeholder="具体的な内容と原因を記入"
+                ></textarea>
+              </div>
+              <div class="text-area-box">
+                <div class="text-area-label">▲結果</div>
+                <textarea
+                  v-model="form.result"
+                  class="text-area"
+                  rows="5"
+                  placeholder="結果を記入"
+                ></textarea>
+              </div>
+            </div>
+            <div class="text-area-box full">
+              <div class="text-area-label">▲対応、対策方法</div>
+              <textarea
+                v-model="form.response"
+                class="text-area"
+                rows="5"
+                placeholder="対応・対策方法を記入"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- 送信 -->
+          <div class="submit-area">
+            <button class="submit-btn" @click="submitReport" :disabled="submitting">
+              {{ submitting ? '送信中...' : '📝 報告書を送信する' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 報告一覧 ===== -->
+      <div v-else-if="currentTab === 'list'" class="list-view">
+        <div class="list-controls">
+          <select v-model="listMonth" class="month-select" @change="loadIncidents">
+            <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+          </select>
+        </div>
+
+        <div v-if="incidents.length === 0" class="empty-state">
+          <div class="empty-state-icon">📄</div>
+          <p>この月の報告はありません</p>
+        </div>
+
+        <div
+          v-for="inc in incidents"
+          :key="inc.id"
+          class="incident-card"
+          :class="'cls-' + (inc.classification || '')"
+          @click="openDetail(inc)"
+        >
+          <div class="inc-header">
+            <span class="inc-date">{{ fmtDate(inc.incident_date) }}</span>
+            <span class="inc-badge" :class="inc.classification">{{ inc.classification || '未分類' }}</span>
+          </div>
+          <div class="inc-body">
+            <div class="inc-target">{{ inc.target_person || '（対象者未記入）' }}</div>
+            <div class="inc-cats">{{ catNames(inc.category_ids) }}</div>
+          </div>
+          <div class="inc-footer-row">
+            <span class="inc-footer">報告者：{{ inc.staff_name || '—' }}</span>
+            <div v-if="currentStaff.is_admin" class="admin-actions" @click.stop>
+              <button class="admin-edit-btn" @click="openEdit(inc)">✏️ 編集</button>
+              <button class="admin-del-btn"  @click="deleteIncident(inc)">🗑️ 削除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 分析 ===== -->
+      <div v-else-if="currentTab === 'analysis'" class="analysis-view">
+        <div class="analysis-controls">
+          <select v-model="analysisMonth" class="month-select" @change="onAnalysisMonthChange">
+            <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+          </select>
+        </div>
+
+        <!-- カテゴリ別棒グラフ -->
+        <div class="chart-card">
+          <div class="chart-title">📊 カテゴリ別件数（{{ analysisLabel }}）</div>
+          <div class="chart-wrap">
+            <div v-if="monthlyTotal === 0" class="no-data">この月の報告はありません</div>
+            <canvas v-else ref="barChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 月別折れ線グラフ -->
+        <div class="chart-card">
+          <div class="chart-title">📈 月別インシデント件数（過去12ヶ月）</div>
+          <div class="chart-wrap">
+            <canvas ref="lineChart"></canvas>
+          </div>
+        </div>
+
+        <!-- サマリー -->
+        <div class="summary-card">
+          <div class="chart-title">📋 {{ analysisLabel }} サマリー</div>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <div class="summary-number">{{ monthlyTotal }}</div>
+              <div class="summary-label">総件数</div>
+            </div>
+            <div class="summary-item" v-for="cls in ['ヒヤリハット','インシデント','アクシデント']" :key="cls">
+              <div class="summary-number">{{ monthlySummary[cls] || 0 }}</div>
+              <div class="summary-label">{{ cls }}</div>
+            </div>
+          </div>
+          <div v-if="monthlySummary.topCat" class="top-category">
+            最多カテゴリ：<strong>{{ monthlySummary.topCat }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 管理者設定 ===== -->
+      <div v-else-if="currentTab === 'settings'" class="settings-view">
+        <div class="settings-card">
+          <div class="settings-title">🔑 管理者権限の管理</div>
+          <p class="settings-desc">ONにしたスタッフはインシデントの編集・削除ができます</p>
+
+          <div class="staff-admin-list">
+            <div v-for="s in allStaff" :key="s.id" class="staff-admin-row">
+              <div class="staff-admin-info">
+                <span class="staff-admin-avatar" :style="{ background: s.color }">
+                  {{ s.name.charAt(0) }}
+                </span>
+                <span class="staff-admin-name">{{ s.name }}</span>
+                <span v-if="s.id === currentStaff.id" class="self-badge">自分</span>
+              </div>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  :checked="s.is_admin"
+                  :disabled="s.id === currentStaff.id"
+                  @change="toggleAdmin(s)"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-note">
+            ⚠️ 自分自身の権限は変更できません（誤操作防止）
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ボトムナビ -->
+    <nav class="bottom-nav">
+      <button
+        v-for="tab in visibleTabs"
+        :key="tab.id"
+        class="nav-tab"
+        :class="{ active: currentTab === tab.id }"
+        @click="switchTab(tab.id)"
+      >
+        <span class="nav-icon">{{ tab.icon }}</span>
+        <span class="nav-label">{{ tab.label }}</span>
+      </button>
+    </nav>
+
+    <!-- 編集モーダル（管理者専用） -->
+    <div v-if="editModal.show" class="modal-overlay" @click.self="editModal.show = false">
+      <div class="modal-box edit-modal-box">
+        <div class="modal-drag"></div>
+        <div class="modal-hdr">
+          <h3>✏️ インシデント編集</h3>
+          <button class="modal-close" @click="editModal.show = false">✕</button>
+        </div>
+        <div class="modal-body-content">
+
+          <!-- 基本情報 -->
+          <div class="edit-section">
+            <div class="edit-row">
+              <span class="star-label">★発生日</span>
+              <input type="date" v-model="editModal.incidentDate" class="info-input" />
+              <span class="star-label">時間</span>
+              <input type="time" v-model="editModal.incidentTime" class="info-input" style="max-width:110px" />
+            </div>
+            <div class="edit-row">
+              <span class="star-label">★対象者</span>
+              <input type="text" v-model="editModal.targetPerson" class="info-input" placeholder="利用者名" />
+            </div>
+            <div class="edit-row">
+              <span class="star-label">★分類</span>
+              <select v-model="editModal.classification" class="info-input">
+                <option value="">— 選択 —</option>
+                <option value="ヒヤリハット">ヒヤリハット</option>
+                <option value="インシデント">インシデント</option>
+                <option value="アクシデント">アクシデント</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- カテゴリ -->
+          <div class="edit-section-label">▲内容</div>
+          <div class="category-table edit-cat-table">
+            <div
+              v-for="cat in CATEGORIES" :key="cat.id"
+              class="category-row"
+              :class="{ selected: editModal.selectedCatIds.includes(cat.id) }"
+            >
+              <div class="category-name" @click="toggleEditCat(cat.id)">
+                <span class="cat-checkbox">{{ editModal.selectedCatIds.includes(cat.id) ? '☑' : '☐' }}</span>
+                <span>{{ cat.name }}</span>
+              </div>
+              <div v-if="editModal.selectedCatIds.includes(cat.id) && cat.sections.length" class="cat-options">
+                <div v-for="sec in cat.sections" :key="sec.key" class="option-section">
+                  <div v-if="sec.label" class="opt-section-label">{{ sec.label }}</div>
+                  <div v-if="sec.type === 'checkbox'" class="checkbox-group">
+                    <label
+                      v-for="opt in sec.options" :key="opt"
+                      class="opt-chip"
+                      :class="{ 'opt-checked': editModal.selections[cat.id][sec.key].includes(opt) }"
+                    >
+                      <input type="checkbox" :value="opt" v-model="editModal.selections[cat.id][sec.key]" />
+                      {{ opt }}
+                    </label>
+                  </div>
+                  <div v-else-if="sec.type === 'text'" class="text-group">
+                    <span class="text-label">{{ sec.label }}：</span>
+                    <input type="text" v-model="editModal.selections[cat.id][sec.key]" class="cat-text-input" :placeholder="sec.placeholder" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- テキスト -->
+          <div class="edit-section" style="padding-top:12px">
+            <div class="text-area-label">▲具体的内容、原因</div>
+            <textarea v-model="editModal.details" class="text-area" rows="4"></textarea>
+          </div>
+          <div class="edit-section">
+            <div class="text-area-label">▲結果</div>
+            <textarea v-model="editModal.result" class="text-area" rows="4"></textarea>
+          </div>
+          <div class="edit-section" style="padding-bottom:16px">
+            <div class="text-area-label">▲対応、対策方法</div>
+            <textarea v-model="editModal.response" class="text-area" rows="4"></textarea>
+          </div>
+
+          <!-- 保存ボタン -->
+          <button class="submit-btn" @click="saveEdit" :disabled="editModal.saving" style="margin-bottom:32px">
+            {{ editModal.saving ? '保存中...' : '💾 変更を保存する' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 詳細モーダル -->
+    <div v-if="detail.show" class="modal-overlay" @click.self="detail.show = false">
+      <div class="modal-box">
+        <div class="modal-drag"></div>
+        <div class="modal-hdr">
+          <h3>インシデント詳細</h3>
+          <button class="modal-close" @click="detail.show = false">✕</button>
+        </div>
+        <div class="modal-body-content">
+          <div class="detail-row">
+            <span class="detail-key">発生日時</span>
+            <span class="detail-val">
+              {{ fmtDate(detail.d.incident_date) }}
+              {{ detail.d.incident_time ? detail.d.incident_time.slice(0,5) : '' }}
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">報告者</span>
+            <span class="detail-val">{{ detail.d.staff_name || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">対象者</span>
+            <span class="detail-val">{{ detail.d.target_person || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">分類</span>
+            <span class="detail-val">{{ detail.d.classification || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">カテゴリ</span>
+            <span class="detail-val">{{ catNames(detail.d.category_ids) }}</span>
+          </div>
+          <div v-if="detail.d.details" class="detail-blk">
+            <div class="detail-blk-label">▲具体的内容・原因</div>
+            <div class="detail-blk-text">{{ detail.d.details }}</div>
+          </div>
+          <div v-if="detail.d.result" class="detail-blk">
+            <div class="detail-blk-label">▲結果</div>
+            <div class="detail-blk-text">{{ detail.d.result }}</div>
+          </div>
+          <div v-if="detail.d.response" class="detail-blk">
+            <div class="detail-blk-label">▲対応・対策方法</div>
+            <div class="detail-blk-text">{{ detail.d.response }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </template>
+</div>
+
+<script src="incident.js"></script>
+</body>
+</html>

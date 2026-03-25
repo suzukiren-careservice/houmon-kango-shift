@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>訪問看護ステーション シフト管理</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== ローディング ========== -->
+  <div v-if="loading" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">読み込み中...</p>
+  </div>
+
+  <!-- ========== HEADER ========== -->
+  <header class="app-header no-print">
+    <div class="header-left">
+      <h1 class="app-title">訪問看護 シフト管理</h1>
+    </div>
+    <nav class="header-nav">
+      <button
+        v-for="tab in tabs"
+        :key="tab.id"
+        class="nav-btn"
+        :class="{ active: currentTab === tab.id }"
+        @click="currentTab = tab.id"
+      >{{ tab.label }}</button>
+    </nav>
+  </header>
+
+  <!-- ========== WEEKLY SCHEDULE VIEW ========== -->
+  <main v-if="currentTab === 'schedule'" class="view-schedule no-print">
+
+    <!-- Week navigation -->
+    <div class="week-nav">
+      <button class="btn btn-secondary" @click="prevWeek">&#9664; 前週</button>
+      <button class="btn btn-secondary" @click="goToday">今週</button>
+      <span class="week-label">{{ weekLabel }}</span>
+      <button class="btn btn-secondary" @click="nextWeek">次週 &#9654;</button>
+      <button class="btn btn-secondary print-btn" @click="printSchedule">&#128438; 印刷</button>
+    </div>
+
+    <!-- Grid wrapper for both-direction scroll -->
+    <div class="grid-wrapper">
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th class="corner-cell sticky-col sticky-row">スタッフ</th>
+            <th
+              v-for="day in weekDays"
+              :key="day.dateStr"
+              class="day-header sticky-row"
+              :class="{ 'today-col': day.isToday, 'weekend-col': day.isWeekend }"
+            >
+              <div class="day-header-inner">
+                <span class="day-name">{{ day.dayName }}</span>
+                <span class="day-date">{{ day.shortDate }}</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(staff, slotIdx) in staffSlots" :key="staff.isEmpty ? 'empty-' + slotIdx : staff.id" :class="{ 'empty-staff-row': staff.isEmpty }">
+            <td class="staff-cell sticky-col" :class="{ 'empty-staff-cell': staff.isEmpty }">
+              <template v-if="!staff.isEmpty">
+                <div class="staff-name-wrapper">
+                  <span class="staff-color-dot" :style="{ backgroundColor: staff.color }"></span>
+                  <span class="staff-name-text">{{ staff.name }}</span>
+                </div>
+              </template>
+              <div v-else class="empty-staff-placeholder" @click="openAddStaff">＋ 登録</div>
+            </td>
+            <td
+              v-for="day in weekDays"
+              :key="day.dateStr"
+              class="schedule-cell"
+              :class="{ 'today-col': day.isToday, 'weekend-col': day.isWeekend, 'empty-slot-day': staff.isEmpty }"
+            >
+              <template v-if="!staff.isEmpty">
+              <!-- Morning block -->
+              <div
+                class="period-block period-morning"
+                :class="{ 'period-off': !getShift(staff.id, day.dateStr).morning }"
+              >
+                <div class="period-header">
+                  <span class="period-label">午前</span>
+                  <button
+                    class="shift-toggle"
+                    :class="getShift(staff.id, day.dateStr).morning ? 'toggle-on' : 'toggle-off'"
+                    @click="toggleShift(staff.id, day.dateStr, 'morning')"
+                  >{{ getShift(staff.id, day.dateStr).morning ? '出勤' : '休み' }}</button>
+                </div>
+                <div v-if="getShift(staff.id, day.dateStr).morning" class="visit-list">
+                  <div
+                    v-for="visit in getVisits(staff.id, day.dateStr, 'morning')"
+                    :key="visit.id"
+                    class="visit-card"
+                    :style="{ borderLeftColor: staff.color }"
+                    @click="openEditVisit(visit)"
+                  >
+                    <div class="visit-header-line">
+                      <span v-if="visit.startTime" class="visit-time">{{ visit.startTime }}</span>
+                      <span class="visit-client">{{ getClientName(visit.clientId) }}</span>
+                    </div>
+                    <div v-if="visit.location" class="visit-location">{{ visit.location }}</div>
+                    <div v-if="visit.notes" class="visit-notes">{{ visit.notes }}</div>
+                  </div>
+                  <button
+                    class="add-visit-btn"
+                    @click="openAddVisit(staff.id, day.dateStr, 'morning')"
+                  >＋</button>
+                </div>
+              </div>
+
+              <!-- Afternoon block -->
+              <div
+                class="period-block period-afternoon"
+                :class="{ 'period-off': !getShift(staff.id, day.dateStr).afternoon }"
+              >
+                <div class="period-header">
+                  <span class="period-label">午後</span>
+                  <button
+                    class="shift-toggle"
+                    :class="getShift(staff.id, day.dateStr).afternoon ? 'toggle-on' : 'toggle-off'"
+                    @click="toggleShift(staff.id, day.dateStr, 'afternoon')"
+                  >{{ getShift(staff.id, day.dateStr).afternoon ? '出勤' : '休み' }}</button>
+                </div>
+                <div v-if="getShift(staff.id, day.dateStr).afternoon" class="visit-list">
+                  <div
+                    v-for="visit in getVisits(staff.id, day.dateStr, 'afternoon')"
+                    :key="visit.id"
+                    class="visit-card"
+                    :style="{ borderLeftColor: staff.color }"
+                    @click="openEditVisit(visit)"
+                  >
+                    <div class="visit-header-line">
+                      <span v-if="visit.startTime" class="visit-time">{{ visit.startTime }}</span>
+                      <span class="visit-client">{{ getClientName(visit.clientId) }}</span>
+                    </div>
+                    <div v-if="visit.location" class="visit-location">{{ visit.location }}</div>
+                    <div v-if="visit.notes" class="visit-notes">{{ visit.notes }}</div>
+                  </div>
+                  <button
+                    class="add-visit-btn"
+                    @click="openAddVisit(staff.id, day.dateStr, 'afternoon')"
+                  >＋</button>
+                </div>
+              </div>
+              </template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- ========== STAFF MANAGEMENT VIEW ========== -->
+  <main v-if="currentTab === 'staff'" class="view-manage no-print">
+    <div class="manage-header">
+      <h2>スタッフ管理</h2>
+      <button class="btn btn-primary" @click="openAddStaff">＋ スタッフ追加</button>
+    </div>
+    <div class="manage-list">
+      <div v-for="staff in staffList" :key="staff.id" class="manage-item">
+        <span class="staff-color-dot large" :style="{ backgroundColor: staff.color }"></span>
+        <span class="manage-item-name" :class="{ inactive: !staff.active }">{{ staff.name }}</span>
+        <span v-if="!staff.active" class="inactive-badge">非稼働</span>
+        <div class="manage-item-actions">
+          <button class="btn btn-edit" @click="openEditStaff(staff)">編集</button>
+          <button class="btn btn-danger" @click="deleteStaff(staff)">削除</button>
+        </div>
+      </div>
+      <p v-if="staffList.length === 0" class="empty-msg">スタッフが登録されていません</p>
+    </div>
+  </main>
+
+  <!-- ========== CLIENT MANAGEMENT VIEW ========== -->
+  <main v-if="currentTab === 'clients'" class="view-manage no-print">
+    <div class="manage-header">
+      <h2>利用者管理</h2>
+      <button class="btn btn-primary" @click="openAddClient">＋ 利用者追加</button>
+    </div>
+    <div class="manage-list">
+      <div v-for="client in clientList" :key="client.id" class="manage-item client-item">
+        <div class="client-info">
+          <span class="manage-item-name">{{ client.name }}</span>
+          <span v-if="client.address" class="client-address">{{ client.address }}</span>
+          <span v-if="client.notes" class="client-notes-preview">{{ client.notes }}</span>
+        </div>
+        <div class="manage-item-actions">
+          <button class="btn btn-edit" @click="openEditClient(client)">編集</button>
+          <button class="btn btn-danger" @click="deleteClient(client)">削除</button>
+        </div>
+      </div>
+      <p v-if="clientList.length === 0" class="empty-msg">利用者が登録されていません</p>
+    </div>
+  </main>
+
+  <!-- ========== PRINT VIEW (hidden on screen) ========== -->
+  <div class="print-only" id="print-area">
+    <div class="print-title">訪問看護週間スケジュール ― {{ weekLabel }}</div>
+    <table class="print-table">
+      <thead>
+        <tr>
+          <th class="print-staff-col">スタッフ</th>
+          <th v-for="day in weekDays" :key="day.dateStr" class="print-day-col">
+            {{ day.dayName }}<br/>{{ day.shortDate }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="staff in activeStaff" :key="staff.id">
+          <td class="print-staff-name">{{ staff.name }}</td>
+          <td v-for="day in weekDays" :key="day.dateStr" class="print-cell">
+            <div class="print-period">
+              <div class="print-period-label">午前</div>
+              <template v-if="getShift(staff.id, day.dateStr).morning">
+                <div
+                  v-for="visit in getVisits(staff.id, day.dateStr, 'morning')"
+                  :key="visit.id"
+                  class="print-visit"
+                >
+                  <span v-if="visit.startTime" class="print-time">{{ visit.startTime }} </span><strong>{{ getClientName(visit.clientId) }}</strong>
+                  <span v-if="visit.location"> {{ visit.location }}</span>
+                </div>
+                <div v-if="getVisits(staff.id, day.dateStr, 'morning').length === 0" class="print-empty">―</div>
+              </template>
+              <div v-else class="print-off">休み</div>
+            </div>
+            <div class="print-period">
+              <div class="print-period-label">午後</div>
+              <template v-if="getShift(staff.id, day.dateStr).afternoon">
+                <div
+                  v-for="visit in getVisits(staff.id, day.dateStr, 'afternoon')"
+                  :key="visit.id"
+                  class="print-visit"
+                >
+                  <span v-if="visit.startTime" class="print-time">{{ visit.startTime }} </span><strong>{{ getClientName(visit.clientId) }}</strong>
+                  <span v-if="visit.location"> {{ visit.location }}</span>
+                </div>
+                <div v-if="getVisits(staff.id, day.dateStr, 'afternoon').length === 0" class="print-empty">―</div>
+              </template>
+              <div v-else class="print-off">休み</div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ========== VISIT MODAL ========== -->
+  <div v-if="visitModal.show" class="modal-overlay" @click.self="closeVisitModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>
+          {{ visitModal.staffName }} ―
+          {{ visitModal.dateLabel }} ―
+          {{ visitModal.period === 'morning' ? '午前' : '午後' }}
+        </h3>
+        <button class="modal-close" @click="closeVisitModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>利用者 <span class="required">*</span></label>
+          <select v-model="visitModal.clientId" @change="onVisitClientChange" class="form-select">
+            <option value="">― 選択してください ―</option>
+            <option v-for="c in clientList" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+        <div v-if="visitModal.clientNotes" class="client-notes-ref">
+          <span class="notes-ref-label">特記事項（利用者情報）：</span>
+          <span class="notes-ref-text">{{ visitModal.clientNotes }}</span>
+        </div>
+        <div class="form-group">
+          <label>場所・住所</label>
+          <input type="text" v-model="visitModal.location" class="form-input" placeholder="住所を入力" />
+        </div>
+        <div class="form-group">
+          <label>訪問時刻</label>
+          <select v-model="visitModal.startTime" class="form-select">
+            <option value="">― 時刻未設定 ―</option>
+            <option v-for="t in timeOptions" :key="t" :value="t">{{ t }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>訪問特記事項</label>
+          <textarea v-model="visitModal.notes" class="form-textarea" rows="3" placeholder="この訪問に関するメモ"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button v-if="visitModal.isEdit" class="btn btn-danger" @click="deleteVisit">削除</button>
+        <div class="modal-footer-right">
+          <button class="btn btn-cancel" @click="closeVisitModal">キャンセル</button>
+          <button class="btn btn-primary" @click="saveVisit">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== STAFF MODAL ========== -->
+  <div v-if="staffModal.show" class="modal-overlay" @click.self="closeStaffModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>{{ staffModal.isEdit ? 'スタッフ編集' : 'スタッフ追加' }}</h3>
+        <button class="modal-close" @click="closeStaffModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>名前 <span class="required">*</span></label>
+          <input type="text" v-model="staffModal.name" class="form-input" placeholder="スタッフ名" />
+        </div>
+        <div class="form-group">
+          <label>カラー</label>
+          <div class="color-swatches">
+            <button
+              v-for="color in colorOptions"
+              :key="color"
+              class="color-swatch"
+              :class="{ selected: staffModal.color === color }"
+              :style="{ backgroundColor: color }"
+              @click="staffModal.color = color"
+            ></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>ステータス</label>
+          <div class="toggle-row">
+            <button
+              class="btn"
+              :class="staffModal.active ? 'btn-primary' : 'btn-cancel'"
+              @click="staffModal.active = !staffModal.active"
+            >{{ staffModal.active ? '稼働中' : '非稼働' }}</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div></div>
+        <div class="modal-footer-right">
+          <button class="btn btn-cancel" @click="closeStaffModal">キャンセル</button>
+          <button class="btn btn-primary" @click="saveStaff">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== CLIENT MODAL ========== -->
+  <div v-if="clientModal.show" class="modal-overlay" @click.self="closeClientModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>{{ clientModal.isEdit ? '利用者編集' : '利用者追加' }}</h3>
+        <button class="modal-close" @click="closeClientModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>利用者名 <span class="required">*</span></label>
+          <input type="text" v-model="clientModal.name" class="form-input" placeholder="氏名" />
+        </div>
+        <div class="form-group">
+          <label>住所</label>
+          <input type="text" v-model="clientModal.address" class="form-input" placeholder="住所" />
+        </div>
+        <div class="form-group">
+          <label>特記事項（永続）</label>
+          <textarea v-model="clientModal.notes" class="form-textarea" rows="4" placeholder="注意事項、処置内容など"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div></div>
+        <div class="modal-footer-right">
+          <button class="btn btn-cancel" @click="closeClientModal">キャンセル</button>
+          <button class="btn btn-primary" @click="saveClient">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

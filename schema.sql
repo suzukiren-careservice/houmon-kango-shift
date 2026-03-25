@@ -51,3 +51,25 @@ ALTER TABLE staff   DISABLE ROW LEVEL SECURITY;
 ALTER TABLE clients DISABLE ROW LEVEL SECURITY;
 ALTER TABLE shifts  DISABLE ROW LEVEL SECURITY;
 ALTER TABLE visits  DISABLE ROW LEVEL SECURITY;
+
+-- =============================================
+-- インシデント報告テーブル
+-- =============================================
+CREATE TABLE incidents (
+  id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  report_date    DATE        NOT NULL,
+  staff_id       UUID        REFERENCES staff(id) ON DELETE SET NULL,
+  staff_name     TEXT        NOT NULL DEFAULT '',
+  incident_date  DATE        NOT NULL,
+  incident_time  TIME,
+  target_person  TEXT        NOT NULL DEFAULT '',
+  classification TEXT        NOT NULL DEFAULT '',
+  category_ids   INTEGER[]   NOT NULL DEFAULT '{}',
+  selections     JSONB       NOT NULL DEFAULT '{}',
+  details        TEXT        NOT NULL DEFAULT '',
+  result         TEXT        NOT NULL DEFAULT '',
+  response       TEXT        NOT NULL DEFAULT ''
+);
+
+ALTER TABLE incidents DISABLE ROW LEVEL SECURITY;

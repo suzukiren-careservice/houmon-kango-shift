@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "incident",
+      "runtimeExecutable": "perl",
+      "runtimeArgs": ["serve.pl", "C:/Users/r-suzuki/OneDrive/デスクトップ/Claude"],
+      "port": 3001
+    }
+  ]
+}
