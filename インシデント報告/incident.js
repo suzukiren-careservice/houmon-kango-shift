@@ -134,6 +134,14 @@ createApp({
       CATEGORIES,
       loading: true,
 
+      // パスワード認証
+      appAuthenticated: false,
+      appPassword: '',
+      pwdInput: '',
+      pwdError: false,
+      // パスワード変更（管理者用）
+      pwdChange: { input: '', confirm: '', saving: false, error: '', success: false },
+
       // タブ
       currentTab: 'report',
       tabs: [
@@ -225,20 +233,75 @@ createApp({
   },
 
   async mounted() {
-    // localStorage からスタッフ復元（シフトアプリと共有）
-    const saved = localStorage.getItem('incident_staff');
-    if (saved) {
-      try { this.currentStaff = JSON.parse(saved); } catch {}
+    await this.loadAppPassword();
+    const storedAuth = localStorage.getItem('app_auth');
+    if (storedAuth && storedAuth === this.appPassword) {
+      this.appAuthenticated = true;
+      const saved = localStorage.getItem('incident_staff');
+      if (saved) {
+        try { this.currentStaff = JSON.parse(saved); } catch {}
+      }
+      await this.loadStaff();
+      if (this.currentStaff) {
+        await this.loadIncidents();
+        await this.loadAllIncidents();
+      }
     }
-    await this.loadStaff();
     this.loading = false;
-    if (this.currentStaff) {
-      await this.loadIncidents();
-      await this.loadAllIncidents();
-    }
   },
 
   methods: {
+
+    // ===== パスワード認証 =====
+    async loadAppPassword() {
+      const { data } = await db.from('settings').select('value').eq('key', 'app_password').single();
+      this.appPassword = data?.value || '';
+    },
+
+    async checkPassword() {
+      if (!this.pwdInput) return;
+      if (this.pwdInput === this.appPassword) {
+        localStorage.setItem('app_auth', this.appPassword);
+        this.appAuthenticated = true;
+        this.pwdError = false;
+        this.pwdInput = '';
+        const saved = localStorage.getItem('incident_staff');
+        if (saved) {
+          try { this.currentStaff = JSON.parse(saved); } catch {}
+        }
+        await this.loadStaff();
+        if (this.currentStaff) {
+          await this.loadIncidents();
+          await this.loadAllIncidents();
+        }
+      } else {
+        this.pwdError = true;
+        this.pwdInput = '';
+      }
+    },
+
+    async saveAppPassword() {
+      this.pwdChange.error = '';
+      if (!this.pwdChange.input) { this.pwdChange.error = 'パスワードを入力してください'; return; }
+      if (this.pwdChange.input !== this.pwdChange.confirm) { this.pwdChange.error = 'パスワードが一致しません'; return; }
+      this.pwdChange.saving = true;
+      try {
+        const { error } = await db.from('settings')
+          .update({ value: this.pwdChange.input })
+          .eq('key', 'app_password');
+        if (error) throw error;
+        this.appPassword = this.pwdChange.input;
+        localStorage.setItem('app_auth', this.appPassword);
+        this.pwdChange.input = '';
+        this.pwdChange.confirm = '';
+        this.pwdChange.success = true;
+        setTimeout(() => { this.pwdChange.success = false; }, 3000);
+      } catch (e) {
+        this.pwdChange.error = '保存エラー: ' + e.message;
+      } finally {
+        this.pwdChange.saving = false;
+      }
+    },
 
     // ===== スタッフ =====
     async loadStaff() {

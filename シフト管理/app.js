@@ -16,7 +16,14 @@ const { createApp } = Vue;
 createApp({
   data() {
     return {
-      loading: false,
+      loading: true,
+      // パスワード認証
+      appAuthenticated: false,
+      appPassword: '',
+      pwdInput: '',
+      pwdError: false,
+      // スタッフログイン
+      currentStaff: null,
       currentTab: 'schedule',
       tabs: [
         { id: 'schedule', label: '週間スケジュール' },
@@ -49,6 +56,10 @@ createApp({
   },
 
   computed: {
+    isAdmin() {
+      return this.currentStaff?.is_admin === true;
+    },
+
     weekStart() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -125,6 +136,39 @@ createApp({
       return dow === 0 || dow === 6;
     },
 
+    // ===== パスワード認証 =====
+    async checkPassword() {
+      if (!this.pwdInput) return;
+      if (this.pwdInput === this.appPassword) {
+        localStorage.setItem('app_auth', this.appPassword);
+        this.appAuthenticated = true;
+        this.pwdError = false;
+        this.pwdInput = '';
+        const savedStaff = localStorage.getItem('incident_staff');
+        if (savedStaff) {
+          try { this.currentStaff = JSON.parse(savedStaff); } catch {}
+        }
+        await this.loadAllData();
+        if (this.currentStaff) {
+          const fresh = this.staffList.find(s => s.id === this.currentStaff.id);
+          if (fresh) this.currentStaff = fresh;
+        }
+      } else {
+        this.pwdError = true;
+        this.pwdInput = '';
+      }
+    },
+
+    selectStaff(staff) {
+      this.currentStaff = staff;
+      localStorage.setItem('incident_staff', JSON.stringify(staff));
+    },
+
+    logoutStaff() {
+      this.currentStaff = null;
+      localStorage.removeItem('incident_staff');
+    },
+
     // ===== データ読み込み =====
     async loadAllData() {
       this.loading = true;
@@ -142,7 +186,7 @@ createApp({
         ]);
         if (e1 || e2 || e3 || e4) throw (e1 || e2 || e3 || e4);
 
-        this.staffList  = (staffData  || []).map(s => ({ id: s.id, name: s.name, color: s.color, active: s.active }));
+        this.staffList  = (staffData  || []).map(s => ({ id: s.id, name: s.name, color: s.color, active: s.active, is_admin: s.is_admin }));
         this.clientList = (clientData || []).map(c => ({ id: c.id, name: c.name, address: c.address || '', notes: c.notes || '' }));
 
         this.shifts = {};
@@ -373,6 +417,22 @@ createApp({
   },
 
   async mounted() {
-    await this.loadAllData();
+    const { data: pwdData } = await db.from('settings').select('value').eq('key', 'app_password').single();
+    this.appPassword = pwdData?.value || '';
+    const storedAuth = localStorage.getItem('app_auth');
+    if (storedAuth && storedAuth === this.appPassword) {
+      this.appAuthenticated = true;
+      const savedStaff = localStorage.getItem('incident_staff');
+      if (savedStaff) {
+        try { this.currentStaff = JSON.parse(savedStaff); } catch {}
+      }
+      await this.loadAllData();
+      if (this.currentStaff) {
+        const fresh = this.staffList.find(s => s.id === this.currentStaff.id);
+        if (fresh) this.currentStaff = fresh;
+      }
+    } else {
+      this.loading = false;
+    }
   },
 }).mount('#app');

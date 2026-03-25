@@ -17,6 +17,52 @@
     <p class="loading-text">読み込み中...</p>
   </div>
 
+  <!-- ========== パスワード画面 ========== -->
+  <div v-else-if="!appAuthenticated" class="pwd-screen">
+    <div class="pwd-card">
+      <div class="pwd-icon">📅</div>
+      <h1 class="pwd-title">シフト管理</h1>
+      <p class="pwd-sub">訪問看護ステーション</p>
+      <div class="pwd-form">
+        <input
+          type="password"
+          v-model="pwdInput"
+          class="pwd-input"
+          placeholder="パスワードを入力"
+          @keyup.enter="checkPassword"
+          autocomplete="current-password"
+        />
+        <div v-if="pwdError" class="pwd-error-msg">パスワードが違います</div>
+        <button class="pwd-btn" @click="checkPassword">ログイン</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== スタッフ選択画面 ========== -->
+  <div v-else-if="!currentStaff" class="pwd-screen">
+    <div class="pwd-card staff-select-card">
+      <div class="pwd-icon">👤</div>
+      <h1 class="pwd-title">シフト管理</h1>
+      <p class="pwd-sub">あなたは誰ですか？</p>
+      <div class="staff-select-list">
+        <button
+          v-for="s in staffList.filter(s => s.active)"
+          :key="s.id"
+          class="staff-select-item"
+          :style="{ '--c': s.color }"
+          @click="selectStaff(s)"
+        >
+          <span class="staff-select-avatar" :style="{ background: s.color }">{{ s.name.charAt(0) }}</span>
+          <span>{{ s.name }}</span>
+          <span v-if="s.is_admin" class="staff-admin-tag">管理者</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== メインアプリ ========== -->
+  <template v-else>
+
   <!-- ========== HEADER ========== -->
   <header class="app-header no-print">
     <div class="header-left">
@@ -31,6 +77,12 @@
         @click="currentTab = tab.id"
       >{{ tab.label }}</button>
     </nav>
+    <div class="header-user-area">
+      <span class="header-user-dot" :style="{ background: currentStaff.color }"></span>
+      <span class="header-user-name">{{ currentStaff.name }}</span>
+      <span v-if="isAdmin" class="header-admin-badge">管理者</span>
+      <button class="header-change-btn" @click="logoutStaff">変更</button>
+    </div>
   </header>
 
   <!-- ========== WEEKLY SCHEDULE VIEW ========== -->
@@ -73,7 +125,7 @@
                   <span class="staff-name-text">{{ staff.name }}</span>
                 </div>
               </template>
-              <div v-else class="empty-staff-placeholder" @click="openAddStaff">＋ 登録</div>
+              <div v-else-if="isAdmin" class="empty-staff-placeholder" @click="openAddStaff">＋ 登録</div>
             </td>
             <td
               v-for="day in weekDays"
@@ -90,10 +142,12 @@
                 <div class="period-header">
                   <span class="period-label">午前</span>
                   <button
+                    v-if="isAdmin"
                     class="shift-toggle"
                     :class="getShift(staff.id, day.dateStr).morning ? 'toggle-on' : 'toggle-off'"
                     @click="toggleShift(staff.id, day.dateStr, 'morning')"
                   >{{ getShift(staff.id, day.dateStr).morning ? '出勤' : '休み' }}</button>
+                  <span v-else class="shift-label-readonly">{{ getShift(staff.id, day.dateStr).morning ? '出勤' : '休み' }}</span>
                 </div>
                 <div v-if="getShift(staff.id, day.dateStr).morning" class="visit-list">
                   <div
@@ -101,7 +155,7 @@
                     :key="visit.id"
                     class="visit-card"
                     :style="{ borderLeftColor: staff.color }"
-                    @click="openEditVisit(visit)"
+                    @click="isAdmin ? openEditVisit(visit) : null"
                   >
                     <div class="visit-header-line">
                       <span v-if="visit.startTime" class="visit-time">{{ visit.startTime }}</span>
@@ -111,6 +165,7 @@
                     <div v-if="visit.notes" class="visit-notes">{{ visit.notes }}</div>
                   </div>
                   <button
+                    v-if="isAdmin"
                     class="add-visit-btn"
                     @click="openAddVisit(staff.id, day.dateStr, 'morning')"
                   >＋</button>
@@ -125,10 +180,12 @@
                 <div class="period-header">
                   <span class="period-label">午後</span>
                   <button
+                    v-if="isAdmin"
                     class="shift-toggle"
                     :class="getShift(staff.id, day.dateStr).afternoon ? 'toggle-on' : 'toggle-off'"
                     @click="toggleShift(staff.id, day.dateStr, 'afternoon')"
                   >{{ getShift(staff.id, day.dateStr).afternoon ? '出勤' : '休み' }}</button>
+                  <span v-else class="shift-label-readonly">{{ getShift(staff.id, day.dateStr).afternoon ? '出勤' : '休み' }}</span>
                 </div>
                 <div v-if="getShift(staff.id, day.dateStr).afternoon" class="visit-list">
                   <div
@@ -136,7 +193,7 @@
                     :key="visit.id"
                     class="visit-card"
                     :style="{ borderLeftColor: staff.color }"
-                    @click="openEditVisit(visit)"
+                    @click="isAdmin ? openEditVisit(visit) : null"
                   >
                     <div class="visit-header-line">
                       <span v-if="visit.startTime" class="visit-time">{{ visit.startTime }}</span>
@@ -146,6 +203,7 @@
                     <div v-if="visit.notes" class="visit-notes">{{ visit.notes }}</div>
                   </div>
                   <button
+                    v-if="isAdmin"
                     class="add-visit-btn"
                     @click="openAddVisit(staff.id, day.dateStr, 'afternoon')"
                   >＋</button>
@@ -163,14 +221,14 @@
   <main v-if="currentTab === 'staff'" class="view-manage no-print">
     <div class="manage-header">
       <h2>スタッフ管理</h2>
-      <button class="btn btn-primary" @click="openAddStaff">＋ スタッフ追加</button>
+      <button v-if="isAdmin" class="btn btn-primary" @click="openAddStaff">＋ スタッフ追加</button>
     </div>
     <div class="manage-list">
       <div v-for="staff in staffList" :key="staff.id" class="manage-item">
         <span class="staff-color-dot large" :style="{ backgroundColor: staff.color }"></span>
         <span class="manage-item-name" :class="{ inactive: !staff.active }">{{ staff.name }}</span>
         <span v-if="!staff.active" class="inactive-badge">非稼働</span>
-        <div class="manage-item-actions">
+        <div v-if="isAdmin" class="manage-item-actions">
           <button class="btn btn-edit" @click="openEditStaff(staff)">編集</button>
           <button class="btn btn-danger" @click="deleteStaff(staff)">削除</button>
         </div>
@@ -183,7 +241,7 @@
   <main v-if="currentTab === 'clients'" class="view-manage no-print">
     <div class="manage-header">
       <h2>利用者管理</h2>
-      <button class="btn btn-primary" @click="openAddClient">＋ 利用者追加</button>
+      <button v-if="isAdmin" class="btn btn-primary" @click="openAddClient">＋ 利用者追加</button>
     </div>
     <div class="manage-list">
       <div v-for="client in clientList" :key="client.id" class="manage-item client-item">
@@ -192,7 +250,7 @@
           <span v-if="client.address" class="client-address">{{ client.address }}</span>
           <span v-if="client.notes" class="client-notes-preview">{{ client.notes }}</span>
         </div>
-        <div class="manage-item-actions">
+        <div v-if="isAdmin" class="manage-item-actions">
           <button class="btn btn-edit" @click="openEditClient(client)">編集</button>
           <button class="btn btn-danger" @click="deleteClient(client)">削除</button>
         </div>
@@ -378,6 +436,10 @@
       </div>
     </div>
   </div>
+
+</div>
+
+  </template><!-- end v-else (main app) -->
 
 </div>
 

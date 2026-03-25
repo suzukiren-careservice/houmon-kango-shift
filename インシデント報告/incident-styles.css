@@ -589,3 +589,54 @@ body {
   padding: 10px 12px; border-radius: 8px;
   color: var(--text);
 }
+
+/* ===== Password Screen ===== */
+.pwd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+.pwd-input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+  text-align: center;
+  letter-spacing: 2px;
+}
+.pwd-input::placeholder { color: rgba(255,255,255,0.4); letter-spacing: 0; }
+.pwd-input:focus { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.12); }
+.pwd-error-msg { color: #FF5252; font-size: 13px; text-align: center; }
+.pwd-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #1E88E5, #00897B);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.pwd-btn:active { opacity: 0.8; }
+
+/* ===== Password Change (Settings) ===== */
+.pwd-change-form { margin-top: 12px; }
+.pwd-change-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  display: block;
+}
+.pwd-change-input:focus { border-color: var(--primary); }
+.pwd-change-error { color: var(--danger); font-size: 13px; margin-top: 8px; }
+.pwd-change-success { color: #2E7D32; font-size: 13px; margin-top: 8px; }

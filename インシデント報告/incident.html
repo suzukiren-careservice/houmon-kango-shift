@@ -21,6 +21,29 @@
     <p style="color:#546E7A;font-size:13px">読み込み中...</p>
   </div>
 
+  <!-- ========== パスワード画面 ========== -->
+  <div v-else-if="!appAuthenticated" class="login-screen">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-icon">🔐</div>
+        <h1>インシデント報告</h1>
+        <p>訪問看護ステーション</p>
+      </div>
+      <div class="pwd-form">
+        <input
+          type="password"
+          v-model="pwdInput"
+          class="pwd-input"
+          placeholder="パスワードを入力"
+          @keyup.enter="checkPassword"
+          autocomplete="current-password"
+        />
+        <div v-if="pwdError" class="pwd-error-msg">パスワードが違います</div>
+        <button class="pwd-btn" @click="checkPassword">ログイン</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ========== ログイン画面 ========== -->
   <div v-else-if="!currentStaff" class="login-screen">
     <div class="login-card">
@@ -314,6 +337,21 @@
 
           <div class="settings-note">
             ⚠️ 自分自身の権限は変更できません（誤操作防止）
+          </div>
+        </div>
+
+        <!-- パスワード変更 -->
+        <div class="settings-card" style="margin-top:16px">
+          <div class="settings-title">🔐 アプリパスワードの変更</div>
+          <p class="settings-desc">変更すると全スタッフが次回アクセス時に再入力が必要になります</p>
+          <div class="pwd-change-form">
+            <input type="password" v-model="pwdChange.input" class="pwd-change-input" placeholder="新しいパスワード" />
+            <input type="password" v-model="pwdChange.confirm" class="pwd-change-input" placeholder="確認（もう一度入力）" style="margin-top:8px" />
+            <div v-if="pwdChange.error" class="pwd-change-error">{{ pwdChange.error }}</div>
+            <div v-if="pwdChange.success" class="pwd-change-success">✅ パスワードを変更しました</div>
+            <button class="submit-btn" @click="saveAppPassword" :disabled="pwdChange.saving" style="margin-top:12px">
+              {{ pwdChange.saving ? '保存中...' : '🔒 パスワードを変更する' }}
+            </button>
           </div>
         </div>
       </div>
