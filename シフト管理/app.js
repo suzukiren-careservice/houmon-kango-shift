@@ -27,7 +27,6 @@ createApp({
       currentTab: 'schedule',
       tabs: [
         { id: 'schedule', label: '週間スケジュール' },
-        { id: 'staff',    label: 'スタッフ管理' },
         { id: 'clients',  label: '利用者管理' },
       ],
       colorOptions: COLOR_OPTIONS,

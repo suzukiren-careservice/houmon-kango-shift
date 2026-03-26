@@ -310,6 +310,45 @@
     .msg-err { font-size: 12px; color: #EF4444; }
     .msg-ok  { font-size: 12px; color: #10B981; font-weight: 600; }
     .loading-msg { text-align: center; padding: 24px; color: var(--sub); font-size: 13px; }
+
+    /* スタッフ管理 */
+    .s-actions { display: flex; gap: 6px; }
+    .s-act-btn {
+      padding: 5px 10px; border-radius: 8px;
+      border: 1.5px solid var(--border); background: #fff;
+      font-size: 12px; cursor: pointer; color: var(--sub);
+      font-weight: 600; transition: all 0.15s;
+    }
+    .s-act-btn.edit:hover { border-color: var(--primary); color: var(--primary); background: #EFF6FF; }
+    .s-act-btn.del:hover  { border-color: #EF4444; color: #EF4444; background: #FEF2F2; }
+    .s-inactive { opacity: 0.5; }
+    .s-badge {
+      font-size: 10px; padding: 2px 7px; border-radius: 6px; font-weight: 600;
+      background: #F1F5F9; color: #94A3B8;
+    }
+    .staff-form {
+      background: #F8FAFC; border-radius: 14px;
+      padding: 16px; margin-top: 12px;
+      display: flex; flex-direction: column; gap: 12px;
+      border: 1px solid var(--border);
+    }
+    .form-label { font-size: 12px; color: var(--sub); font-weight: 600; margin-bottom: 4px; display: block; }
+    .color-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-swatch {
+      width: 28px; height: 28px; border-radius: 50%;
+      cursor: pointer; border: 3px solid transparent;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .color-swatch.selected { border-color: #0F172A; transform: scale(1.18); }
+    .form-row { display: flex; gap: 8px; }
+    .add-staff-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; padding: 11px; margin-top: 10px;
+      border-radius: 11px; border: 1.5px dashed var(--border);
+      background: transparent; color: var(--sub);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .add-staff-btn:hover { border-color: var(--primary); color: var(--primary); background: #EFF6FF; }
   </style>
 </head>
 <body>
@@ -415,6 +454,55 @@
             <p style="font-size:11px; color:#94A3B8; margin-top:10px">⚠ 操作中のアカウントは変更できません</p>
           </div>
 
+          <!-- スタッフ管理 -->
+          <div class="sec">
+            <div class="sec-label">👥 スタッフ管理</div>
+            <p class="sec-note">スタッフの追加・編集・削除ができます</p>
+            <div v-for="s in allStaff" :key="s.id" class="s-row" :class="{ 's-inactive': !s.active }">
+              <div class="s-avatar" :style="{ background: s.color }">{{ s.name.charAt(0) }}</div>
+              <span class="s-name">{{ s.name }}</span>
+              <span v-if="!s.active" class="s-badge">非稼働</span>
+              <div class="s-actions">
+                <button class="s-act-btn edit" @click="openEditStaff(s)">編集</button>
+                <button class="s-act-btn del"  @click="deleteStaff(s)">削除</button>
+              </div>
+            </div>
+            <!-- 追加・編集フォーム -->
+            <div v-if="staffForm.show" class="staff-form">
+              <div>
+                <span class="form-label">スタッフ名</span>
+                <input class="field" v-model="staffForm.name" placeholder="例：山田" />
+              </div>
+              <div>
+                <span class="form-label">カラー</span>
+                <div class="color-grid">
+                  <div v-for="c in colorOptions" :key="c"
+                    class="color-swatch"
+                    :class="{ selected: staffForm.color === c }"
+                    :style="{ background: c }"
+                    @click="staffForm.color = c">
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="form-label" style="margin:0">稼働中</span>
+                <label class="tog">
+                  <input type="checkbox" v-model="staffForm.active" />
+                  <span class="tog-sl"></span>
+                </label>
+              </div>
+              <div class="form-row">
+                <button class="change-btn" style="flex:1" @click="staffForm.show=false">キャンセル</button>
+                <button class="btn-primary" style="flex:2;padding:13px" @click="saveStaff" :disabled="staffForm.saving">
+                  {{ staffForm.saving ? '保存中...' : (staffForm.isEdit ? '✓ 更新する' : '＋ 追加する') }}
+                </button>
+              </div>
+            </div>
+            <button v-if="!staffForm.show" class="add-staff-btn" @click="openAddStaff">
+              ＋ スタッフを追加
+            </button>
+          </div>
+
           <div class="sec">
             <div class="sec-label">🔐 アプリパスワードの変更</div>
             <p class="sec-note">変更すると全スタッフが次回アクセス時に再入力が必要になります</p>
@@ -448,6 +536,8 @@ createApp({
       showModal: false, authenticated: false, pwdInput: '', pwdError: false,
       loadingStaff: false, allStaff: [], currentAdminId: null,
       pwdChange: { input: '', confirm: '', saving: false, error: '', success: false },
+      staffForm: { show: false, isEdit: false, staffId: null, name: '', color: '#1E88E5', active: true, saving: false },
+      colorOptions: ['#E53935','#8E24AA','#1E88E5','#00897B','#43A047','#F4511E','#FB8C00','#D81B60','#6D4C41','#546E7A'],
     };
   },
   async mounted() {
@@ -486,8 +576,42 @@ createApp({
     },
     async loadStaff() {
       this.loadingStaff = true;
-      const { data } = await db.from('staff').select('*').eq('active', true).order('name');
+      const { data } = await db.from('staff').select('*').order('name');
       this.allStaff = data || []; this.loadingStaff = false;
+    },
+    openAddStaff() {
+      this.staffForm = {
+        show: true, isEdit: false, staffId: null, saving: false,
+        name: '', color: this.colorOptions[this.allStaff.length % this.colorOptions.length], active: true,
+      };
+    },
+    openEditStaff(s) {
+      this.staffForm = { show: true, isEdit: true, staffId: s.id, name: s.name, color: s.color, active: s.active, saving: false };
+    },
+    async saveStaff() {
+      if (!this.staffForm.name.trim()) { alert('スタッフ名を入力してください'); return; }
+      this.staffForm.saving = true;
+      const payload = { name: this.staffForm.name.trim(), color: this.staffForm.color, active: this.staffForm.active };
+      try {
+        if (this.staffForm.isEdit) {
+          const { error } = await db.from('staff').update(payload).eq('id', this.staffForm.staffId);
+          if (error) throw error;
+          const idx = this.allStaff.findIndex(s => s.id === this.staffForm.staffId);
+          if (idx !== -1) Object.assign(this.allStaff[idx], payload);
+        } else {
+          const { data, error } = await db.from('staff').insert({ ...payload, is_admin: false }).select().single();
+          if (error) throw error;
+          this.allStaff.push(data);
+        }
+        this.staffForm.show = false;
+      } catch(e) { alert('保存エラー: ' + e.message); }
+      finally { this.staffForm.saving = false; }
+    },
+    async deleteStaff(s) {
+      if (!confirm(`「${s.name}」を削除しますか？\n関連するシフト・訪問データも削除されます。`)) return;
+      const { error } = await db.from('staff').delete().eq('id', s.id);
+      if (error) { alert('削除エラー: ' + error.message); return; }
+      this.allStaff = this.allStaff.filter(st => st.id !== s.id);
     },
     async toggleAdmin(staff) {
       const newVal = !staff.is_admin;

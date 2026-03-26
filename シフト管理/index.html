@@ -219,25 +219,6 @@
   </main>
 
   <!-- ========== STAFF MANAGEMENT VIEW ========== -->
-  <main v-if="currentTab === 'staff'" class="view-manage no-print">
-    <div class="manage-header">
-      <h2>スタッフ管理</h2>
-      <button v-if="isAdmin" class="btn btn-primary" @click="openAddStaff">＋ スタッフ追加</button>
-    </div>
-    <div class="manage-list">
-      <div v-for="staff in staffList" :key="staff.id" class="manage-item">
-        <span class="staff-color-dot large" :style="{ backgroundColor: staff.color }"></span>
-        <span class="manage-item-name" :class="{ inactive: !staff.active }">{{ staff.name }}</span>
-        <span v-if="!staff.active" class="inactive-badge">非稼働</span>
-        <div v-if="isAdmin" class="manage-item-actions">
-          <button class="btn btn-edit" @click="openEditStaff(staff)">編集</button>
-          <button class="btn btn-danger" @click="deleteStaff(staff)">削除</button>
-        </div>
-      </div>
-      <p v-if="staffList.length === 0" class="empty-msg">スタッフが登録されていません</p>
-    </div>
-  </main>
-
   <!-- ========== CLIENT MANAGEMENT VIEW ========== -->
   <main v-if="currentTab === 'clients'" class="view-manage no-print">
     <div class="manage-header">
