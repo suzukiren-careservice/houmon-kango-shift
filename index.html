@@ -205,8 +205,29 @@
 <body>
 <div id="app">
 
+  <!-- ===== パスワード画面 ===== -->
+  <div v-if="!appAuthenticated" class="container" style="max-width:360px">
+    <div class="header">
+      <span class="header-icon">🏥</span>
+      <h1>訪問看護ステーション</h1>
+      <p>パスワードを入力してください</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <input
+        type="password"
+        v-model="appPwdInput"
+        class="pwd-input"
+        placeholder="パスワードを入力"
+        @keyup.enter="checkAppPassword"
+        autocomplete="current-password"
+      />
+      <div v-if="appPwdError" class="pwd-error">パスワードが違います</div>
+      <button class="pwd-submit-btn" @click="checkAppPassword">ログイン</button>
+    </div>
+  </div>
+
   <!-- ===== ランディングページ ===== -->
-  <div class="container">
+  <div v-else class="container">
     <div class="header">
       <span class="header-icon">🏥</span>
       <h1>訪問看護ステーション</h1>
@@ -320,6 +341,9 @@ createApp({
       showModal: false,
       appPassword: '',
       adminPassword: '',
+      appAuthenticated: false,
+      appPwdInput: '',
+      appPwdError: false,
       authenticated: false,
       pwdInput: '',
       pwdError: false,
@@ -337,6 +361,12 @@ createApp({
     ]);
     this.appPassword   = appPwd?.value   || '';
     this.adminPassword = adminPwd?.value || '';
+    // アプリ共通パスワード確認
+    const storedAppAuth = localStorage.getItem('app_auth');
+    if (storedAppAuth && storedAppAuth === this.appPassword) {
+      this.appAuthenticated = true;
+    }
+    // 管理設定パスワード確認
     const storedAdminAuth = localStorage.getItem('admin_auth');
     if (storedAdminAuth && storedAdminAuth === this.adminPassword) {
       this.authenticated = true;
@@ -348,6 +378,19 @@ createApp({
   },
 
   methods: {
+    checkAppPassword() {
+      if (!this.appPwdInput) return;
+      if (this.appPwdInput === this.appPassword) {
+        localStorage.setItem('app_auth', this.appPassword);
+        this.appAuthenticated = true;
+        this.appPwdError = false;
+        this.appPwdInput = '';
+      } else {
+        this.appPwdError = true;
+        this.appPwdInput = '';
+      }
+    },
+
     async openSettings() {
       this.showModal = true;
       if (this.authenticated) {
