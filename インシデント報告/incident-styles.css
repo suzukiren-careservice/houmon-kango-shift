@@ -131,6 +131,22 @@ body {
   flex-shrink: 0;
 }
 
+/* ===== Back Button ===== */
+.back-btn {
+  color: rgba(255,255,255,0.85);
+  font-size: 13px; font-weight: 600;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  transition: background 0.15s;
+  white-space: nowrap;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.back-btn:hover { background: rgba(255,255,255,0.25); }
+
 /* ===== App Header ===== */
 .app-header {
   position: sticky; top: 0; z-index: 100;
