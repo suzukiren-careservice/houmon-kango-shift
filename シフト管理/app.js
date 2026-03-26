@@ -41,7 +41,7 @@ createApp({
         show: false, isEdit: false, visitId: null,
         staffId: '', staffName: '', dateStr: '', dateLabel: '',
         period: 'morning', clientId: '', clientNotes: '',
-        location: '', startTime: '', notes: '',
+        location: '', startTime: '', endTime: '', notes: '',
       },
       staffModal: {
         show: false, isEdit: false, staffId: null,
@@ -201,6 +201,7 @@ createApp({
           period:    v.period,
           location:  v.location   || '',
           startTime: v.start_time || '',
+          endTime:   v.end_time   || '',
           notes:     v.notes      || '',
           order:     v.order      || 0,
         }));
@@ -263,7 +264,7 @@ createApp({
         staffId, staffName: staff?.name || '',
         dateStr, dateLabel: this.formatDateJp(dateStr),
         period, clientId: '', clientNotes: '',
-        location: '', startTime: '', notes: '',
+        location: '', startTime: '', endTime: '', notes: '',
       };
     },
     openEditVisit(visit) {
@@ -275,7 +276,7 @@ createApp({
         dateStr: visit.date, dateLabel: this.formatDateJp(visit.date),
         period: visit.period, clientId: visit.clientId,
         clientNotes: client?.notes || '',
-        location: visit.location || '', startTime: visit.startTime || '', notes: visit.notes || '',
+        location: visit.location || '', startTime: visit.startTime || '', endTime: visit.endTime || '', notes: visit.notes || '',
       };
     },
     onVisitClientChange() {
@@ -295,6 +296,7 @@ createApp({
         period:     this.visitModal.period,
         location:   this.visitModal.location,
         start_time: this.visitModal.startTime,
+        end_time:   this.visitModal.endTime,
         notes:      this.visitModal.notes,
       };
       try {
@@ -305,7 +307,7 @@ createApp({
           if (idx !== -1) this.visits.splice(idx, 1, {
             ...this.visits[idx],
             clientId: payload.client_id, location: payload.location,
-            startTime: payload.start_time, notes: payload.notes,
+            startTime: payload.start_time, endTime: payload.end_time, notes: payload.notes,
           });
         } else {
           const order = this.getVisits(payload.staff_id, payload.date, payload.period).length;
@@ -315,7 +317,7 @@ createApp({
             id: data.id, staffId: data.staff_id, clientId: data.client_id,
             date: data.date, period: data.period,
             location: data.location || '', startTime: data.start_time || '',
-            notes: data.notes || '', order: data.order || 0,
+            endTime: data.end_time || '', notes: data.notes || '', order: data.order || 0,
           });
         }
       } catch (e) {
