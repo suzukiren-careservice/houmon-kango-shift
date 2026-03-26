@@ -10,319 +10,306 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --primary:  #2563EB;
+      --teal:     #0D9488;
+      --text:     #0F172A;
+      --sub:      #64748B;
+      --border:   #E2E8F0;
+      --bg:       #F8FAFC;
+      --card:     #FFFFFF;
+      --shadow:   0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.07);
+      --shadow-sm:0 1px 2px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.05);
+      --radius:   18px;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
-      background: #070B18;
+      background: var(--bg);
       min-height: 100vh;
       display: flex; align-items: center; justify-content: center;
       padding: 32px 20px;
-      overflow-x: hidden;
     }
 
-    /* ── 背景グロー ── */
-    body::before, body::after {
+    /* 背景の装飾 */
+    body::before {
       content: '';
-      position: fixed;
-      border-radius: 50%;
+      position: fixed; top: -200px; right: -200px;
+      width: 700px; height: 700px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(37,99,235,0.06) 0%, transparent 65%);
       pointer-events: none;
     }
-    body::before {
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(30,136,229,0.12) 0%, transparent 65%);
-      top: -150px; right: -150px;
-    }
     body::after {
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(0,137,123,0.10) 0%, transparent 65%);
-      bottom: -150px; left: -150px;
+      content: '';
+      position: fixed; bottom: -200px; left: -200px;
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(13,148,136,0.05) 0%, transparent 65%);
+      pointer-events: none;
     }
 
-    #app { width: 100%; max-width: 400px; position: relative; z-index: 1; }
+    #app { width: 100%; max-width: 390px; position: relative; z-index: 1; }
+
+    /* ══════════════════════════
+       共通パーツ
+    ══════════════════════════ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .btn-primary {
+      width: 100%; padding: 15px;
+      border-radius: 13px; border: none;
+      background: linear-gradient(135deg, var(--primary), var(--teal));
+      color: #fff; font-size: 15px; font-weight: 700;
+      letter-spacing: 0.5px; cursor: pointer;
+      transition: opacity 0.18s, transform 0.12s;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+    }
+    .btn-primary:active { opacity: 0.88; transform: scale(0.99); }
+
+    .field {
+      width: 100%; padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px; background: #fff;
+      font-size: 15px; color: var(--text); outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+    }
+    .field::placeholder { color: #CBD5E1; }
 
     /* ══════════════════════════
        パスワード画面
     ══════════════════════════ */
     .pwd-screen { text-align: center; }
 
-    .brand { margin-bottom: 48px; }
-    .brand-line {
-      display: flex; align-items: center; justify-content: center;
-      gap: 10px; margin-bottom: 10px;
+    .logo { margin-bottom: 40px; }
+    .logo-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(13,148,136,0.08));
+      border: 1px solid rgba(37,99,235,0.15);
+      border-radius: 100px; padding: 6px 14px;
+      margin-bottom: 16px;
     }
-    .brand-accent {
-      width: 28px; height: 2px;
-      background: linear-gradient(90deg, transparent, #1E88E5);
+    .logo-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--teal));
     }
-    .brand-accent.right {
-      background: linear-gradient(90deg, #00897B, transparent);
+    .logo-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 2px;
+      color: var(--primary); text-transform: uppercase;
     }
-    .brand-name {
-      font-size: 13px; font-weight: 700;
-      letter-spacing: 3px;
-      background: linear-gradient(135deg, #64B5F6, #80CBC4);
+    .logo-title {
+      font-size: 28px; font-weight: 800;
+      color: var(--text); letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+    .logo-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--primary), var(--teal));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      text-transform: uppercase;
-    }
-    .brand-title {
-      font-size: 26px; font-weight: 700;
-      color: #fff; letter-spacing: 0.5px;
-      line-height: 1.3;
     }
 
-    .pwd-label {
-      font-size: 12px; color: rgba(255,255,255,0.35);
-      letter-spacing: 2px; text-transform: uppercase;
-      margin-bottom: 20px; display: block;
-    }
-    .pwd-input-wrap { position: relative; margin-bottom: 10px; }
-    .pwd-input {
-      width: 100%; padding: 15px 18px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 14px;
-      color: #fff; font-size: 16px; outline: none;
-      text-align: center; letter-spacing: 3px;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .pwd-input::placeholder { color: rgba(255,255,255,0.2); letter-spacing: 1px; font-size: 13px; }
-    .pwd-input:focus {
-      border-color: rgba(30,136,229,0.5);
-      background: rgba(255,255,255,0.07);
+    .pwd-card { padding: 32px 28px; text-align: left; margin-bottom: 0; }
+    .pwd-card-label {
+      font-size: 13px; font-weight: 600; color: var(--sub);
+      letter-spacing: 0.3px; margin-bottom: 8px; display: block;
     }
     .pwd-error {
-      font-size: 12px; color: #EF5350;
-      text-align: center; margin-bottom: 12px;
-      letter-spacing: 0.5px;
+      font-size: 12px; color: #EF4444;
+      margin-top: 6px; margin-bottom: 0;
+      display: flex; align-items: center; gap: 4px;
     }
-    .pwd-btn {
-      width: 100%; padding: 15px;
-      border-radius: 14px; border: none;
-      background: linear-gradient(135deg, #1565C0 0%, #00897B 100%);
-      color: #fff; font-size: 15px; font-weight: 700;
-      letter-spacing: 1px; cursor: pointer;
-      position: relative; overflow: hidden;
-      transition: opacity 0.2s, transform 0.15s;
-    }
-    .pwd-btn::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
-    }
-    .pwd-btn:active { opacity: 0.85; transform: scale(0.99); }
+    .pwd-submit { margin-top: 16px; }
 
     /* ══════════════════════════
        アプリ一覧
     ══════════════════════════ */
-    .page-header { margin-bottom: 32px; }
+    .page-head { margin-bottom: 28px; }
     .page-eyebrow {
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 8px;
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(37,99,235,0.07);
+      border: 1px solid rgba(37,99,235,0.12);
+      border-radius: 100px; padding: 5px 12px;
+      margin-bottom: 14px;
     }
     .eyebrow-dot {
       width: 6px; height: 6px; border-radius: 50%;
-      background: linear-gradient(135deg, #1E88E5, #00897B);
+      background: linear-gradient(135deg, var(--primary), var(--teal));
     }
     .eyebrow-text {
-      font-size: 11px; font-weight: 700; letter-spacing: 3px;
-      color: rgba(255,255,255,0.35); text-transform: uppercase;
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      color: var(--primary); text-transform: uppercase;
     }
     .page-title {
-      font-size: 28px; font-weight: 700;
-      color: #fff; letter-spacing: 0.3px; line-height: 1.2;
+      font-size: 26px; font-weight: 800;
+      color: var(--text); letter-spacing: -0.3px; line-height: 1.25;
     }
-    .page-title span {
-      background: linear-gradient(135deg, #42A5F5, #26C6DA);
+    .page-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--primary), var(--teal));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
-    /* アプリカード */
-    .app-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+    .app-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 
     .app-card {
-      display: flex; align-items: center; gap: 16px;
-      padding: 18px 20px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 18px; text-decoration: none;
+      display: flex; align-items: center; gap: 15px;
+      padding: 17px 18px;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 16px; text-decoration: none;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.18s;
       position: relative; overflow: hidden;
-      transition: all 0.2s;
     }
-    .app-card::before {
+    .app-card::after {
       content: '';
-      position: absolute; top: 0; left: 0;
-      width: 3px; height: 100%;
-      border-radius: 18px 0 0 18px;
-      transition: opacity 0.2s;
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 4px; border-radius: 16px 0 0 16px;
     }
-    .app-card.shift::before  { background: linear-gradient(180deg, #1E88E5, #42A5F5); }
-    .app-card.incident::before { background: linear-gradient(180deg, #00897B, #26C6DA); }
+    .app-card.shift::after  { background: linear-gradient(180deg, #2563EB, #60A5FA); }
+    .app-card.incident::after { background: linear-gradient(180deg, #0D9488, #34D399); }
     .app-card:hover {
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(255,255,255,0.14);
-      transform: translateX(4px);
+      border-color: transparent;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      transform: translateY(-1px);
     }
-
-    .app-icon-wrap {
-      width: 48px; height: 48px; border-radius: 14px;
+    .app-icon {
+      width: 46px; height: 46px; border-radius: 13px;
       display: flex; align-items: center; justify-content: center;
       font-size: 22px; flex-shrink: 0;
     }
-    .app-icon-wrap.shift    { background: rgba(30,136,229,0.15); }
-    .app-icon-wrap.incident { background: rgba(0,137,123,0.15); }
-
-    .app-text { flex: 1; }
-    .app-name {
-      font-size: 15px; font-weight: 700;
-      color: #fff; margin-bottom: 3px; letter-spacing: 0.2px;
-    }
-    .app-desc {
-      font-size: 11px; color: rgba(255,255,255,0.35);
-      line-height: 1.5; letter-spacing: 0.3px;
-    }
-    .app-arrow {
-      font-size: 16px; color: rgba(255,255,255,0.2);
-      transition: transform 0.2s, color 0.2s;
-    }
-    .app-card:hover .app-arrow { transform: translateX(2px); color: rgba(255,255,255,0.4); }
-
-    /* 区切り線 */
-    .divider {
-      display: flex; align-items: center; gap: 12px;
-      margin: 16px 0;
-    }
-    .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
-    .divider-text { font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 2px; }
+    .app-icon.shift    { background: linear-gradient(135deg, #EFF6FF, #DBEAFE); }
+    .app-icon.incident { background: linear-gradient(135deg, #F0FDF4, #CCFBF1); }
+    .app-info { flex: 1; }
+    .app-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .app-desc { font-size: 11px; color: var(--sub); line-height: 1.5; }
+    .app-arr { font-size: 18px; color: #CBD5E1; transition: transform 0.18s; }
+    .app-card:hover .app-arr { transform: translateX(2px); color: #94A3B8; }
 
     /* 設定ボタン */
+    .settings-row {
+      display: flex; align-items: center; justify-content: center;
+      padding-top: 6px;
+    }
     .settings-btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 13px;
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 14px;
-      color: rgba(255,255,255,0.3); font-size: 13px;
-      letter-spacing: 0.5px; cursor: pointer;
-      transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px;
+      background: transparent; border: 1.5px solid var(--border);
+      border-radius: 100px; color: var(--sub);
+      font-size: 13px; font-weight: 600; letter-spacing: 0.3px;
+      cursor: pointer; transition: all 0.18s;
     }
     .settings-btn:hover {
-      background: rgba(255,255,255,0.04);
-      border-color: rgba(255,255,255,0.12);
-      color: rgba(255,255,255,0.55);
+      border-color: #CBD5E1;
+      background: #F1F5F9; color: var(--text);
     }
 
     /* ══════════════════════════
        設定モーダル
     ══════════════════════════ */
-    .modal-overlay {
+    .modal-bg {
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(8px);
+      background: rgba(15,23,42,0.45);
+      backdrop-filter: blur(6px);
       display: flex; align-items: flex-end; justify-content: center;
-      z-index: 100;
+      z-index: 200;
     }
     .modal-sheet {
       width: 100%; max-width: 480px;
-      background: #0F1627;
-      border: 1px solid rgba(255,255,255,0.08);
+      background: #fff;
       border-radius: 24px 24px 0 0;
+      box-shadow: 0 -4px 32px rgba(0,0,0,0.1);
       max-height: 88vh; overflow-y: auto;
       padding-bottom: 48px;
     }
-    .modal-handle {
+    .sheet-handle {
       width: 36px; height: 4px;
-      background: rgba(255,255,255,0.12);
-      border-radius: 2px; margin: 14px auto 0;
+      background: var(--border); border-radius: 2px;
+      margin: 12px auto 0;
     }
-    .modal-hdr {
+    .sheet-hdr {
       display: flex; align-items: center; justify-content: space-between;
       padding: 16px 22px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid var(--border);
     }
-    .modal-hdr h2 {
-      color: #fff; font-size: 16px; font-weight: 700; letter-spacing: 0.3px;
-    }
-    .modal-close {
-      background: rgba(255,255,255,0.07); border: none;
-      color: rgba(255,255,255,0.5); font-size: 16px;
+    .sheet-hdr h2 { font-size: 16px; font-weight: 700; color: var(--text); }
+    .sheet-close {
+      background: #F1F5F9; border: none;
+      color: var(--sub); font-size: 15px;
       width: 30px; height: 30px; border-radius: 50%;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
 
     /* モーダル内パスワード */
-    .modal-pwd { padding: 28px 22px; display: flex; flex-direction: column; gap: 10px; }
-    .modal-pwd p { font-size: 13px; color: rgba(255,255,255,0.4); text-align: center; margin-bottom: 6px; }
+    .modal-pwd { padding: 24px 22px; display: flex; flex-direction: column; gap: 10px; }
+    .modal-pwd p { font-size: 13px; color: var(--sub); text-align: center; }
 
     /* 設定セクション */
-    .setting-section { padding: 18px 22px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .setting-section:last-child { border-bottom: none; }
-    .section-label {
-      font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
-      color: rgba(255,255,255,0.3); text-transform: uppercase;
-      margin-bottom: 14px;
+    .sec { padding: 18px 22px; border-bottom: 1px solid var(--border); }
+    .sec:last-child { border-bottom: none; }
+    .sec-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      color: var(--sub); text-transform: uppercase; margin-bottom: 4px;
     }
-    .section-note { font-size: 11px; color: rgba(255,255,255,0.3); margin-bottom: 14px; line-height: 1.6; }
+    .sec-note { font-size: 12px; color: #94A3B8; margin-bottom: 14px; line-height: 1.6; }
 
     /* スタッフ行 */
-    .staff-row {
+    .s-row {
       display: flex; align-items: center; gap: 12px;
-      padding: 9px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
+      padding: 10px 0;
+      border-bottom: 1px solid #F8FAFC;
     }
-    .staff-row:last-child { border-bottom: none; }
-    .staff-avatar {
+    .s-row:last-child { border-bottom: none; }
+    .s-avatar {
       width: 34px; height: 34px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
     }
-    .staff-name { color: rgba(255,255,255,0.85); font-size: 14px; flex: 1; }
-    .self-badge {
-      font-size: 10px; color: rgba(255,255,255,0.3);
-      background: rgba(255,255,255,0.07);
-      padding: 2px 7px; border-radius: 6px; letter-spacing: 0.5px;
+    .s-name { font-size: 14px; color: var(--text); flex: 1; font-weight: 500; }
+    .s-self {
+      font-size: 10px; color: var(--sub);
+      background: var(--border); padding: 2px 7px; border-radius: 6px;
     }
 
     /* トグル */
-    .toggle { position: relative; display: inline-block; width: 42px; height: 23px; flex-shrink: 0; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider {
+    .tog { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+    .tog input { opacity: 0; width: 0; height: 0; }
+    .tog-sl {
       position: absolute; inset: 0;
-      background: rgba(255,255,255,0.1); border-radius: 23px;
-      cursor: pointer; transition: 0.25s;
+      background: var(--border); border-radius: 24px;
+      cursor: pointer; transition: 0.22s;
     }
-    .toggle-slider::before {
+    .tog-sl::before {
       content: ''; position: absolute;
-      width: 17px; height: 17px; border-radius: 50%;
-      background: #fff; left: 3px; top: 3px; transition: 0.25s;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; left: 3px; top: 3px;
+      box-shadow: var(--shadow-sm); transition: 0.22s;
     }
-    .toggle input:checked + .toggle-slider { background: #1976D2; }
-    .toggle input:checked + .toggle-slider::before { transform: translateX(19px); }
-    .toggle input:disabled + .toggle-slider { opacity: 0.35; cursor: not-allowed; }
+    .tog input:checked + .tog-sl { background: var(--primary); }
+    .tog input:checked + .tog-sl::before { transform: translateX(18px); }
+    .tog input:disabled + .tog-sl { opacity: 0.4; cursor: not-allowed; }
 
-    /* パスワード変更フォーム */
+    /* パスワード変更 */
     .pwd-fields { display: flex; flex-direction: column; gap: 8px; }
-    .field-input {
-      width: 100%; padding: 12px 14px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 11px; color: #fff; font-size: 14px; outline: none;
-      transition: border-color 0.2s;
-    }
-    .field-input::placeholder { color: rgba(255,255,255,0.25); }
-    .field-input:focus { border-color: rgba(30,136,229,0.45); }
     .change-btn {
-      width: 100%; padding: 12px;
-      border-radius: 11px; border: none;
-      background: rgba(25,118,210,0.2);
-      border: 1px solid rgba(25,118,210,0.35);
-      color: #90CAF9; font-size: 14px; font-weight: 700;
-      letter-spacing: 0.3px; cursor: pointer; transition: all 0.2s;
+      width: 100%; padding: 13px;
+      border-radius: 11px; border: 1.5px solid var(--border);
+      background: #fff; color: var(--primary);
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all 0.18s;
     }
-    .change-btn:hover:not(:disabled) { background: rgba(25,118,210,0.3); }
+    .change-btn:hover:not(:disabled) { background: #EFF6FF; border-color: var(--primary); }
     .change-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    .msg-err { font-size: 12px; color: #EF5350; }
-    .msg-ok  { font-size: 12px; color: #66BB6A; }
-    .loading-msg { text-align: center; padding: 24px; color: rgba(255,255,255,0.3); font-size: 13px; }
+    .msg-err { font-size: 12px; color: #EF4444; }
+    .msg-ok  { font-size: 12px; color: #10B981; font-weight: 600; }
+    .loading-msg { text-align: center; padding: 24px; color: var(--sub); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -330,89 +317,81 @@
 
   <!-- ══ パスワード画面 ══ -->
   <div v-if="!appAuthenticated" class="pwd-screen">
-    <div class="brand">
-      <div class="brand-line">
-        <div class="brand-accent"></div>
-        <span class="brand-name">Houmon Kango</span>
-        <div class="brand-accent right"></div>
+    <div class="logo">
+      <div class="logo-badge">
+        <div class="logo-dot"></div>
+        <span class="logo-label">Houmon Kango</span>
       </div>
-      <div class="brand-title">訪問看護<br>ステーション</div>
+      <div class="logo-title">訪問看護<br><em>ステーション</em></div>
     </div>
-    <span class="pwd-label">Password</span>
-    <div class="pwd-input-wrap">
+    <div class="card pwd-card">
+      <span class="pwd-card-label">パスワード</span>
       <input
         type="password"
         v-model="appPwdInput"
-        class="pwd-input"
+        class="field"
+        style="text-align:center; letter-spacing:3px"
         placeholder="パスワードを入力"
         @keyup.enter="checkAppPassword"
         autocomplete="current-password"
       />
+      <p v-if="appPwdError" class="pwd-error">⚠ パスワードが違います</p>
+      <div class="pwd-submit">
+        <button class="btn-primary" @click="checkAppPassword">ログイン</button>
+      </div>
     </div>
-    <p v-if="appPwdError" class="pwd-error">パスワードが違います</p>
-    <button class="pwd-btn" @click="checkAppPassword">ログイン</button>
   </div>
 
   <!-- ══ アプリ一覧 ══ -->
   <div v-else>
-    <div class="page-header">
+    <div class="page-head">
       <div class="page-eyebrow">
         <div class="eyebrow-dot"></div>
-        <span class="eyebrow-text">Houmon Kango Station</span>
+        <span class="eyebrow-text">App Menu</span>
       </div>
-      <div class="page-title">アプリを<br><span>選択</span>してください</div>
+      <div class="page-title">アプリを<br><em>選択</em>してください</div>
     </div>
 
     <div class="app-list">
       <a href="シフト管理/index.html" class="app-card shift">
-        <div class="app-icon-wrap shift">📅</div>
-        <div class="app-text">
+        <div class="app-icon shift">📅</div>
+        <div class="app-info">
           <div class="app-name">シフト管理</div>
           <div class="app-desc">週間スケジュール・スタッフ管理・利用者管理</div>
         </div>
-        <span class="app-arrow">›</span>
+        <span class="app-arr">›</span>
       </a>
       <a href="インシデント報告/incident.html" class="app-card incident">
-        <div class="app-icon-wrap incident">📝</div>
-        <div class="app-text">
+        <div class="app-icon incident">📝</div>
+        <div class="app-info">
           <div class="app-name">インシデント報告</div>
           <div class="app-desc">報告書の作成・一覧・月別分析</div>
         </div>
-        <span class="app-arrow">›</span>
+        <span class="app-arr">›</span>
       </a>
     </div>
 
-    <div class="divider">
-      <div class="divider-line"></div>
-      <span class="divider-text">管理</span>
-      <div class="divider-line"></div>
+    <div class="settings-row">
+      <button class="settings-btn" @click="openSettings">⚙ 管理設定</button>
     </div>
-
-    <button class="settings-btn" @click="openSettings">⚙️&nbsp;&nbsp;管理設定</button>
   </div>
 
   <!-- ══ 設定モーダル ══ -->
-  <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+  <div v-if="showModal" class="modal-bg" @click.self="closeModal">
     <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-hdr">
-        <h2>管理設定</h2>
-        <button class="modal-close" @click="closeModal">✕</button>
+      <div class="sheet-handle"></div>
+      <div class="sheet-hdr">
+        <h2>⚙ 管理設定</h2>
+        <button class="sheet-close" @click="closeModal">✕</button>
       </div>
 
       <!-- 管理パスワード未認証 -->
       <div v-if="!authenticated" class="modal-pwd">
         <p>管理設定のパスワードを入力してください</p>
-        <input
-          type="password"
-          v-model="pwdInput"
-          class="field-input"
-          placeholder="管理パスワード"
-          @keyup.enter="checkAdminPassword"
-          autocomplete="current-password"
-        />
-        <p v-if="pwdError" class="msg-err">パスワードが違います</p>
-        <button class="pwd-btn" @click="checkAdminPassword">確認</button>
+        <input type="password" v-model="pwdInput" class="field" placeholder="管理パスワード"
+          @keyup.enter="checkAdminPassword" autocomplete="current-password" />
+        <p v-if="pwdError" class="msg-err">⚠ パスワードが違います</p>
+        <button class="btn-primary" @click="checkAdminPassword">確認</button>
       </div>
 
       <!-- 認証済み -->
@@ -420,34 +399,28 @@
         <div v-if="loadingStaff" class="loading-msg">読み込み中...</div>
         <template v-else>
 
-          <!-- 編集権限 -->
-          <div class="setting-section">
-            <div class="section-label">🔑 編集権限の管理</div>
-            <p class="section-note">ONにしたスタッフは両アプリで編集・削除が可能になります</p>
-            <div v-for="s in allStaff" :key="s.id" class="staff-row">
-              <div class="staff-avatar" :style="{ background: s.color }">{{ s.name.charAt(0) }}</div>
-              <span class="staff-name">{{ s.name }}</span>
-              <span v-if="s.id === currentAdminId" class="self-badge">操作中</span>
-              <label class="toggle">
-                <input
-                  type="checkbox"
-                  :checked="s.is_admin"
-                  :disabled="s.id === currentAdminId"
-                  @change="toggleAdmin(s)"
-                />
-                <span class="toggle-slider"></span>
+          <div class="sec">
+            <div class="sec-label">🔑 編集権限の管理</div>
+            <p class="sec-note">ONにしたスタッフは両アプリで編集・削除が可能になります</p>
+            <div v-for="s in allStaff" :key="s.id" class="s-row">
+              <div class="s-avatar" :style="{ background: s.color }">{{ s.name.charAt(0) }}</div>
+              <span class="s-name">{{ s.name }}</span>
+              <span v-if="s.id === currentAdminId" class="s-self">操作中</span>
+              <label class="tog">
+                <input type="checkbox" :checked="s.is_admin"
+                  :disabled="s.id === currentAdminId" @change="toggleAdmin(s)" />
+                <span class="tog-sl"></span>
               </label>
             </div>
-            <p style="font-size:11px; color:rgba(255,255,255,0.25); margin-top:12px">⚠️ 操作中のアカウントは変更できません</p>
+            <p style="font-size:11px; color:#94A3B8; margin-top:10px">⚠ 操作中のアカウントは変更できません</p>
           </div>
 
-          <!-- パスワード変更 -->
-          <div class="setting-section">
-            <div class="section-label">🔐 アプリパスワードの変更</div>
-            <p class="section-note">変更すると全スタッフが次回アクセス時に再入力が必要になります</p>
+          <div class="sec">
+            <div class="sec-label">🔐 アプリパスワードの変更</div>
+            <p class="sec-note">変更すると全スタッフが次回アクセス時に再入力が必要になります</p>
             <div class="pwd-fields">
-              <input type="password" v-model="pwdChange.input"   class="field-input" placeholder="新しいパスワード" />
-              <input type="password" v-model="pwdChange.confirm" class="field-input" placeholder="確認（もう一度入力）" />
+              <input type="password" v-model="pwdChange.input"   class="field" placeholder="新しいパスワード" />
+              <input type="password" v-model="pwdChange.confirm" class="field" placeholder="確認（もう一度入力）" />
               <p v-if="pwdChange.error"   class="msg-err">{{ pwdChange.error }}</p>
               <p v-if="pwdChange.success" class="msg-ok">✅ パスワードを変更しました</p>
               <button class="change-btn" @click="savePassword" :disabled="pwdChange.saving">
@@ -471,32 +444,24 @@ createApp({
   data() {
     return {
       appPassword: '', adminPassword: '',
-      appAuthenticated: false,
-      appPwdInput: '', appPwdError: false,
-      showModal: false,
-      authenticated: false,
-      pwdInput: '', pwdError: false,
-      loadingStaff: false,
-      allStaff: [], currentAdminId: null,
+      appAuthenticated: false, appPwdInput: '', appPwdError: false,
+      showModal: false, authenticated: false, pwdInput: '', pwdError: false,
+      loadingStaff: false, allStaff: [], currentAdminId: null,
       pwdChange: { input: '', confirm: '', saving: false, error: '', success: false },
     };
   },
-
   async mounted() {
-    const [{ data: appPwd }, { data: adminPwd }] = await Promise.all([
+    const [{ data: a }, { data: b }] = await Promise.all([
       db.from('settings').select('value').eq('key', 'app_password').single(),
       db.from('settings').select('value').eq('key', 'admin_password').single(),
     ]);
-    this.appPassword   = appPwd?.value   || '';
-    this.adminPassword = adminPwd?.value || '';
-
+    this.appPassword = a?.value || ''; this.adminPassword = b?.value || '';
     if (localStorage.getItem('app_auth') === this.appPassword) this.appAuthenticated = true;
     if (localStorage.getItem('admin_auth') === this.adminPassword) {
       this.authenticated = true;
       try { this.currentAdminId = JSON.parse(localStorage.getItem('incident_staff'))?.id || null; } catch {}
     }
   },
-
   methods: {
     checkAppPassword() {
       if (!this.appPwdInput) return;
@@ -505,14 +470,11 @@ createApp({
         this.appAuthenticated = true; this.appPwdError = false; this.appPwdInput = '';
       } else { this.appPwdError = true; this.appPwdInput = ''; }
     },
-
     async openSettings() {
       this.showModal = true;
       if (this.authenticated) await this.loadStaff();
     },
-
     closeModal() { this.showModal = false; this.pwdInput = ''; this.pwdError = false; },
-
     async checkAdminPassword() {
       if (!this.pwdInput) return;
       if (this.pwdInput === this.adminPassword) {
@@ -522,23 +484,18 @@ createApp({
         await this.loadStaff();
       } else { this.pwdError = true; this.pwdInput = ''; }
     },
-
     async loadStaff() {
       this.loadingStaff = true;
       const { data } = await db.from('staff').select('*').eq('active', true).order('name');
-      this.allStaff = data || [];
-      this.loadingStaff = false;
+      this.allStaff = data || []; this.loadingStaff = false;
     },
-
     async toggleAdmin(staff) {
       const newVal = !staff.is_admin;
-      const action = newVal ? '編集権限を付与' : '編集権限を削除';
-      if (!confirm(`「${staff.name}」に${action}しますか？`)) { await this.loadStaff(); return; }
+      if (!confirm(`「${staff.name}」に編集権限を${newVal ? '付与' : '削除'}しますか？`)) { await this.loadStaff(); return; }
       const { error } = await db.from('staff').update({ is_admin: newVal }).eq('id', staff.id);
       if (error) alert('更新エラー: ' + error.message);
       else staff.is_admin = newVal;
     },
-
     async savePassword() {
       this.pwdChange.error = '';
       if (!this.pwdChange.input) { this.pwdChange.error = 'パスワードを入力してください'; return; }

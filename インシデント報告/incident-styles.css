@@ -52,82 +52,77 @@ body {
 .login-screen {
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
-  background: #0A0F1E;
+  background: #F8FAFC;
   padding: 24px 16px;
   position: relative; overflow: hidden;
 }
-/* 背景の装飾円 */
 .login-screen::before {
   content: '';
   position: absolute;
-  top: -120px; right: -80px;
-  width: 400px; height: 400px;
+  top: -150px; right: -150px;
+  width: 500px; height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(30,136,229,0.25) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(37,99,235,0.07) 0%, transparent 65%);
 }
 .login-screen::after {
   content: '';
   position: absolute;
-  bottom: -100px; left: -60px;
-  width: 320px; height: 320px;
+  bottom: -120px; left: -120px;
+  width: 400px; height: 400px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0,137,123,0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(13,148,136,0.06) 0%, transparent 65%);
 }
 .login-card {
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
   border-radius: 24px;
   padding: 36px 28px 32px;
   width: 100%; max-width: 360px;
   position: relative; z-index: 1;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
 }
-.login-header { text-align: center; margin-bottom: 32px; }
+.login-header { text-align: center; margin-bottom: 28px; }
 .login-icon {
-  font-size: 48px; margin-bottom: 14px;
+  font-size: 44px; margin-bottom: 12px;
   display: block;
-  filter: drop-shadow(0 0 16px rgba(30,136,229,0.6));
 }
 .login-header h1 {
-  font-size: 24px; font-weight: 700;
-  color: #FFFFFF; margin-bottom: 5px;
-  letter-spacing: 0.5px;
+  font-size: 22px; font-weight: 800;
+  color: #0F172A; margin-bottom: 4px;
+  letter-spacing: -0.3px;
 }
 .login-header p {
-  font-size: 12px; color: rgba(255,255,255,0.45);
-  letter-spacing: 1px; text-transform: uppercase;
+  font-size: 11px; color: #94A3B8;
+  letter-spacing: 1.5px; text-transform: uppercase;
 }
 .login-divider {
   display: flex; align-items: center; gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
-.login-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.12); }
+.login-divider-line { flex: 1; height: 1px; background: #E2E8F0; }
 .login-prompt {
-  font-size: 11px; color: rgba(255,255,255,0.4);
+  font-size: 10px; color: #94A3B8;
   letter-spacing: 1.5px; text-transform: uppercase;
   white-space: nowrap;
 }
-.staff-grid { display: flex; flex-direction: column; gap: 8px; }
+.staff-grid { display: flex; flex-direction: column; gap: 7px; }
 .staff-select-btn {
-  display: flex; align-items: center; gap: 14px;
-  padding: 12px 16px;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 14px;
-  background: rgba(255,255,255,0.05);
+  display: flex; align-items: center; gap: 13px;
+  padding: 12px 14px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 13px;
+  background: #F8FAFC;
   cursor: pointer; width: 100%;
-  font-size: 14px; font-weight: 500;
-  color: rgba(255,255,255,0.88);
-  transition: all 0.18s; text-align: left;
+  font-size: 14px; font-weight: 600;
+  color: #1E293B;
+  transition: all 0.16s; text-align: left;
 }
 .staff-select-btn:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: var(--staff-color, #1E88E5);
+  background: #EFF6FF;
+  border-color: var(--staff-color, #2563EB);
   transform: translateX(3px);
 }
-.staff-select-btn:active {
-  transform: scale(0.98);
-}
+.staff-select-btn:active { transform: scale(0.99); }
 .staff-avatar {
   width: 36px; height: 36px;
   border-radius: 10px;
@@ -592,51 +587,44 @@ body {
 
 /* ===== Password Screen ===== */
 .pwd-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 24px;
+  display: flex; flex-direction: column;
+  gap: 10px; margin-top: 20px;
 }
 .pwd-input {
-  width: 100%;
-  padding: 14px 16px;
+  width: 100%; padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.08);
-  color: #fff;
-  font-size: 16px;
-  outline: none;
-  text-align: center;
-  letter-spacing: 2px;
+  border: 1.5px solid #E2E8F0;
+  background: #F8FAFC;
+  color: #0F172A; font-size: 16px; outline: none;
+  text-align: center; letter-spacing: 2px;
+  transition: border-color 0.18s, box-shadow 0.18s;
 }
-.pwd-input::placeholder { color: rgba(255,255,255,0.4); letter-spacing: 0; }
-.pwd-input:focus { border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.12); }
-.pwd-error-msg { color: #FF5252; font-size: 13px; text-align: center; }
+.pwd-input::placeholder { color: #CBD5E1; letter-spacing: 0; font-size: 13px; }
+.pwd-input:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+  background: #fff;
+}
+.pwd-error-msg { color: #EF4444; font-size: 12px; text-align: center; }
 .pwd-btn {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, #1E88E5, #00897B);
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
+  width: 100%; padding: 14px;
+  border-radius: 12px; border: none;
+  background: linear-gradient(135deg, #2563EB, #0D9488);
+  color: #fff; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: opacity 0.18s;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.22);
 }
-.pwd-btn:active { opacity: 0.8; }
+.pwd-btn:active { opacity: 0.86; }
 
 /* ===== Password Change (Settings) ===== */
 .pwd-change-form { margin-top: 12px; }
 .pwd-change-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-  display: block;
+  width: 100%; padding: 11px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px; font-size: 14px; outline: none; display: block;
+  background: #F8FAFC; color: var(--text);
+  transition: border-color 0.18s;
 }
-.pwd-change-input:focus { border-color: var(--primary); }
-.pwd-change-error { color: var(--danger); font-size: 13px; margin-top: 8px; }
-.pwd-change-success { color: #2E7D32; font-size: 13px; margin-top: 8px; }
+.pwd-change-input:focus { border-color: var(--primary); background: #fff; }
+.pwd-change-error { color: #EF4444; font-size: 12px; margin-top: 6px; }
+.pwd-change-success { color: #10B981; font-size: 12px; margin-top: 6px; font-weight: 600; }
