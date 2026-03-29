@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>見守り訪問管理</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <script src="../config.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== ローディング ========== -->
+  <div v-if="loading" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">読み込み中...</p>
+  </div>
+
+  <!-- ========== パスワード画面 ========== -->
+  <div v-else-if="!appAuthenticated" class="pwd-screen">
+    <div class="pwd-card">
+      <div class="pwd-icon">🏠</div>
+      <h1 class="pwd-title">見守り訪問管理</h1>
+      <p class="pwd-sub">パスワードを入力してください</p>
+      <input
+        type="password"
+        v-model="pwdInput"
+        class="pwd-input"
+        placeholder="パスワード"
+        @keyup.enter="checkPassword"
+        autocomplete="current-password"
+      />
+      <div v-if="pwdError" class="pwd-error-msg">パスワードが違います</div>
+      <button class="pwd-btn" @click="checkPassword">ログイン</button>
+    </div>
+  </div>
+
+  <!-- ========== メインアプリ ========== -->
+  <template v-else>
+
+  <!-- ヘッダー -->
+  <header class="app-header">
+    <div class="header-top">
+      <div class="header-spacer"></div>
+      <span class="header-title">🏠 見守り訪問管理</span>
+      <div class="header-spacer"></div>
+    </div>
+    <div class="tab-nav">
+      <button class="tab-btn" :class="{ active: currentTab === 'schedule' }"
+        @click="currentTab = 'schedule'">
+        訪問スケジュール
+      </button>
+      <button class="tab-btn" :class="{ active: currentTab === 'residents' }"
+        @click="currentTab = 'residents'">
+        利用者管理
+      </button>
+    </div>
+  </header>
+
+  <!-- ========== 訪問スケジュールタブ ========== -->
+  <div v-if="currentTab === 'schedule'" class="main-content">
+
+    <!-- 月セレクタ -->
+    <div class="month-selector">
+      <button class="month-nav-btn" @click="prevMonth">‹</button>
+      <div class="month-center">
+        <div class="month-label">{{ monthLabel }}</div>
+        <div class="month-summary">{{ doneCount }} / {{ totalCount }} 件完了</div>
+        <button class="today-btn" @click="goToday">今月</button>
+      </div>
+      <button class="month-nav-btn" @click="nextMonth">›</button>
+    </div>
+
+    <!-- 空状態 -->
+    <div v-if="visitsByDate.length === 0" class="empty-state">
+      <div class="empty-icon">📅</div>
+      <div class="empty-title">訪問スケジュールがありません</div>
+      <div class="empty-desc">
+        右下の ＋ ボタンから<br>
+        訪問スケジュールを追加してください
+      </div>
+    </div>
+
+    <!-- 訪問リスト -->
+    <div v-else class="visit-list">
+      <div v-for="group in visitsByDate" :key="group.dateStr" class="date-group">
+        <div class="date-label" :class="{ weekend: group.isWeekend }">
+          {{ group.label }}
+        </div>
+        <div
+          v-for="visit in group.visits"
+          :key="visit.id"
+          class="visit-card"
+          :class="visit.visited ? 'status-done' : 'status-pending'"
+          @click="openVisitModal(visit)"
+        >
+          <div class="visit-card-icon" :class="visit.visited ? 'done' : 'pending'">
+            {{ visit.visited ? '✅' : '⏰' }}
+          </div>
+          <div class="visit-card-body">
+            <div class="visit-card-name">{{ visit.resident_name }}</div>
+            <div class="visit-card-meta">
+              {{ visit.scheduled_time || '時刻未定' }}
+              <template v-if="visit.resident_address">　{{ visit.resident_address }}</template>
+            </div>
+          </div>
+          <span class="visit-status-badge" :class="visit.visited ? 'done' : 'pending'">
+            {{ visit.visited ? '訪問済' : '訪問予定' }}
+          </span>
+          <span class="visit-arr">›</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAB: 訪問追加 -->
+    <button class="fab" @click="openAddVisitModal" title="訪問スケジュールを追加">＋</button>
+
+  </div>
+
+  <!-- ========== 利用者管理タブ ========== -->
+  <div v-else-if="currentTab === 'residents'" class="main-content">
+
+    <!-- 空状態 -->
+    <div v-if="residents.length === 0" class="empty-state">
+      <div class="empty-icon">👤</div>
+      <div class="empty-title">利用者が登録されていません</div>
+      <div class="empty-desc">下のボタンから利用者を追加してください</div>
+    </div>
+
+    <!-- 利用者リスト -->
+    <div v-else class="resident-list">
+      <div
+        v-for="r in residents"
+        :key="r.id"
+        class="resident-card"
+        :class="{ inactive: !r.active }"
+      >
+        <div class="resident-avatar">{{ r.name.charAt(0) }}</div>
+        <div class="resident-info">
+          <div class="resident-name">
+            {{ r.name }}
+            <span v-if="!r.active" class="resident-inactive-tag">停止中</span>
+          </div>
+          <div v-if="r.address || r.room_number" class="resident-sub">
+            <template v-if="r.room_number">{{ r.room_number }}　</template>
+            {{ r.address }}
+          </div>
+        </div>
+        <div class="resident-actions">
+          <button class="r-btn edit" @click="openEditResidentModal(r)">編集</button>
+          <button class="r-btn del"  @click="deleteResident(r.id)">削除</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="add-resident-btn" @click="openAddResidentModal">
+      ＋ 利用者を追加
+    </button>
+
+  </div>
+
+  <!-- =====================================================
+       モーダル群
+  ===================================================== -->
+
+  <!-- ===== 訪問詳細・記録モーダル ===== -->
+  <div v-if="visitModal.show" class="modal-bg" @click.self="closeVisitModal">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-hdr">
+        <span class="sheet-title">訪問記録</span>
+        <button class="sheet-close" @click="closeVisitModal">✕</button>
+      </div>
+
+      <div class="sheet-body" v-if="visitModal.visit">
+
+        <!-- 利用者情報バナー -->
+        <div class="visit-info-banner">
+          <div class="visit-info-name">{{ visitModal.visit.resident_name }}</div>
+          <div class="visit-info-meta">
+            <div class="visit-info-row">
+              📅 {{ formatDate(visitModal.visit.scheduled_date) }}
+              <template v-if="visitModal.visit.scheduled_time">
+                　{{ visitModal.visit.scheduled_time }}
+              </template>
+            </div>
+            <div v-if="visitModal.visit.resident_address" class="visit-info-row">
+              📍 {{ visitModal.visit.resident_address }}
+            </div>
+            <div v-if="visitModal.visit.resident_room" class="visit-info-row">
+              🚪 {{ visitModal.visit.resident_room }}
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 訪問済み表示モード ── -->
+        <template v-if="visitModal.visit.visited && !visitModal.isEdit">
+
+          <div class="record-display">
+            <div class="record-header">
+              <div class="record-display-title">訪問記録 ✓</div>
+              <div class="record-timestamp">{{ formatVisitedAt(visitModal.visit.visited_at) }}</div>
+            </div>
+
+            <div class="record-item">
+              <div class="record-item-label">① 体の状態の変化</div>
+              <div class="record-item-value">
+                {{ visitModal.visit.body_change === 'yes' ? '変化あり' : '変化なし' }}
+              </div>
+              <div v-if="visitModal.visit.body_change === 'yes' && visitModal.visit.body_change_detail"
+                class="record-item-detail">
+                {{ visitModal.visit.body_change_detail }}
+              </div>
+            </div>
+
+            <div class="record-item">
+              <div class="record-item-label">② 体のことで気になること</div>
+              <div class="record-item-value">
+                {{ visitModal.visit.body_concern === 'yes' ? 'あり' : 'なし' }}
+              </div>
+              <div v-if="visitModal.visit.body_concern === 'yes' && visitModal.visit.body_concern_detail"
+                class="record-item-detail">
+                {{ visitModal.visit.body_concern_detail }}
+              </div>
+            </div>
+
+            <div class="record-item">
+              <div class="record-item-label">③ 前回訪問後の病院受診</div>
+              <div class="record-item-value">
+                {{ visitModal.visit.hospital_visit === 'yes' ? '受診あり' : '受診なし' }}
+              </div>
+              <div v-if="visitModal.visit.hospital_visit === 'yes' && visitModal.visit.hospital_detail"
+                class="record-item-detail">
+                {{ visitModal.visit.hospital_detail }}
+              </div>
+            </div>
+
+            <div v-if="visitModal.visit.visit_notes" class="record-item">
+              <div class="record-item-label">メモ</div>
+              <div class="record-item-detail">{{ visitModal.visit.visit_notes }}</div>
+            </div>
+          </div>
+
+          <button class="edit-record-btn" @click="startEdit">記録を修正する</button>
+          <button class="delete-btn" @click="deleteVisit">訪問スケジュールを削除</button>
+
+        </template>
+
+        <!-- ── 記録入力フォーム（未訪問 or 修正モード） ── -->
+        <template v-else>
+
+          <!-- チェック①: 体の状態変化 -->
+          <div class="check-section">
+            <div class="check-title">
+              <span class="check-num">1</span>
+              体の状態に大きな変化はないか
+            </div>
+            <div class="radio-group">
+              <div class="radio-option"
+                :class="visitModal.bodyChange === 'none' ? 'ok' : ''"
+                @click="visitModal.bodyChange = 'none'">
+                変化なし
+              </div>
+              <div class="radio-option"
+                :class="visitModal.bodyChange === 'yes' ? 'ng' : ''"
+                @click="visitModal.bodyChange = 'yes'">
+                変化あり
+              </div>
+            </div>
+            <div v-if="visitModal.bodyChange === 'yes'" class="check-detail">
+              <textarea
+                v-model="visitModal.bodyChangeDetail"
+                class="check-textarea"
+                placeholder="どのような変化があったか記入してください">
+              </textarea>
+            </div>
+          </div>
+
+          <!-- チェック②: 気になること -->
+          <div class="check-section">
+            <div class="check-title">
+              <span class="check-num">2</span>
+              体のことで気になることはないか
+            </div>
+            <div class="radio-group">
+              <div class="radio-option"
+                :class="visitModal.bodyConcern === 'none' ? 'ok' : ''"
+                @click="visitModal.bodyConcern = 'none'">
+                なし
+              </div>
+              <div class="radio-option"
+                :class="visitModal.bodyConcern === 'yes' ? 'ng' : ''"
+                @click="visitModal.bodyConcern = 'yes'">
+                あり
+              </div>
+            </div>
+            <div v-if="visitModal.bodyConcern === 'yes'" class="check-detail">
+              <textarea
+                v-model="visitModal.bodyConcernDetail"
+                class="check-textarea"
+                placeholder="どのようなことが気になるか記入してください">
+              </textarea>
+            </div>
+          </div>
+
+          <!-- チェック③: 病院受診 -->
+          <div class="check-section">
+            <div class="check-title">
+              <span class="check-num">3</span>
+              前回の訪問から病院にかかったか
+            </div>
+            <div class="radio-group">
+              <div class="radio-option"
+                :class="visitModal.hospitalVisit === 'none' ? 'ok' : ''"
+                @click="visitModal.hospitalVisit = 'none'">
+                かかっていない
+              </div>
+              <div class="radio-option"
+                :class="visitModal.hospitalVisit === 'yes' ? 'mid' : ''"
+                @click="visitModal.hospitalVisit = 'yes'">
+                かかった
+              </div>
+            </div>
+            <div v-if="visitModal.hospitalVisit === 'yes'" class="check-detail">
+              <textarea
+                v-model="visitModal.hospitalDetail"
+                class="check-textarea"
+                placeholder="病院名・受診内容など">
+              </textarea>
+            </div>
+          </div>
+
+          <!-- メモ -->
+          <div class="form-field">
+            <label class="form-label">メモ・その他（任意）</label>
+            <textarea
+              v-model="visitModal.visitNotes"
+              class="check-textarea"
+              placeholder="自由記述">
+            </textarea>
+          </div>
+
+          <button class="save-btn"
+            :disabled="visitModal.saving"
+            @click="saveVisitRecord">
+            {{ visitModal.saving ? '保存中...' : '訪問済みとして保存' }}
+          </button>
+
+          <button v-if="visitModal.isEdit" class="cancel-btn" @click="visitModal.isEdit = false">
+            キャンセル
+          </button>
+
+          <button v-if="!visitModal.visit.visited" class="delete-btn" @click="deleteVisit">
+            訪問スケジュールを削除
+          </button>
+
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 訪問スケジュール追加モーダル ===== -->
+  <div v-if="addVisitModal.show" class="modal-bg" @click.self="closeAddVisitModal">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-hdr">
+        <span class="sheet-title">訪問スケジュールを追加</span>
+        <button class="sheet-close" @click="closeAddVisitModal">✕</button>
+      </div>
+      <div class="sheet-body">
+
+        <div class="form-field">
+          <label class="form-label">利用者</label>
+          <select v-model="addVisitModal.residentId" class="form-select">
+            <option value="" disabled>選択してください</option>
+            <option v-for="r in activeResidents" :key="r.id" :value="r.id">
+              {{ r.name }}{{ r.room_number ? '（' + r.room_number + '）' : '' }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">訪問予定日</label>
+          <input type="date" v-model="addVisitModal.scheduledDate" class="form-input" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">訪問予定時刻（任意）</label>
+          <input type="time" v-model="addVisitModal.scheduledTime" class="form-input" />
+        </div>
+
+        <button
+          class="save-btn"
+          :disabled="addVisitModal.saving || !addVisitModal.residentId || !addVisitModal.scheduledDate"
+          @click="saveAddVisit">
+          {{ addVisitModal.saving ? '追加中...' : 'スケジュールを追加' }}
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 利用者追加・編集モーダル ===== -->
+  <div v-if="residentModal.show" class="modal-bg" @click.self="closeResidentModal">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-hdr">
+        <span class="sheet-title">{{ residentModal.isEdit ? '利用者を編集' : '利用者を追加' }}</span>
+        <button class="sheet-close" @click="closeResidentModal">✕</button>
+      </div>
+      <div class="sheet-body">
+
+        <div class="form-field">
+          <label class="form-label">氏名 *</label>
+          <input type="text" v-model="residentModal.name" class="form-input"
+            placeholder="例：山田 花子" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">住所</label>
+          <input type="text" v-model="residentModal.address" class="form-input"
+            placeholder="例：〇〇市〇〇町1-2-3" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">部屋番号</label>
+          <input type="text" v-model="residentModal.roomNumber" class="form-input"
+            placeholder="例：101号室" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">電話番号</label>
+          <input type="tel" v-model="residentModal.phone" class="form-input"
+            placeholder="例：090-1234-5678" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">緊急連絡先</label>
+          <input type="text" v-model="residentModal.emergencyContact" class="form-input"
+            placeholder="例：長女 090-9876-5432" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">備考・特記事項</label>
+          <textarea v-model="residentModal.notes" class="check-textarea"
+            placeholder="病歴・注意事項など"></textarea>
+        </div>
+
+        <button
+          class="save-btn"
+          :disabled="residentModal.saving || !residentModal.name.trim()"
+          @click="saveResident">
+          {{ residentModal.saving ? '保存中...' : (residentModal.isEdit ? '変更を保存' : '利用者を追加') }}
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  </template>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

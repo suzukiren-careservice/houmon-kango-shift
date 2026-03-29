@@ -2,7 +2,7 @@ use strict;
 use IO::Socket::INET;
 my $root = $ARGV[0];
 my $server = IO::Socket::INET->new(
-    LocalAddr => '127.0.0.1',
+    LocalAddr => '0.0.0.0',
     LocalPort => 3001,
     Proto     => 'tcp',
     Listen    => 10,
