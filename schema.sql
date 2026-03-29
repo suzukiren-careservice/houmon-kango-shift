@@ -160,6 +160,7 @@ ALTER TABLE consultations DISABLE ROW LEVEL SECURITY;
 CREATE TABLE welfare_residents (
   id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   name              TEXT        NOT NULL,
+  building_name     TEXT        DEFAULT '',
   address           TEXT        DEFAULT '',
   room_number       TEXT        DEFAULT '',
   phone             TEXT        DEFAULT '',

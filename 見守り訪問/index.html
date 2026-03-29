@@ -145,7 +145,8 @@
             {{ r.name }}
             <span v-if="!r.active" class="resident-inactive-tag">停止中</span>
           </div>
-          <div v-if="r.address || r.room_number" class="resident-sub">
+          <div v-if="r.building_name || r.address || r.room_number" class="resident-sub">
+            <template v-if="r.building_name">{{ r.building_name }}　</template>
             <template v-if="r.room_number">{{ r.room_number }}　</template>
             {{ r.address }}
           </div>
@@ -188,8 +189,10 @@
                 　{{ visitModal.visit.scheduled_time }}
               </template>
             </div>
-            <div v-if="visitModal.visit.resident_address" class="visit-info-row">
-              📍 {{ visitModal.visit.resident_address }}
+            <div v-if="visitModal.visit.resident_building || visitModal.visit.resident_address" class="visit-info-row">
+              📍
+              <template v-if="visitModal.visit.resident_building">{{ visitModal.visit.resident_building }}　</template>
+              {{ visitModal.visit.resident_address }}
             </div>
             <div v-if="visitModal.visit.resident_room" class="visit-info-row">
               🚪 {{ visitModal.visit.resident_room }}
@@ -418,6 +421,12 @@
           <label class="form-label">氏名 *</label>
           <input type="text" v-model="residentModal.name" class="form-input"
             placeholder="例：山田 花子" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">建物名</label>
+          <input type="text" v-model="residentModal.buildingName" class="form-input"
+            placeholder="例：〇〇マンション" />
         </div>
 
         <div class="form-field">

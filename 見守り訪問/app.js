@@ -62,6 +62,7 @@ createApp({
         saving: false,
         id: null,
         name:             '',
+        buildingName:     '',
         address:          '',
         roomNumber:       '',
         phone:            '',
@@ -185,9 +186,10 @@ createApp({
       if (!error) {
         this.visits = (data || []).map(v => ({
           ...v,
-          resident_name:    v.welfare_residents?.name        || '（不明）',
-          resident_address: v.welfare_residents?.address     || '',
-          resident_room:    v.welfare_residents?.room_number || '',
+          resident_name:     v.welfare_residents?.name          || '（不明）',
+          resident_building: v.welfare_residents?.building_name || '',
+          resident_address:  v.welfare_residents?.address       || '',
+          resident_room:     v.welfare_residents?.room_number   || '',
         }));
       }
     },
@@ -304,7 +306,7 @@ createApp({
     openAddResidentModal() {
       this.residentModal = {
         show: true, isEdit: false, saving: false, id: null,
-        name: '', address: '', roomNumber: '',
+        name: '', buildingName: '', address: '', roomNumber: '',
         phone: '', emergencyContact: '', notes: '',
       };
     },
@@ -312,12 +314,13 @@ createApp({
     openEditResidentModal(r) {
       this.residentModal = {
         show: true, isEdit: true, saving: false, id: r.id,
-        name:             r.name             || '',
-        address:          r.address          || '',
-        roomNumber:       r.room_number      || '',
-        phone:            r.phone            || '',
-        emergencyContact: r.emergency_contact|| '',
-        notes:            r.notes            || '',
+        name:             r.name              || '',
+        buildingName:     r.building_name     || '',
+        address:          r.address           || '',
+        roomNumber:       r.room_number       || '',
+        phone:            r.phone             || '',
+        emergencyContact: r.emergency_contact || '',
+        notes:            r.notes             || '',
       };
     },
 
@@ -331,6 +334,7 @@ createApp({
 
       const payload = {
         name:              this.residentModal.name.trim(),
+        building_name:     this.residentModal.buildingName,
         address:           this.residentModal.address,
         room_number:       this.residentModal.roomNumber,
         phone:             this.residentModal.phone,
