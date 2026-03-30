@@ -62,6 +62,7 @@ createApp({
         saving: false,
         id: null,
         name:             '',
+        furigana:         '',
         buildingName:     '',
         address:          '',
         roomNumber:       '',
@@ -306,7 +307,7 @@ createApp({
     openAddResidentModal() {
       this.residentModal = {
         show: true, isEdit: false, saving: false, id: null,
-        name: '', buildingName: '', address: '', roomNumber: '',
+        name: '', furigana: '', buildingName: '', address: '', roomNumber: '',
         phone: '', emergencyContact: '', notes: '',
       };
     },
@@ -315,6 +316,7 @@ createApp({
       this.residentModal = {
         show: true, isEdit: true, saving: false, id: r.id,
         name:             r.name              || '',
+        furigana:         r.furigana          || '',
         buildingName:     r.building_name     || '',
         address:          r.address           || '',
         roomNumber:       r.room_number       || '',
@@ -334,6 +336,7 @@ createApp({
 
       const payload = {
         name:              this.residentModal.name.trim(),
+        furigana:          this.residentModal.furigana,
         building_name:     this.residentModal.buildingName,
         address:           this.residentModal.address,
         room_number:       this.residentModal.roomNumber,
