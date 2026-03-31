@@ -88,9 +88,10 @@
               <div class="form-group">
                 <label>対象施設</label>
                 <div class="radio-group">
-                  <label class="radio-label"><input type="radio" name="facility" value="わが家" checked> わが家</label>
+                  <label class="radio-label"><input type="radio" name="facility" value="ケアフル" checked> ケアフル</label>
+                  <label class="radio-label"><input type="radio" name="facility" value="わが家"> わが家</label>
                   <label class="radio-label"><input type="radio" name="facility" value="大ちゃん家"> 大ちゃん家</label>
-                  <label class="radio-label"><input type="radio" name="facility" value="どちらでも"> どちらでも</label>
+                  <label class="radio-label"><input type="radio" name="facility" value="どちらの施設でも"> どちらの施設でも</label>
                 </div>
               </div>
               <div class="form-group">
@@ -436,9 +437,10 @@
           <input type="text" id="searchInput" placeholder="🔍 氏名・病名・担当者で検索..." oninput="renderList()" class="search-input">
           <select id="filterFacility" onchange="renderList()" class="filter-select">
             <option value="">施設：すべて</option>
+            <option value="ケアフル">ケアフル</option>
             <option value="わが家">わが家</option>
             <option value="大ちゃん家">大ちゃん家</option>
-            <option value="どちらでも">どちらでも</option>
+            <option value="どちらの施設でも">どちらの施設でも</option>
           </select>
           <select id="filterProgress" onchange="renderList()" class="filter-select">
             <option value="">進捗：すべて</option>
@@ -556,7 +558,7 @@
   <script src="app.js"></script>
   <script>
     (function() {
-      if (sessionStorage.getItem('nyukyo_auth') === '1') {
+      if (localStorage.getItem('nyukyo_auth') === '1') {
         document.getElementById('passwordScreen').style.display = 'none';
         document.getElementById('appContainer').style.display = '';
       }
@@ -564,7 +566,7 @@
     function checkPassword() {
       const val = document.getElementById('passwordInput').value;
       if (val === 'careful7570') {
-        sessionStorage.setItem('nyukyo_auth', '1');
+        localStorage.setItem('nyukyo_auth', '1');
         document.getElementById('passwordScreen').style.display = 'none';
         document.getElementById('appContainer').style.display = '';
       } else {
