@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入居相談管理システム</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config.js"></script>
+</head>
+<body>
+
+  <!-- パスワード画面 -->
+  <div id="passwordScreen" class="password-screen">
+    <div class="password-box">
+      <div class="password-logo">🏠</div>
+      <div class="password-title">入居相談管理システム</div>
+      <div class="password-subtitle">パスワードを入力してください</div>
+      <div class="password-input-wrap">
+        <input type="password" id="passwordInput" placeholder="パスワード" onkeydown="if(event.key==='Enter')checkPassword()">
+      </div>
+      <div id="passwordError" class="password-error"></div>
+      <button class="password-btn" onclick="checkPassword()">ログイン</button>
+    </div>
+  </div>
+
+  <div class="app-container" id="appContainer" style="display:none">
+    <!-- サイドバー -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">🏠</div>
+        <div class="sidebar-title">入居相談<br>管理システム</div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-view="form" onclick="showView('form')">
+          <span class="nav-icon">✏️</span>新規相談入力
+        </button>
+        <button class="nav-btn" data-view="list" onclick="showView('list')">
+          <span class="nav-icon">📋</span>相談一覧
+        </button>
+        <button class="nav-btn" data-view="analytics" onclick="showView('analytics')">
+          <span class="nav-icon">📊</span>分析・集計
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="record-count" id="sidebarCount">0 件の記録</div>
+      </div>
+    </aside>
+
+    <!-- メインコンテンツ -->
+    <main class="main-content">
+
+      <!-- ===== 新規相談入力 ===== -->
+      <div id="view-form" class="view active">
+        <div class="view-header">
+          <h1 class="view-title">新規相談入力</h1>
+          <div class="view-subtitle">入所問い合わせチェック表</div>
+        </div>
+
+        <!-- 編集モードバナー -->
+        <div id="editModeBanner" class="edit-mode-banner" style="display:none">
+          <span>✏️ 編集中：<strong id="editModeName"></strong> 様</span>
+          <button type="button" class="btn btn-outline btn-sm" onclick="cancelEdit()">編集キャンセル</button>
+        </div>
+
+        <form id="consultationForm" onsubmit="saveConsultation(event)">
+
+          <!-- セクション①：基本情報 -->
+          <div class="form-section">
+            <div class="section-title">① 基本情報</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>相談日時</label>
+                <input type="datetime-local" id="consultDate" required>
+              </div>
+              <div class="form-group">
+                <label>受付方法</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="reception" value="来訪" checked> 来訪</label>
+                  <label class="radio-label"><input type="radio" name="reception" value="TEL"> TEL</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>対応スタッフ</label>
+                <input type="text" id="staff" placeholder="担当スタッフ名">
+              </div>
+              <div class="form-group">
+                <label>対象施設</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="facility" value="わが家" checked> わが家</label>
+                  <label class="radio-label"><input type="radio" name="facility" value="大ちゃん家"> 大ちゃん家</label>
+                  <label class="radio-label"><input type="radio" name="facility" value="どちらでも"> どちらでも</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>進捗ステータス</label>
+                <select id="progressStatus">
+                  <option value="対応中" selected>対応中</option>
+                  <option value="見学予定">見学予定</option>
+                  <option value="入居決定">入居決定</option>
+                  <option value="保留中">保留中</option>
+                  <option value="連絡不通">連絡不通</option>
+                  <option value="辞退・無し">辞退・無し</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>相談者名</label>
+                <input type="text" id="consultantName" placeholder="相談者氏名（様）">
+              </div>
+              <div class="form-group">
+                <label>利用予定者との関係</label>
+                <input type="text" id="relationship" placeholder="例：長女、ケアマネ">
+              </div>
+            </div>
+          </div>
+
+          <!-- セクション②：利用予定者情報 -->
+          <div class="form-section">
+            <div class="section-title">② 利用予定者情報</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>利用予定者名</label>
+                <input type="text" id="userName" placeholder="氏名（様）" required>
+              </div>
+              <div class="form-group">
+                <label>性別</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="gender" value="男" checked> 男</label>
+                  <label class="radio-label"><input type="radio" name="gender" value="女"> 女</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>生年月日（元号）</label>
+                <div class="inline-group">
+                  <select id="gengou">
+                    <option value="T">T（大正）</option>
+                    <option value="S">S（昭和）</option>
+                    <option value="H">H（平成）</option>
+                    <option value="R">R（令和）</option>
+                  </select>
+                  <input type="number" id="birthYear" placeholder="年" min="1" max="99" style="width:60px">
+                  <span>年</span>
+                  <input type="number" id="birthMonth" placeholder="月" min="1" max="12" style="width:50px">
+                  <span>月</span>
+                  <input type="number" id="birthDay" placeholder="日" min="1" max="31" style="width:50px">
+                  <span>日</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>年齢</label>
+                <div class="inline-group">
+                  <input type="number" id="age" placeholder="歳" min="0" max="150" style="width:70px">
+                  <span>歳</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- セクション③：病状・医療情報 -->
+          <div class="form-section">
+            <div class="section-title">③ 病状・医療情報</div>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label>病名・疾病名</label>
+                <input type="text" id="disease" placeholder="例：肺癌、脳梗塞後遺症">
+              </div>
+              <div class="form-group">
+                <label>現在の状況</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="currentStatus" value="入院中" checked> 入院中</label>
+                  <label class="radio-label"><input type="radio" name="currentStatus" value="在宅"> 在宅</label>
+                  <label class="radio-label"><input type="radio" name="currentStatus" value="施設"> 施設</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>入院先 / 施設名</label>
+                <input type="text" id="hospitalName" placeholder="病院・施設名">
+              </div>
+              <div class="form-group">
+                <label>担当相談員</label>
+                <input type="text" id="caseworker" placeholder="担当相談員名">
+              </div>
+              <div class="form-group">
+                <label>担当ケアマネージャー</label>
+                <input type="text" id="careManager" placeholder="ケアマネージャー名">
+              </div>
+              <div class="form-group">
+                <label>居宅介護支援事業所</label>
+                <input type="text" id="careOffice" placeholder="事業所名">
+              </div>
+            </div>
+
+            <div class="subsection-title">介護度・福祉情報</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>介護保険</label>
+                <select id="careLevel">
+                  <option value="">選択してください</option>
+                  <option value="支援1">支援1</option>
+                  <option value="支援2">支援2</option>
+                  <option value="介護1">介護1</option>
+                  <option value="介護2">介護2</option>
+                  <option value="介護3">介護3</option>
+                  <option value="介護4">介護4</option>
+                  <option value="介護5">介護5</option>
+                  <option value="申請中">申請中</option>
+                  <option value="申請未">申請未</option>
+                  <option value="区変中">区変中</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>身障手帳</label>
+                <div class="inline-group">
+                  <input type="text" id="disabilityGrade" placeholder="級" style="width:60px">
+                  <span>級</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>福祉医療受給者証</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="welfareCard" value="有"> 有</label>
+                  <label class="radio-label"><input type="radio" name="welfareCard" value="無" checked> 無</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>生活保護受給</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="livelihood" value="有"> 有</label>
+                  <label class="radio-label"><input type="radio" name="livelihood" value="無" checked> 無</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="subsection-title">主治医</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>主治医</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="doctor" value="正翔会"> 正翔会</label>
+                  <label class="radio-label"><input type="radio" name="doctor" value="みのかも西CL"> みのかも西CL</label>
+                  <label class="radio-label"><input type="radio" name="doctor" value="その他"> その他</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>主治医（その他）</label>
+                <input type="text" id="doctorOther" placeholder="医療機関名">
+              </div>
+            </div>
+
+            <div class="subsection-title">病状・医療的ケア（詳細）</div>
+            <div class="form-group full-width">
+              <label>病状・医療的ケア メモ</label>
+              <textarea id="medicalMemo" rows="4" placeholder="病状・医療的ケアの詳細を記入してください"></textarea>
+            </div>
+
+            <div class="subsection-title">医療処置</div>
+            <div class="checkbox-grid">
+              <label class="check-label"><input type="checkbox" name="medProc" value="在宅酸素"> 在宅酸素</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="人工呼吸器"> 人工呼吸器</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="人工肛門"> 人工肛門</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="バルンカテーテル"> バルンカテーテル</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="褥瘡"> 褥瘡</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="吸引"> 吸引</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="胃ろう"> 胃ろう</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="鼻注"> 鼻注</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="中心静脈栄養(CVポート)"> 中心静脈栄養(CVポート)</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="中心静脈栄養(CVカテーテル)"> 中心静脈栄養(CVカテーテル)</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="末梢点滴"> 末梢点滴</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="気管切開"> 気管切開</label>
+              <label class="check-label"><input type="checkbox" name="medProc" value="人工透析"> 人工透析</label>
+            </div>
+            <div class="form-group" style="margin-top:8px">
+              <label>人工透析（曜日）</label>
+              <input type="text" id="dialysisDay" placeholder="例：月・水・金">
+            </div>
+          </div>
+
+          <!-- セクション④：生活状況 -->
+          <div class="form-section">
+            <div class="section-title">④ 生活状況</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>食事形態</label>
+                <input type="text" id="mealType" placeholder="例：普通食、刻み食、とろみ">
+              </div>
+              <div class="form-group">
+                <label>移動動作</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="mobility" value="歩行"> 歩行</label>
+                  <label class="radio-label"><input type="radio" name="mobility" value="車椅子"> 車椅子</label>
+                  <label class="radio-label"><input type="radio" name="mobility" value="全介助"> 全介助</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>排泄</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="excretion" value="トイレ歩行"> トイレ歩行</label>
+                  <label class="radio-label"><input type="radio" name="excretion" value="ポータブルトイレ"> ポータブルトイレ</label>
+                  <label class="radio-label"><input type="radio" name="excretion" value="オムツ"> オムツ</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>入浴</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="bathing" value="施設入浴"> 施設入浴</label>
+                  <label class="radio-label"><input type="radio" name="bathing" value="シャワー浴"> シャワー浴</label>
+                  <label class="radio-label"><input type="radio" name="bathing" value="訪問入浴"> 訪問入浴</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- セクション⑤：連絡先・キーパーソン -->
+          <div class="form-section">
+            <div class="section-title">⑤ 連絡先・キーパーソン</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>自宅住所</label>
+                <input type="text" id="homeAddress" placeholder="住所">
+              </div>
+              <div class="form-group">
+                <label>キーパーソン名</label>
+                <input type="text" id="keyPerson" placeholder="キーパーソン氏名（様）">
+              </div>
+              <div class="form-group">
+                <label>続柄</label>
+                <input type="text" id="keyPersonRelation" placeholder="例：長男、妻">
+              </div>
+              <div class="form-group">
+                <label>連絡先</label>
+                <input type="tel" id="keyPersonContact" placeholder="電話番号">
+              </div>
+            </div>
+          </div>
+
+          <!-- セクション⑥：見学・希望部屋 -->
+          <div class="form-section">
+            <div class="section-title">⑥ 見学・部屋希望</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>見学希望</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="tourRequest" value="有"> 有</label>
+                  <label class="radio-label"><input type="radio" name="tourRequest" value="無" checked> 無</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>見学希望日時</label>
+                <input type="datetime-local" id="tourDate">
+              </div>
+              <div class="form-group">
+                <label>予定見学者</label>
+                <input type="text" id="tourPerson" placeholder="見学予定者名">
+              </div>
+              <div class="form-group">
+                <label>見学者連絡先</label>
+                <input type="tel" id="tourContact" placeholder="電話番号">
+              </div>
+              <div class="form-group">
+                <label>希望部屋</label>
+                <div class="radio-group">
+                  <label class="radio-label"><input type="radio" name="floorPref" value="1階"> 1階</label>
+                  <label class="radio-label"><input type="radio" name="floorPref" value="2階"> 2階</label>
+                  <label class="radio-label"><input type="radio" name="floorPref" value="どちらでも"> どちらでも</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- セクション⑦：カンファレンス -->
+          <div class="form-section">
+            <div class="section-title">⑦ カンファレンス・面談</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>事前面談（日程）</label>
+                <input type="datetime-local" id="preMeetingDate">
+              </div>
+              <div class="form-group">
+                <label>ENTカンファレンス（日程）</label>
+                <input type="datetime-local" id="entConfDate">
+              </div>
+            </div>
+
+            <div class="subsection-title">退院調整カンファレンス 候補日</div>
+            <div class="conference-list">
+              <div class="conference-item">
+                <span class="conf-num">①</span>
+                <input type="date" id="conf1Date">
+                <input type="time" id="conf1Time" placeholder="時刻">
+                <label style="margin-left:8px">出席者：</label>
+                <input type="text" id="conf1Attend" placeholder="出席者名" style="flex:1">
+              </div>
+              <div class="conference-item">
+                <span class="conf-num">②</span>
+                <input type="date" id="conf2Date">
+                <input type="time" id="conf2Time" placeholder="時刻">
+                <label style="margin-left:8px">出席者：</label>
+                <input type="text" id="conf2Attend" placeholder="出席者名" style="flex:1">
+              </div>
+              <div class="conference-item">
+                <span class="conf-num">③</span>
+                <input type="date" id="conf3Date">
+                <input type="time" id="conf3Time" placeholder="時刻">
+                <label style="margin-left:8px">出席者：</label>
+                <input type="text" id="conf3Attend" placeholder="出席者名" style="flex:1">
+              </div>
+            </div>
+          </div>
+
+          <!-- セクション⑧：備考 -->
+          <div class="form-section">
+            <div class="section-title">⑧ 備考・その他</div>
+            <div class="form-group full-width">
+              <label>備考</label>
+              <textarea id="notes" rows="4" placeholder="その他特記事項など"></textarea>
+            </div>
+          </div>
+
+          <!-- 送信ボタン -->
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="clearForm()">クリア</button>
+            <button type="submit" class="btn btn-primary">保存する</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ===== 相談一覧 ===== -->
+      <div id="view-list" class="view">
+        <div class="view-header">
+          <h1 class="view-title">相談一覧</h1>
+          <div class="view-subtitle" id="listCount">0 件</div>
+        </div>
+
+        <div class="list-controls">
+          <input type="text" id="searchInput" placeholder="🔍 氏名・病名・担当者で検索..." oninput="renderList()" class="search-input">
+          <select id="filterFacility" onchange="renderList()" class="filter-select">
+            <option value="">施設：すべて</option>
+            <option value="わが家">わが家</option>
+            <option value="大ちゃん家">大ちゃん家</option>
+            <option value="どちらでも">どちらでも</option>
+          </select>
+          <select id="filterProgress" onchange="renderList()" class="filter-select">
+            <option value="">進捗：すべて</option>
+            <option value="対応中">対応中</option>
+            <option value="見学予定">見学予定</option>
+            <option value="入居決定">入居決定</option>
+            <option value="保留中">保留中</option>
+            <option value="連絡不通">連絡不通</option>
+            <option value="辞退・無し">辞退・無し</option>
+          </select>
+          <select id="filterCareLevel" onchange="renderList()" class="filter-select">
+            <option value="">介護度：すべて</option>
+            <option value="支援1">支援1</option>
+            <option value="支援2">支援2</option>
+            <option value="介護1">介護1</option>
+            <option value="介護2">介護2</option>
+            <option value="介護3">介護3</option>
+            <option value="介護4">介護4</option>
+            <option value="介護5">介護5</option>
+            <option value="申請中">申請中</option>
+          </select>
+          <select id="filterMonth" onchange="renderList()" class="filter-select">
+            <option value="">月：すべて</option>
+          </select>
+          <button class="btn btn-outline" onclick="exportCSV()">📥 CSVエクスポート</button>
+        </div>
+
+        <div id="consultationList" class="consultation-list"></div>
+      </div>
+
+      <!-- ===== 分析 ===== -->
+      <div id="view-analytics" class="view">
+        <div class="view-header">
+          <h1 class="view-title">分析・集計</h1>
+          <div class="view-subtitle" id="analyticsSubtitle"></div>
+        </div>
+
+        <div class="analytics-grid">
+          <!-- サマリーカード -->
+          <div class="stat-cards">
+            <div class="stat-card">
+              <div class="stat-value" id="statTotal">0</div>
+              <div class="stat-label">総相談件数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statThisMonth">0</div>
+              <div class="stat-label">今月の相談</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statTourRate">0%</div>
+              <div class="stat-label">見学希望率</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="statAvgAge">-</div>
+              <div class="stat-label">平均年齢</div>
+            </div>
+          </div>
+
+          <!-- グラフ -->
+          <div class="chart-row">
+            <div class="chart-card">
+              <div class="chart-title">月別相談件数</div>
+              <canvas id="monthlyChart"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">介護度別分布</div>
+              <canvas id="careLevelChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-card">
+              <div class="chart-title">受付方法</div>
+              <canvas id="receptionChart"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">医療処置（上位10件）</div>
+              <canvas id="medProcChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-card">
+              <div class="chart-title">現在の状況</div>
+              <canvas id="statusChart"></canvas>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">性別分布</div>
+              <canvas id="genderChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 詳細モーダル -->
+  <div id="detailModal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">相談詳細</h2>
+        <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="modalDeleteBtn">削除</button>
+        <button class="btn btn-edit" id="modalEditBtn">編集</button>
+        <button class="btn btn-secondary" onclick="closeModalDirect()">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+  <script>
+    (function() {
+      if (sessionStorage.getItem('nyukyo_auth') === '1') {
+        document.getElementById('passwordScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = '';
+      }
+    })();
+    function checkPassword() {
+      const val = document.getElementById('passwordInput').value;
+      if (val === 'careful7570') {
+        sessionStorage.setItem('nyukyo_auth', '1');
+        document.getElementById('passwordScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = '';
+      } else {
+        const err = document.getElementById('passwordError');
+        err.textContent = 'パスワードが違います';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+      }
+    }
+  </script>
+</body>
+</html>
