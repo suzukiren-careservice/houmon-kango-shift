@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp:*)",
+      "Read(//c/Users/r-suzuki/.claude/**)",
+      "Bash(netstat -ano)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3001/%E5%85%A5%E5%B1%85%E7%9B%B8%E8%AB%87/index.html\")",
+      "Bash(ipconfig)",
+      "Bash(curl -s \"http://localhost:3001/%E5%85%A5%E5%B1%85%E7%9B%B8%E8%AB%87/index.html\")",
+      "Bash(curl -s \"http://localhost:3001/%E5%85%A5%E5%B1%85%E7%9B%B8%E8%AB%87/styles.css\")",
+      "Bash(curl -s \"http://localhost:3001/%E5%85%A5%E5%B1%85%E7%9B%B8%E8%AB%87/app.js\")",
+      "Bash(curl -v \"http://localhost:3001/\")",
+      "Bash(cmd //c start \"\" \"C:/Program Files/Git/usr/bin/perl.exe\" \"C:/Users/r-suzuki/OneDrive/デスクトップ/Claude/serve.pl\" \"C:/Users/r-suzuki/OneDrive/デスクトップ/Claude\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3001/\")",
+      "Bash(taskkill //PID 17476 //F)",
+      "Bash(STARTUP=\"C:/Users/r-suzuki/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup\")",
+      "Bash(cp \"C:/Users/r-suzuki/OneDrive/デスクトップ/Claude/start-server.vbs\" \"$STARTUP/start-server.vbs\")",
+      "Bash(echo \"copied: $?\")",
+      "Bash(cscript //nologo \"C:/Users/r-suzuki/OneDrive/デスクトップ/Claude/start-server.vbs\")",
+      "Bash(wscript \"C:/Users/r-suzuki/OneDrive/デスクトップ/Claude/start-server.vbs\")",
+      "Bash(cmd //c wscript \"C:\\\\Users\\\\r-suzuki\\\\OneDrive\\\\デスクトップ\\\\Claude\\\\start-server.vbs\")",
+      "Bash(powershell -Command \"Start-Process wscript -ArgumentList ''C:\\\\Users\\\\r-suzuki\\\\OneDrive\\\\デスクトップ\\\\Claude\\\\start-server.vbs'' -WindowStyle Hidden\")",
+      "Bash(powershell -Command \"Start-Process -FilePath ''C:\\\\Program Files\\\\Git\\\\usr\\\\bin\\\\perl.exe'' -ArgumentList ''C:\\\\Users\\\\r-suzuki\\\\OneDrive\\\\デスクトップ\\\\Claude\\\\serve.pl'',''C:\\\\Users\\\\r-suzuki\\\\OneDrive\\\\デスクトップ\\\\Claude'' -WindowStyle Hidden\")",
+      "Bash(powershell -Command \":*)",
+      "Bash(start \"C:/Users/r-suzuki/OneDrive/デスクトップ/Claude/mockup-client-view.html\")",
+      "mcp__71e1a243-70c7-462f-92de-ebb0d8474609__apply_migration"
+    ]
+  }
+}

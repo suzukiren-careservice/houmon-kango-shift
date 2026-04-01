@@ -27,6 +27,7 @@ createApp({
       currentTab: 'schedule',
       tabs: [
         { id: 'schedule', label: '週間スケジュール' },
+        { id: 'clientview', label: '利用者確認' },
         { id: 'clients',  label: '利用者管理' },
       ],
       colorOptions: COLOR_OPTIONS,
@@ -49,8 +50,9 @@ createApp({
       },
       clientModal: {
         show: false, isEdit: false, clientId: null,
-        name: '', address: '', notes: '',
+        name: '', address: '', notes: '', weeklyVisits: null,
       },
+      clientViewFilter: 'all', // 'all' | 'active' | 'warn'
     };
   },
 
@@ -94,6 +96,47 @@ createApp({
 
     activeStaff() {
       return this.staffList.filter(s => s.active);
+    },
+
+    // 利用者確認ビュー用
+    clientViewRows() {
+      return this.clientList.map(client => {
+        const days = this.weekDays.map(day => {
+          // この利用者へのこの日の訪問を全て取得
+          const dayVisits = this.visits.filter(v =>
+            v.clientId === client.id && v.date === day.dateStr
+          );
+          return {
+            dateStr: day.dateStr,
+            isToday: day.isToday,
+            visits: dayVisits.map(v => {
+              const staff = this.staffList.find(s => s.id === v.staffId);
+              return { ...v, staffName: staff?.name || '?', staffColor: staff?.color || '#999' };
+            }),
+          };
+        });
+        const weekCount = days.reduce((sum, d) => sum + d.visits.length, 0);
+        const expected = client.weeklyVisits;
+        let status = 'none';
+        if (expected !== null && expected !== undefined) {
+          status = weekCount >= expected ? 'ok' : 'warn';
+        }
+        return { client, days, weekCount, expected, status };
+      }).filter(row => {
+        if (this.clientViewFilter === 'active') return row.weekCount > 0;
+        if (this.clientViewFilter === 'warn')   return row.status === 'warn';
+        return true;
+      });
+    },
+
+    clientViewWarnCount() {
+      return this.clientList.filter(client => {
+        if (!client.weeklyVisits) return false;
+        const weekCount = this.visits.filter(v =>
+          v.clientId === client.id && this.weekDays.some(d => d.dateStr === v.date)
+        ).length;
+        return weekCount < client.weeklyVisits;
+      }).length;
     },
 
     // 常に10行以上表示（空スロットでパディング）
@@ -186,7 +229,7 @@ createApp({
         if (e1 || e2 || e3 || e4) throw (e1 || e2 || e3 || e4);
 
         this.staffList  = (staffData  || []).map(s => ({ id: s.id, name: s.name, color: s.color, active: s.active, is_admin: s.is_admin }));
-        this.clientList = (clientData || []).map(c => ({ id: c.id, name: c.name, address: c.address || '', notes: c.notes || '' }));
+        this.clientList = (clientData || []).map(c => ({ id: c.id, name: c.name, address: c.address || '', notes: c.notes || '', weeklyVisits: c.weekly_visits || null }));
 
         this.shifts = {};
         (shiftData || []).forEach(s => {
@@ -377,24 +420,25 @@ createApp({
 
     // ===== 利用者 =====
     openAddClient() {
-      this.clientModal = { show: true, isEdit: false, clientId: null, name: '', address: '', notes: '' };
+      this.clientModal = { show: true, isEdit: false, clientId: null, name: '', address: '', notes: '', weeklyVisits: null };
     },
     openEditClient(client) {
-      this.clientModal = { show: true, isEdit: true, clientId: client.id, name: client.name, address: client.address || '', notes: client.notes || '' };
+      this.clientModal = { show: true, isEdit: true, clientId: client.id, name: client.name, address: client.address || '', notes: client.notes || '', weeklyVisits: client.weeklyVisits || null };
     },
     async saveClient() {
       if (!this.clientModal.name.trim()) { alert('利用者名を入力してください。'); return; }
-      const payload = { name: this.clientModal.name.trim(), address: this.clientModal.address.trim(), notes: this.clientModal.notes.trim() };
+      const wv = this.clientModal.weeklyVisits ? parseInt(this.clientModal.weeklyVisits) : null;
+      const payload = { name: this.clientModal.name.trim(), address: this.clientModal.address.trim(), notes: this.clientModal.notes.trim(), weekly_visits: wv };
       try {
         if (this.clientModal.isEdit) {
           const { error } = await db.from('clients').update(payload).eq('id', this.clientModal.clientId);
           if (error) throw error;
           const idx = this.clientList.findIndex(c => c.id === this.clientModal.clientId);
-          if (idx !== -1) this.clientList.splice(idx, 1, { id: this.clientModal.clientId, ...payload });
+          if (idx !== -1) this.clientList.splice(idx, 1, { id: this.clientModal.clientId, ...this.clientList[idx], name: payload.name, address: payload.address, notes: payload.notes, weeklyVisits: wv });
         } else {
           const { data, error } = await db.from('clients').insert(payload).select().single();
           if (error) throw error;
-          this.clientList.push({ id: data.id, ...payload });
+          this.clientList.push({ id: data.id, name: data.name, address: data.address, notes: data.notes, weeklyVisits: data.weekly_visits });
         }
       } catch (e) { alert('利用者の保存に失敗しました'); return; }
       this.closeClientModal();

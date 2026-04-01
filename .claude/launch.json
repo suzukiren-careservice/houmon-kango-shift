@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "incident",
-      "runtimeExecutable": "perl",
+      "runtimeExecutable": "C:/Program Files/Git/usr/bin/perl.exe",
       "runtimeArgs": ["serve.pl", "C:/Users/r-suzuki/OneDrive/デスクトップ/Claude"],
       "port": 3001
     }

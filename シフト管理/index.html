@@ -218,6 +218,84 @@
     </div>
   </main>
 
+  <!-- ========== CLIENT VIEW ========== -->
+  <main v-if="currentTab === 'clientview'" class="view-clientview no-print">
+
+    <!-- 週ナビ -->
+    <div class="week-nav">
+      <button class="btn btn-secondary" @click="prevWeek">&#9664; 前週</button>
+      <button class="btn btn-secondary" @click="goToday">今週</button>
+      <span class="week-label">{{ weekLabel }}</span>
+      <button class="btn btn-secondary" @click="nextWeek">次週 &#9654;</button>
+    </div>
+
+    <!-- フィルター＋アラート -->
+    <div class="cv-toolbar">
+      <div class="cv-filters">
+        <button class="cv-chip" :class="{ on: clientViewFilter==='all' }"    @click="clientViewFilter='all'">全員</button>
+        <button class="cv-chip" :class="{ on: clientViewFilter==='active' }" @click="clientViewFilter='active'">今週訪問あり</button>
+        <button class="cv-chip warn" :class="{ on: clientViewFilter==='warn' }" @click="clientViewFilter='warn'">
+          ⚠ 要確認{{ clientViewWarnCount > 0 ? `（${clientViewWarnCount}名）` : '' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- テーブル -->
+    <div class="cv-table-wrap">
+      <table class="cv-table">
+        <thead>
+          <tr>
+            <th class="cv-name-col">利用者</th>
+            <th v-for="day in weekDays" :key="day.dateStr"
+              :class="['cv-day-col', { 'cv-today': day.isToday, 'cv-weekend': day.isWeekend }]">
+              {{ ['日','月','火','水','木','金','土'][new Date(day.dateStr+'T00:00:00').getDay()] }}<br>
+              <span class="cv-date">{{ day.shortDate }}</span>
+            </th>
+            <th class="cv-freq-col">今週</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in clientViewRows" :key="row.client.id" :class="{ 'cv-warn-row': row.status==='warn' }">
+            <td class="cv-name-cell">{{ row.client.name }}</td>
+            <td v-for="day in row.days" :key="day.dateStr"
+              :class="['cv-cell', { 'cv-today': day.isToday }]">
+              <div v-if="day.visits.length" class="cv-visits">
+                <span v-for="v in day.visits" :key="v.id"
+                  class="cv-badge"
+                  :style="{ background: v.staffColor }">
+                  {{ v.staffName }}<span class="cv-period">{{ v.period==='morning' ? '午前' : '午後' }}</span>
+                </span>
+              </div>
+              <div v-else class="cv-empty"></div>
+            </td>
+            <td class="cv-freq-cell">
+              <span v-if="row.expected" class="cv-freq-badge" :class="row.status">
+                {{ row.weekCount }}/週{{ row.expected }}
+              </span>
+              <span v-else class="cv-freq-badge none">{{ row.weekCount }}回</span>
+            </td>
+          </tr>
+          <tr v-if="clientViewRows.length === 0">
+            <td :colspan="9" style="text-align:center;padding:32px;color:#94A3B8;font-size:13px">
+              該当する利用者がいません
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 凡例 -->
+    <div class="cv-legend">
+      <span v-for="s in activeStaff" :key="s.id" class="cv-legend-item">
+        <span class="cv-legend-dot" :style="{ background: s.color }"></span>{{ s.name }}
+      </span>
+      <span style="margin-left:auto;display:flex;gap:10px">
+        <span class="cv-legend-item"><span class="cv-freq-badge ok" style="font-size:10px">✓</span> 予定通り</span>
+        <span class="cv-legend-item"><span class="cv-freq-badge warn" style="font-size:10px">!</span> 要確認</span>
+      </span>
+    </div>
+  </main>
+
   <!-- ========== STAFF MANAGEMENT VIEW ========== -->
   <!-- ========== CLIENT MANAGEMENT VIEW ========== -->
   <main v-if="currentTab === 'clients'" class="view-manage no-print">
@@ -414,6 +492,13 @@
         <div class="form-group">
           <label>特記事項（永続）</label>
           <textarea v-model="clientModal.notes" class="form-textarea" rows="4" placeholder="注意事項、処置内容など"></textarea>
+        </div>
+        <div class="form-group">
+          <label>週の予定回数（利用者確認ビュー用）</label>
+          <select v-model="clientModal.weeklyVisits" class="form-input">
+            <option :value="null">未設定</option>
+            <option v-for="n in [1,2,3,4,5,6,7]" :key="n" :value="n">週{{ n }}回</option>
+          </select>
         </div>
       </div>
       <div class="modal-footer">

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>モックアップ：利用者確認ビュー</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+      background: #F0F4F8; font-size: 14px;
+    }
+
+    /* ヘッダー */
+    .app-header {
+      background: #1976D2; color: #fff;
+      height: 56px; padding: 0 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .back-btn {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      color: #fff; border-radius: 8px; padding: 5px 10px;
+      font-size: 13px; text-decoration: none; cursor: pointer;
+    }
+    .app-title { font-size: 17px; font-weight: 700; }
+    .nav { display: flex; gap: 2px; }
+    .nav-btn {
+      padding: 7px 14px; border: none; border-radius: 8px;
+      background: transparent; color: rgba(255,255,255,0.7);
+      font-size: 13px; cursor: pointer;
+    }
+    .nav-btn.active { background: rgba(255,255,255,0.22); color: #fff; font-weight: 700; }
+    .user-area { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .u-dot { width: 9px; height: 9px; border-radius: 50%; background: #43A047; }
+
+    /* 週ナビ */
+    .week-nav {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px; background: #fff;
+      border-bottom: 1px solid #E2E8F0;
+      overflow-x: auto;
+    }
+    .wbtn {
+      padding: 6px 12px; border-radius: 8px;
+      border: 1px solid #E2E8F0; background: #fff;
+      font-size: 13px; cursor: pointer; white-space: nowrap; color: #374151;
+    }
+    .wbtn.today { background: #EFF6FF; border-color: #BFDBFE; color: #2563EB; font-weight: 600; }
+    .week-label { font-size: 13px; font-weight: 600; color: #374151; white-space: nowrap; flex: 1; text-align: center; }
+
+    /* フィルター */
+    .filter-bar {
+      padding: 10px 16px; background: #fff;
+      border-bottom: 1px solid #E2E8F0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .filter-label { font-size: 12px; color: #64748B; font-weight: 600; }
+    .filter-chip {
+      padding: 4px 12px; border-radius: 100px;
+      border: 1.5px solid #E2E8F0; background: #fff;
+      font-size: 12px; cursor: pointer; color: #64748B;
+    }
+    .filter-chip.on { background: #EFF6FF; border-color: #2563EB; color: #2563EB; font-weight: 600; }
+
+    /* テーブルエリア */
+    .table-wrap {
+      overflow-x: auto;
+      padding: 16px;
+    }
+    table {
+      border-collapse: collapse;
+      min-width: 600px; width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+    }
+    thead tr { background: #F8FAFC; }
+    th {
+      padding: 10px 8px; font-size: 12px; font-weight: 700;
+      color: #64748B; border-bottom: 2px solid #E2E8F0;
+      text-align: center; white-space: nowrap;
+    }
+    th.client-col { text-align: left; padding-left: 16px; width: 110px; }
+    th.today-col { background: #EFF6FF; color: #2563EB; }
+
+    td {
+      padding: 8px 6px; border-bottom: 1px solid #F1F5F9;
+      text-align: center; vertical-align: middle;
+    }
+    td.client-name {
+      text-align: left; padding-left: 16px;
+      font-size: 13px; font-weight: 600; color: #1E293B;
+      white-space: nowrap;
+    }
+    td.today-col { background: #F8FBFF; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #FAFAFA; }
+    tr:hover td.today-col { background: #F0F7FF; }
+
+    /* 訪問バッジ */
+    .visit-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 8px; border-radius: 8px;
+      font-size: 11px; font-weight: 700; color: #fff;
+      white-space: nowrap;
+    }
+    .visit-badge.am { opacity: 1; }
+    .visit-badge.pm { opacity: 0.85; }
+    .visit-stack { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+
+    /* 空セル */
+    .empty-cell {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #E2E8F0; margin: 0 auto;
+    }
+
+    /* 週次サマリ */
+    .freq-badge {
+      display: inline-block;
+      padding: 2px 7px; border-radius: 100px;
+      font-size: 10px; font-weight: 700;
+      background: #F1F5F9; color: #64748B;
+    }
+    .freq-badge.ok { background: #F0FDF4; color: #16A34A; }
+    .freq-badge.warn { background: #FEF9C3; color: #CA8A04; }
+
+    th.freq-col, td.freq-col {
+      border-left: 2px solid #E2E8F0;
+      background: #FAFAFA;
+    }
+    td.freq-col { text-align: center; }
+
+    /* 凡例 */
+    .legend {
+      padding: 12px 16px;
+      display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #64748B; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+    /* 注意バナー */
+    .alert-banner {
+      margin: 0 16px 4px;
+      background: #FEF9C3; border: 1px solid #FDE68A; border-radius: 10px;
+      padding: 8px 14px; font-size: 12px; color: #92400E;
+      display: flex; align-items: center; gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header class="app-header">
+  <div class="header-left">
+    <a class="back-btn">‹ 戻る</a>
+    <span class="app-title">訪問看護 シフト管理</span>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn">週間スケジュール</button>
+    <button class="nav-btn active">利用者確認</button>
+    <button class="nav-btn">利用者管理</button>
+  </nav>
+  <div class="user-area">
+    <div class="u-dot"></div>
+    <span>丹羽</span>
+    <span style="background:rgba(255,255,255,0.2);padding:2px 7px;border-radius:6px;font-size:11px">管理者</span>
+  </div>
+</header>
+
+<!-- 週ナビ -->
+<div class="week-nav">
+  <button class="wbtn">◀ 前週</button>
+  <button class="wbtn today">今週</button>
+  <span class="week-label">2026年 3月30日（月）〜 4月5日（日）</span>
+  <button class="wbtn">次週 ▶</button>
+</div>
+
+<!-- フィルター -->
+<div class="filter-bar">
+  <span class="filter-label">表示：</span>
+  <button class="filter-chip on">全員</button>
+  <button class="filter-chip">今週訪問あり</button>
+  <button class="filter-chip">⚠ 要確認</button>
+</div>
+
+<!-- 注意バナー -->
+<div class="alert-banner">
+  ⚠ 予定回数に達していない利用者が 2名 います
+</div>
+
+<!-- テーブル -->
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th class="client-col">利用者</th>
+        <th class="today-col">月<br><span style="font-weight:400;font-size:11px">3/30</span></th>
+        <th>火<br><span style="font-weight:400;font-size:11px">3/31</span></th>
+        <th>水<br><span style="font-weight:400;font-size:11px">4/1</span></th>
+        <th>木<br><span style="font-weight:400;font-size:11px">4/2</span></th>
+        <th>金<br><span style="font-weight:400;font-size:11px">4/3</span></th>
+        <th>土<br><span style="font-weight:400;font-size:11px">4/4</span></th>
+        <th>日<br><span style="font-weight:400;font-size:11px">4/5</span></th>
+        <th class="freq-col">今週<br>回数</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- 週3の利用者 -->
+      <tr>
+        <td class="client-name">山田 花子</td>
+        <td class="today-col">
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#1E88E5">丹羽 午前</span>
+          </div>
+        </td>
+        <td><div class="empty-cell"></div></td>
+        <td>
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#00897B">奥村 午前</span>
+          </div>
+        </td>
+        <td><div class="empty-cell"></div></td>
+        <td>
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#1E88E5">丹羽 午前</span>
+          </div>
+        </td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td class="freq-col"><span class="freq-badge ok">3 / 週3</span></td>
+      </tr>
+
+      <!-- 週2の利用者 -->
+      <tr>
+        <td class="client-name">田中 一郎</td>
+        <td class="today-col"><div class="empty-cell"></div></td>
+        <td>
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#00897B">奥村 午前</span>
+          </div>
+        </td>
+        <td><div class="empty-cell"></div></td>
+        <td>
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#00897B">奥村 午後</span>
+          </div>
+        </td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td class="freq-col"><span class="freq-badge ok">2 / 週2</span></td>
+      </tr>
+
+      <!-- 午前・午後両方ある利用者 -->
+      <tr>
+        <td class="client-name">鈴木 二郎</td>
+        <td class="today-col">
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#8E24AA">山本 午前</span>
+            <span class="visit-badge pm" style="background:#1E88E5">丹羽 午後</span>
+          </div>
+        </td>
+        <td>
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#8E24AA">山本 午前</span>
+          </div>
+        </td>
+        <td><div class="empty-cell"></div></td>
+        <td>
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#8E24AA">山本 午前</span>
+          </div>
+        </td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td class="freq-col"><span class="freq-badge ok">4 / 週3↑</span></td>
+      </tr>
+
+      <!-- 週1の利用者（要確認） -->
+      <tr>
+        <td class="client-name">佐藤 三郎</td>
+        <td class="today-col"><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td class="freq-col"><span class="freq-badge warn">0 / 週1</span></td>
+      </tr>
+
+      <!-- 月2の利用者 -->
+      <tr>
+        <td class="client-name">中村 四郎</td>
+        <td class="today-col">
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#F4511E">小林 午前</span>
+          </div>
+        </td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td class="freq-col"><span class="freq-badge ok">1回</span></td>
+      </tr>
+
+      <!-- 今週なし（要確認） -->
+      <tr>
+        <td class="client-name">高橋 五郎</td>
+        <td class="today-col"><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td class="freq-col"><span class="freq-badge warn">0 / 週2</span></td>
+      </tr>
+
+      <!-- 週5の利用者 -->
+      <tr>
+        <td class="client-name">伊藤 六子</td>
+        <td class="today-col">
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#1E88E5">丹羽 午前</span>
+          </div>
+        </td>
+        <td>
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#00897B">奥村 午前</span>
+          </div>
+        </td>
+        <td>
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#1E88E5">丹羽 午前</span>
+          </div>
+        </td>
+        <td>
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#00897B">奥村 午前</span>
+          </div>
+        </td>
+        <td>
+          <div class="visit-stack">
+            <span class="visit-badge am" style="background:#1E88E5">丹羽 午前</span>
+          </div>
+        </td>
+        <td><div class="empty-cell"></div></td>
+        <td><div class="empty-cell"></div></td>
+        <td class="freq-col"><span class="freq-badge ok">5 / 週5</span></td>
+      </tr>
+
+    </tbody>
+  </table>
+</div>
+
+<!-- 凡例 -->
+<div class="legend">
+  <span class="legend-item"><div class="legend-dot" style="background:#1E88E5"></div>丹羽</span>
+  <span class="legend-item"><div class="legend-dot" style="background:#00897B"></div>奥村</span>
+  <span class="legend-item"><div class="legend-dot" style="background:#8E24AA"></div>山本</span>
+  <span class="legend-item"><div class="legend-dot" style="background:#F4511E"></div>小林</span>
+  <span style="margin-left:auto;display:flex;gap:10px;align-items:center">
+    <span class="legend-item"><span class="freq-badge ok">✓</span> 予定通り</span>
+    <span class="legend-item"><span class="freq-badge warn">!</span> 要確認</span>
+  </span>
+</div>
+
+</body>
+</html>
