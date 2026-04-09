@@ -290,6 +290,7 @@
           <tr>
             <th class="cv-name-col">利用者</th>
             <th style="text-align:center">頻度</th>
+            <th style="text-align:center">前回訪問日</th>
             <th style="text-align:center">集計期間</th>
             <th class="cv-freq-col">訪問回数</th>
           </tr>
@@ -300,6 +301,9 @@
             <td style="text-align:center;font-size:12px;color:#64748B">
               {{ row.client.freqType==='month' ? '月次' : '3ヶ月に1回' }}
             </td>
+            <td style="text-align:center;font-size:12px;color:#64748B">
+              {{ row.lastVisitDate ? formatDateJp(row.lastVisitDate) : '―' }}
+            </td>
             <td style="text-align:center;font-size:12px;color:#64748B">{{ row.periodLabel }}</td>
             <td class="cv-freq-cell">
               <span v-if="row.expected" class="cv-freq-badge" :class="row.status">{{ row.visitCount }}/{{ row.expected }}回</span>
@@ -307,7 +311,7 @@
             </td>
           </tr>
           <tr v-if="clientViewLongtermRows.length === 0">
-            <td colspan="4" style="text-align:center;padding:32px;color:#94A3B8;font-size:13px">
+            <td colspan="5" style="text-align:center;padding:32px;color:#94A3B8;font-size:13px">
               月次・長期の利用者が登録されていません
             </td>
           </tr>
@@ -434,12 +438,12 @@
           <div style="display:flex; align-items:center; gap:8px;">
             <select v-model="visitModal.startTime" class="form-select" style="flex:1;">
               <option value="">― 開始未設定 ―</option>
-              <option v-for="t in timeOptions" :key="t" :value="t">{{ t }}</option>
+              <option v-for="t in currentTimeOptions" :key="t" :value="t">{{ t }}</option>
             </select>
             <span style="color:#64748B; font-size:14px; flex-shrink:0;">〜</span>
             <select v-model="visitModal.endTime" class="form-select" style="flex:1;">
               <option value="">― 終了未設定 ―</option>
-              <option v-for="t in timeOptions" :key="t" :value="t">{{ t }}</option>
+              <option v-for="t in currentTimeOptions" :key="t" :value="t">{{ t }}</option>
             </select>
           </div>
         </div>

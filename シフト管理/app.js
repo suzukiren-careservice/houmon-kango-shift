@@ -146,10 +146,18 @@ createApp({
           }).length;
           periodLabel = '今期(3ヶ月)';
         }
+        // 前回訪問日（全期間で最新）
+        const allVisits = this.visits
+          .filter(v => v.clientId === client.id && v.date)
+          .map(v => v.date)
+          .sort()
+          .reverse();
+        const lastVisitDate = allVisits[0] || null;
+
         const expected = client.weeklyVisits;
         let status = 'none';
         if (expected) status = visitCount >= expected ? 'ok' : 'warn';
-        return { client, visitCount, expected, periodLabel, status };
+        return { client, visitCount, expected, periodLabel, status, lastVisitDate };
       }).filter(row => {
         if (this.clientViewFilter === 'warn') return row.status === 'warn';
         return true;
@@ -174,16 +182,35 @@ createApp({
       return result;
     },
 
-    // 06:00〜20:00 の5分刻み
-    timeOptions() {
+    // 午前：06:00〜12:00 の5分刻み
+    morningTimeOptions() {
       const opts = [];
-      for (let h = 6; h <= 20; h++) {
+      for (let h = 6; h <= 12; h++) {
+        for (let m = 0; m < 60; m += 5) {
+          if (h === 12 && m > 0) break;
+          opts.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+        }
+      }
+      return opts;
+    },
+
+    // 午後：12:00〜20:00 の5分刻み
+    afternoonTimeOptions() {
+      const opts = [];
+      for (let h = 12; h <= 20; h++) {
         for (let m = 0; m < 60; m += 5) {
           if (h === 20 && m > 0) break;
           opts.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
         }
       }
       return opts;
+    },
+
+    // モーダルで使う時刻オプション（period に応じて切り替え）
+    currentTimeOptions() {
+      return this.visitModal.period === 'morning'
+        ? this.morningTimeOptions
+        : this.afternoonTimeOptions;
     },
   },
 
