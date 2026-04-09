@@ -134,27 +134,7 @@ createApp({
       const qStart = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3, 1);
       const qEnd   = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3+3, 0);
 
-      const bmStart = new Date(now.getFullYear(), Math.floor(now.getMonth()/2)*2, 1);
-      const bmEnd   = new Date(now.getFullYear(), Math.floor(now.getMonth()/2)*2+2, 0);
-
       return this.clientList.filter(c => c.freqType === 'month' || c.freqType === 'bimonth' || c.freqType === 'quarter').map(client => {
-        let visitCount, periodLabel;
-        if (client.freqType === 'month') {
-          visitCount = this.visits.filter(v => v.clientId === client.id && v.date.startsWith(ym)).length;
-          periodLabel = '今月';
-        } else if (client.freqType === 'bimonth') {
-          visitCount = this.visits.filter(v => {
-            const d = new Date(v.date + 'T00:00:00');
-            return v.clientId === client.id && d >= bmStart && d <= bmEnd;
-          }).length;
-          periodLabel = '今期(2ヶ月)';
-        } else {
-          visitCount = this.visits.filter(v => {
-            const d = new Date(v.date + 'T00:00:00');
-            return v.clientId === client.id && d >= qStart && d <= qEnd;
-          }).length;
-          periodLabel = '今期(3ヶ月)';
-        }
         // 前回訪問日（全期間で最新）
         const allVisits = this.visits
           .filter(v => v.clientId === client.id && v.date)
@@ -163,10 +143,31 @@ createApp({
           .reverse();
         const lastVisitDate = allVisits[0] || null;
 
-        const expected = client.weeklyVisits;
+        let visitCount = 0;
+        let nextDueDateStr = null;
         let status = 'none';
-        if (expected) status = visitCount >= expected ? 'ok' : 'warn';
-        return { client, visitCount, expected, periodLabel, status, lastVisitDate };
+
+        if (client.freqType === 'month') {
+          // 月次：今月の訪問回数で判定
+          visitCount = this.visits.filter(v => v.clientId === client.id && v.date.startsWith(ym)).length;
+          const expected = client.weeklyVisits;
+          if (expected) status = visitCount >= expected ? 'ok' : 'warn';
+        } else {
+          // 2ヶ月・3ヶ月：前回訪問からの経過で判定
+          const intervalMonths = client.freqType === 'bimonth' ? 2 : 3;
+          if (lastVisitDate) {
+            const lastDate = new Date(lastVisitDate + 'T00:00:00');
+            const nextDue  = new Date(lastDate);
+            nextDue.setMonth(nextDue.getMonth() + intervalMonths);
+            nextDueDateStr = this.formatDateStr(nextDue);
+            status = now >= nextDue ? 'warn' : 'ok';
+          } else {
+            status = 'warn'; // 訪問記録なし
+          }
+        }
+
+        const expected = client.freqType === 'month' ? client.weeklyVisits : null;
+        return { client, visitCount, expected, lastVisitDate, nextDueDateStr, status };
       }).filter(row => {
         if (this.clientViewFilter === 'warn') return row.status === 'warn';
         return true;
