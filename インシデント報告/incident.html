@@ -262,9 +262,9 @@
           </div>
           <div class="inc-footer-row">
             <span class="inc-footer">報告者：{{ inc.staff_name || '—' }}</span>
-            <div v-if="currentStaff.is_admin" class="admin-actions" @click.stop>
+            <div class="admin-actions" @click.stop>
               <button class="admin-edit-btn" @click="openEdit(inc)">✏️ 編集</button>
-              <button class="admin-del-btn"  @click="deleteIncident(inc)">🗑️ 削除</button>
+              <button v-if="currentStaff.is_admin" class="admin-del-btn" @click="deleteIncident(inc)">🗑️ 削除</button>
             </div>
           </div>
         </div>
