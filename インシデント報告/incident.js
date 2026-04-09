@@ -178,6 +178,10 @@ createApp({
       // 詳細モーダル
       detail: { show: false, d: {} },
 
+      // 未読通知
+      unreadCount: 0,
+      showUnreadBanner: false,
+
       // 全スタッフ（設定画面用）
       allStaff: [],
 
@@ -478,16 +482,40 @@ createApp({
       const cutoff = new Date();
       cutoff.setFullYear(cutoff.getFullYear() - 1);
       const { data } = await db.from('incidents')
-        .select('incident_date, classification, category_ids')
+        .select('id, incident_date, classification, category_ids, created_at, staff_id')
         .gte('incident_date', cutoff.toISOString().slice(0, 10))
         .order('incident_date');
       this.allIncidents = data || [];
+      this.checkUnread();
+    },
+
+    // ===== 未読通知 =====
+    checkUnread() {
+      if (!this.currentStaff) return;
+      const key = `incident_last_read_${this.currentStaff.id}`;
+      const lastRead = localStorage.getItem(key);
+      const unread = this.allIncidents.filter(i => {
+        if (i.staff_id === this.currentStaff.id) return false; // 自分の報告は除外
+        if (!lastRead) return true;
+        return new Date(i.created_at) > new Date(lastRead);
+      });
+      this.unreadCount = unread.length;
+      this.showUnreadBanner = this.unreadCount > 0;
+    },
+
+    markAsRead() {
+      if (!this.currentStaff) return;
+      const key = `incident_last_read_${this.currentStaff.id}`;
+      localStorage.setItem(key, new Date().toISOString());
+      this.unreadCount = 0;
+      this.showUnreadBanner = false;
     },
 
     async switchTab(tabId) {
       this.currentTab = tabId;
       if (tabId === 'list') {
         await this.loadIncidents();
+        this.markAsRead();
       } else if (tabId === 'analysis') {
         await this.loadAllIncidents();
         await this.$nextTick();

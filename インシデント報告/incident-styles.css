@@ -198,6 +198,20 @@ body {
 .nav-icon { font-size: 22px; transition: transform 0.15s; }
 .nav-label { font-size: 10px; font-weight: 500; }
 
+/* ===== Unread Banner ===== */
+.unread-banner {
+  background: linear-gradient(135deg, #1E88E5, #0D9488);
+  color: #fff;
+  padding: 12px 18px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: opacity 0.18s;
+  letter-spacing: 0.2px;
+}
+.unread-banner:active { opacity: 0.85; }
+.unread-banner strong { font-size: 16px; }
+
 /* ===== Report Form ===== */
 .form-view { padding: 12px; }
 

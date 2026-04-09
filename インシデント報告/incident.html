@@ -88,6 +88,11 @@
       </div>
     </header>
 
+    <!-- 未読バナー -->
+    <div v-if="showUnreadBanner" class="unread-banner" @click="switchTab('list')">
+      🔔 未読インシデントが <strong>{{ unreadCount }}件</strong> あります　→ 確認する
+    </div>
+
     <!-- コンテンツ -->
     <main class="main-content">
 

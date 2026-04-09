@@ -50,9 +50,10 @@ createApp({
       },
       clientModal: {
         show: false, isEdit: false, clientId: null,
-        name: '', address: '', notes: '', weeklyVisits: null,
+        name: '', address: '', notes: '', weeklyVisits: null, freqType: 'week',
       },
       clientViewFilter: 'all', // 'all' | 'active' | 'warn'
+      clientViewPeriod: 'week', // 'week' | 'longterm'
     };
   },
 
@@ -98,11 +99,10 @@ createApp({
       return this.staffList.filter(s => s.active);
     },
 
-    // 利用者確認ビュー用
+    // 利用者確認ビュー用（週次）
     clientViewRows() {
-      return this.clientList.map(client => {
+      return this.clientList.filter(c => c.freqType === 'week').map(client => {
         const days = this.weekDays.map(day => {
-          // この利用者へのこの日の訪問を全て取得
           const dayVisits = this.visits.filter(v =>
             v.clientId === client.id && v.date === day.dateStr
           );
@@ -118,9 +118,7 @@ createApp({
         const weekCount = days.reduce((sum, d) => sum + d.visits.length, 0);
         const expected = client.weeklyVisits;
         let status = 'none';
-        if (expected !== null && expected !== undefined) {
-          status = weekCount >= expected ? 'ok' : 'warn';
-        }
+        if (expected) status = weekCount >= expected ? 'ok' : 'warn';
         return { client, days, weekCount, expected, status };
       }).filter(row => {
         if (this.clientViewFilter === 'active') return row.weekCount > 0;
@@ -129,14 +127,39 @@ createApp({
       });
     },
 
+    // 月次・長期確認ビュー用
+    clientViewLongtermRows() {
+      const now = new Date();
+      const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      const qStart = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3, 1);
+      const qEnd   = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3+3, 0);
+
+      return this.clientList.filter(c => c.freqType === 'month' || c.freqType === 'quarter').map(client => {
+        let visitCount, periodLabel;
+        if (client.freqType === 'month') {
+          visitCount = this.visits.filter(v => v.clientId === client.id && v.date.startsWith(ym)).length;
+          periodLabel = '今月';
+        } else {
+          visitCount = this.visits.filter(v => {
+            const d = new Date(v.date + 'T00:00:00');
+            return v.clientId === client.id && d >= qStart && d <= qEnd;
+          }).length;
+          periodLabel = '今期(3ヶ月)';
+        }
+        const expected = client.weeklyVisits;
+        let status = 'none';
+        if (expected) status = visitCount >= expected ? 'ok' : 'warn';
+        return { client, visitCount, expected, periodLabel, status };
+      }).filter(row => {
+        if (this.clientViewFilter === 'warn') return row.status === 'warn';
+        return true;
+      });
+    },
+
     clientViewWarnCount() {
-      return this.clientList.filter(client => {
-        if (!client.weeklyVisits) return false;
-        const weekCount = this.visits.filter(v =>
-          v.clientId === client.id && this.weekDays.some(d => d.dateStr === v.date)
-        ).length;
-        return weekCount < client.weeklyVisits;
-      }).length;
+      const weekWarn = this.clientViewRows.filter(r => r.status === 'warn').length;
+      const ltWarn   = this.clientViewLongtermRows.filter(r => r.status === 'warn').length;
+      return weekWarn + ltWarn;
     },
 
     // 常に10行以上表示（空スロットでパディング）
@@ -229,7 +252,7 @@ createApp({
         if (e1 || e2 || e3 || e4) throw (e1 || e2 || e3 || e4);
 
         this.staffList  = (staffData  || []).map(s => ({ id: s.id, name: s.name, color: s.color, active: s.active, is_admin: s.is_admin }));
-        this.clientList = (clientData || []).map(c => ({ id: c.id, name: c.name, address: c.address || '', notes: c.notes || '', weeklyVisits: c.weekly_visits || null }));
+        this.clientList = (clientData || []).map(c => ({ id: c.id, name: c.name, address: c.address || '', notes: c.notes || '', weeklyVisits: c.weekly_visits || null, freqType: c.freq_type || 'week' }));
 
         this.shifts = {};
         (shiftData || []).forEach(s => {
@@ -420,25 +443,25 @@ createApp({
 
     // ===== 利用者 =====
     openAddClient() {
-      this.clientModal = { show: true, isEdit: false, clientId: null, name: '', address: '', notes: '', weeklyVisits: null };
+      this.clientModal = { show: true, isEdit: false, clientId: null, name: '', address: '', notes: '', weeklyVisits: null, freqType: 'week' };
     },
     openEditClient(client) {
-      this.clientModal = { show: true, isEdit: true, clientId: client.id, name: client.name, address: client.address || '', notes: client.notes || '', weeklyVisits: client.weeklyVisits || null };
+      this.clientModal = { show: true, isEdit: true, clientId: client.id, name: client.name, address: client.address || '', notes: client.notes || '', weeklyVisits: client.weeklyVisits || null, freqType: client.freqType || 'week' };
     },
     async saveClient() {
       if (!this.clientModal.name.trim()) { alert('利用者名を入力してください。'); return; }
       const wv = this.clientModal.weeklyVisits ? parseInt(this.clientModal.weeklyVisits) : null;
-      const payload = { name: this.clientModal.name.trim(), address: this.clientModal.address.trim(), notes: this.clientModal.notes.trim(), weekly_visits: wv };
+      const payload = { name: this.clientModal.name.trim(), address: this.clientModal.address.trim(), notes: this.clientModal.notes.trim(), weekly_visits: wv, freq_type: this.clientModal.freqType || 'week' };
       try {
         if (this.clientModal.isEdit) {
           const { error } = await db.from('clients').update(payload).eq('id', this.clientModal.clientId);
           if (error) throw error;
           const idx = this.clientList.findIndex(c => c.id === this.clientModal.clientId);
-          if (idx !== -1) this.clientList.splice(idx, 1, { id: this.clientModal.clientId, ...this.clientList[idx], name: payload.name, address: payload.address, notes: payload.notes, weeklyVisits: wv });
+          if (idx !== -1) this.clientList.splice(idx, 1, { id: this.clientModal.clientId, ...this.clientList[idx], name: payload.name, address: payload.address, notes: payload.notes, weeklyVisits: wv, freqType: payload.freq_type });
         } else {
           const { data, error } = await db.from('clients').insert(payload).select().single();
           if (error) throw error;
-          this.clientList.push({ id: data.id, name: data.name, address: data.address, notes: data.notes, weeklyVisits: data.weekly_visits });
+          this.clientList.push({ id: data.id, name: data.name, address: data.address, notes: data.notes, weeklyVisits: data.weekly_visits, freqType: data.freq_type || 'week' });
         }
       } catch (e) { alert('利用者の保存に失敗しました'); return; }
       this.closeClientModal();

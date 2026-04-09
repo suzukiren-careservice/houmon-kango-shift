@@ -433,6 +433,14 @@ html, body {
   background: #fff; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
 }
+.cv-period-tabs { display: flex; gap: 6px; }
+.cv-period-tab {
+  padding: 7px 14px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: #fff;
+  font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.cv-period-tab.on { background: #EFF6FF; border-color: #2563EB; color: #2563EB; }
 .cv-filters { display: flex; gap: 6px; flex-wrap: wrap; }
 .cv-chip {
   padding: 5px 12px; border-radius: 100px;
