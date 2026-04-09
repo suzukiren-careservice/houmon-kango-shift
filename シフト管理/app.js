@@ -134,11 +134,20 @@ createApp({
       const qStart = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3, 1);
       const qEnd   = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3+3, 0);
 
-      return this.clientList.filter(c => c.freqType === 'month' || c.freqType === 'quarter').map(client => {
+      const bmStart = new Date(now.getFullYear(), Math.floor(now.getMonth()/2)*2, 1);
+      const bmEnd   = new Date(now.getFullYear(), Math.floor(now.getMonth()/2)*2+2, 0);
+
+      return this.clientList.filter(c => c.freqType === 'month' || c.freqType === 'bimonth' || c.freqType === 'quarter').map(client => {
         let visitCount, periodLabel;
         if (client.freqType === 'month') {
           visitCount = this.visits.filter(v => v.clientId === client.id && v.date.startsWith(ym)).length;
           periodLabel = '今月';
+        } else if (client.freqType === 'bimonth') {
+          visitCount = this.visits.filter(v => {
+            const d = new Date(v.date + 'T00:00:00');
+            return v.clientId === client.id && d >= bmStart && d <= bmEnd;
+          }).length;
+          periodLabel = '今期(2ヶ月)';
         } else {
           visitCount = this.visits.filter(v => {
             const d = new Date(v.date + 'T00:00:00');

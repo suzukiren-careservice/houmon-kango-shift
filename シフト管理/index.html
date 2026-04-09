@@ -299,7 +299,7 @@
           <tr v-for="row in clientViewLongtermRows" :key="row.client.id" :class="{ 'cv-warn-row': row.status==='warn' }">
             <td class="cv-name-cell">{{ row.client.name }}</td>
             <td style="text-align:center;font-size:12px;color:#64748B">
-              {{ row.client.freqType==='month' ? '月次' : '3ヶ月に1回' }}
+              {{ row.client.freqType==='month' ? '月次' : row.client.freqType==='bimonth' ? '2ヶ月に1回' : '3ヶ月に1回' }}
             </td>
             <td style="text-align:center;font-size:12px;color:#64748B">
               {{ row.lastVisitDate ? formatDateJp(row.lastVisitDate) : '―' }}
@@ -533,12 +533,13 @@
           <select v-model="clientModal.freqType" class="form-input" style="margin-bottom:8px">
             <option value="week">週次（毎週）</option>
             <option value="month">月次（毎月）</option>
+            <option value="bimonth">長期（2ヶ月に1回）</option>
             <option value="quarter">長期（3ヶ月に1回）</option>
           </select>
           <select v-model="clientModal.weeklyVisits" class="form-input">
             <option :value="null">回数：未設定</option>
             <option v-for="n in (clientModal.freqType==='week' ? [1,2,3,4,5,6,7] : clientModal.freqType==='month' ? [1,2,3,4] : [1])" :key="n" :value="n">
-              {{ clientModal.freqType==='week' ? `週${n}回` : clientModal.freqType==='month' ? `月${n}回` : '3ヶ月に1回' }}
+              {{ clientModal.freqType==='week' ? `週${n}回` : clientModal.freqType==='month' ? `月${n}回` : clientModal.freqType==='bimonth' ? '2ヶ月に1回' : '3ヶ月に1回' }}
             </option>
           </select>
         </div>
