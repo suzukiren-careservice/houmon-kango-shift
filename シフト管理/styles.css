@@ -507,6 +507,16 @@ html, body {
 .cv-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #64748B; }
 .cv-legend-dot { width: 10px; height: 10px; border-radius: 3px; }
 
+/* 1日複数回：日ごとカウントバッジ */
+.cv-day-count {
+  font-size: 10px; font-weight: 700; text-align: center;
+  padding: 1px 4px; border-radius: 3px; margin-top: 2px;
+}
+.cv-day-count.ok      { color: #0D9488; background: #F0FDFA; }
+.cv-day-count.partial { color: #D97706; background: #FFFBEB; }
+.cv-day-count.empty   { color: #94A3B8; background: #F1F5F9; }
+.cv-day-count.none    { color: #94A3B8; }
+
 /* ===== MANAGEMENT VIEWS ===== */
 .view-manage {
   flex: 1;

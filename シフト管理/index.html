@@ -232,7 +232,7 @@
     <!-- 期間タブ＋フィルター -->
     <div class="cv-toolbar">
       <div class="cv-period-tabs">
-        <button class="cv-period-tab" :class="{ on: clientViewPeriod==='week' }"     @click="clientViewPeriod='week'">📅 週次（週◯回）</button>
+        <button class="cv-period-tab" :class="{ on: clientViewPeriod==='week' }"     @click="clientViewPeriod='week'">📅 週次・1日複数回</button>
         <button class="cv-period-tab" :class="{ on: clientViewPeriod==='longterm' }" @click="clientViewPeriod='longterm'">📆 月次・長期（月1回〜）</button>
       </div>
       <div class="cv-filters" style="margin-top:8px">
@@ -268,10 +268,20 @@
                 </span>
               </div>
               <div v-else class="cv-empty"></div>
+              <!-- 1日複数回：日ごとのカウントバッジ -->
+              <div v-if="row.client.freqType === 'daily' && row.client.weeklyVisits"
+                   class="cv-day-count" :class="day.dayStatus">
+                {{ day.dayCount }}/{{ row.client.weeklyVisits }}回
+              </div>
             </td>
             <td class="cv-freq-cell">
-              <span v-if="row.expected" class="cv-freq-badge" :class="row.status">{{ row.weekCount }}/週{{ row.expected }}</span>
-              <span v-else class="cv-freq-badge none">{{ row.weekCount }}回</span>
+              <template v-if="row.client.freqType === 'daily'">
+                <span class="cv-freq-badge" :class="row.status">1日{{ row.expected || '?' }}回</span>
+              </template>
+              <template v-else>
+                <span v-if="row.expected" class="cv-freq-badge" :class="row.status">{{ row.weekCount }}/週{{ row.expected }}</span>
+                <span v-else class="cv-freq-badge none">{{ row.weekCount }}回</span>
+              </template>
             </td>
           </tr>
           <tr v-if="clientViewRows.length === 0">
@@ -544,14 +554,16 @@
           <label>訪問頻度（利用者確認ビュー用）</label>
           <select v-model="clientModal.freqType" class="form-input" style="margin-bottom:8px">
             <option value="week">週次（毎週）</option>
+            <option value="daily">1日複数回（毎日）</option>
             <option value="month">月次（毎月）</option>
             <option value="bimonth">長期（2ヶ月に1回）</option>
             <option value="quarter">長期（3ヶ月に1回）</option>
           </select>
-          <select v-model="clientModal.weeklyVisits" class="form-input">
+          <select v-if="clientModal.freqType !== 'bimonth' && clientModal.freqType !== 'quarter'"
+                  v-model="clientModal.weeklyVisits" class="form-input">
             <option :value="null">回数：未設定</option>
-            <option v-for="n in (clientModal.freqType==='week' ? [1,2,3,4,5,6,7] : clientModal.freqType==='month' ? [1,2,3,4] : [1])" :key="n" :value="n">
-              {{ clientModal.freqType==='week' ? `週${n}回` : clientModal.freqType==='month' ? `月${n}回` : clientModal.freqType==='bimonth' ? '2ヶ月に1回' : '3ヶ月に1回' }}
+            <option v-for="n in (clientModal.freqType==='week' ? [1,2,3,4,5,6,7] : clientModal.freqType==='daily' ? [2,3,4] : [1,2,3,4])" :key="n" :value="n">
+              {{ clientModal.freqType==='week' ? `週${n}回` : clientModal.freqType==='daily' ? `1日${n}回` : `月${n}回` }}
             </option>
           </select>
         </div>

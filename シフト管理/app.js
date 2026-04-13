@@ -99,26 +99,38 @@ createApp({
       return this.staffList.filter(s => s.active);
     },
 
-    // 利用者確認ビュー用（週次）
+    // 利用者確認ビュー用（週次・1日複数回）
     clientViewRows() {
-      return this.clientList.filter(c => c.freqType === 'week').map(client => {
+      return this.clientList.filter(c => c.freqType === 'week' || c.freqType === 'daily').map(client => {
         const days = this.weekDays.map(day => {
           const dayVisits = this.visits.filter(v =>
             v.clientId === client.id && v.date === day.dateStr
           );
+          const dayCount = dayVisits.length;
+          let dayStatus = 'none';
+          if (client.freqType === 'daily' && client.weeklyVisits) {
+            dayStatus = dayCount >= client.weeklyVisits ? 'ok'
+                      : dayCount > 0 ? 'partial' : 'empty';
+          }
           return {
             dateStr: day.dateStr,
             isToday: day.isToday,
+            dayCount,
+            dayStatus,
             visits: dayVisits.map(v => {
               const staff = this.staffList.find(s => s.id === v.staffId);
               return { ...v, staffName: staff?.name || '?', staffColor: staff?.color || '#999' };
             }),
           };
         });
-        const weekCount = days.reduce((sum, d) => sum + d.visits.length, 0);
+        const weekCount = days.reduce((sum, d) => sum + d.dayCount, 0);
         const expected = client.weeklyVisits;
         let status = 'none';
-        if (expected) status = weekCount >= expected ? 'ok' : 'warn';
+        if (client.freqType === 'daily' && expected) {
+          status = days.some(d => d.dayCount < expected) ? 'warn' : 'ok';
+        } else if (expected) {
+          status = weekCount >= expected ? 'ok' : 'warn';
+        }
         return { client, days, weekCount, expected, status };
       }).filter(row => {
         if (this.clientViewFilter === 'active') return row.weekCount > 0;
