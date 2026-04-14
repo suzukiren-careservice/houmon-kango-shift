@@ -275,7 +275,10 @@
               </div>
             </td>
             <td class="cv-freq-cell">
-              <template v-if="row.client.freqType === 'daily'">
+              <template v-if="row.client.onHold">
+                <span class="cv-freq-badge hold">⏸ 停止中</span>
+              </template>
+              <template v-else-if="row.client.freqType === 'daily'">
                 <span class="cv-freq-badge" :class="row.status">1日{{ row.expected || '?' }}回</span>
               </template>
               <template v-else>
@@ -319,8 +322,11 @@
               <template v-else>{{ row.nextDueDateStr ? formatDateJp(row.nextDueDateStr) : '―' }}</template>
             </td>
             <td class="cv-freq-cell">
+              <template v-if="row.client.onHold">
+                <span class="cv-freq-badge hold">⏸ 停止中</span>
+              </template>
               <!-- 月次：今月の訪問回数 -->
-              <template v-if="row.client.freqType==='month'">
+              <template v-else-if="row.client.freqType==='month'">
                 <span v-if="row.expected" class="cv-freq-badge" :class="row.status">{{ row.visitCount }}/{{ row.expected }}回</span>
                 <span v-else class="cv-freq-badge none">{{ row.visitCount }}回</span>
               </template>
@@ -361,9 +367,12 @@
       <button v-if="isAdmin" class="btn btn-primary" @click="openAddClient">＋ 利用者追加</button>
     </div>
     <div class="manage-list">
-      <div v-for="client in clientList" :key="client.id" class="manage-item client-item">
+      <div v-for="client in clientList" :key="client.id" class="manage-item client-item" :class="{ 'client-on-hold': client.onHold }">
         <div class="client-info">
-          <span class="manage-item-name">{{ client.name }}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="manage-item-name">{{ client.name }}</span>
+            <span v-if="client.onHold" class="hold-badge">⏸ 停止中</span>
+          </div>
           <span v-if="client.address" class="client-address">{{ client.address }}</span>
           <span v-if="client.notes" class="client-notes-preview">{{ client.notes }}</span>
         </div>
@@ -401,7 +410,6 @@
                   class="print-visit"
                 >
                   <span v-if="visit.startTime || visit.endTime" class="print-time">{{ visit.startTime || '?' }}〜{{ visit.endTime || '?' }} </span><strong>{{ getClientName(visit.clientId) }}</strong>
-                  <span v-if="visit.location"> {{ visit.location }}</span>
                 </div>
                 <div v-if="getVisits(staff.id, day.dateStr, 'morning').length === 0" class="print-empty">―</div>
               </template>
@@ -416,7 +424,6 @@
                   class="print-visit"
                 >
                   <span v-if="visit.startTime || visit.endTime" class="print-time">{{ visit.startTime || '?' }}〜{{ visit.endTime || '?' }} </span><strong>{{ getClientName(visit.clientId) }}</strong>
-                  <span v-if="visit.location"> {{ visit.location }}</span>
                 </div>
                 <div v-if="getVisits(staff.id, day.dateStr, 'afternoon').length === 0" class="print-empty">―</div>
               </template>
@@ -552,6 +559,19 @@
         </div>
         <div class="form-group">
           <label>訪問頻度（利用者確認ビュー用）</label>
+          <!-- 訪問ストップ -->
+          <div class="form-group" style="margin-bottom:12px">
+            <button
+              type="button"
+              class="btn"
+              :class="clientModal.onHold ? 'btn-danger' : 'btn-cancel'"
+              style="width:100%;font-size:14px;padding:10px"
+              @click="clientModal.onHold = !clientModal.onHold"
+            >
+              {{ clientModal.onHold ? '🔴 訪問ストップ中（タップで解除）' : '⏸ 訪問ストップ（DS・入院など）' }}
+            </button>
+          </div>
+
           <select v-model="clientModal.freqType" class="form-input" style="margin-bottom:8px">
             <option value="week">週次（毎週）</option>
             <option value="daily">1日複数回（毎日）</option>
