@@ -1,0 +1,2 @@
+const SUPABASE_URL = 'https://sssazbednnmzattaiivu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc2F6YmVkbm5temF0dGFpaXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTcxMTMsImV4cCI6MjA5MjE3MzExM30.M9_b0rw9KMoT3Q7maytSzjZzSTtA4KFarmZSXypY7dk';
