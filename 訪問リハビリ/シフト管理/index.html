@@ -233,7 +233,7 @@
     <div class="cv-toolbar">
       <div class="cv-period-tabs">
         <button class="cv-period-tab" :class="{ on: clientViewPeriod==='week' }"     @click="clientViewPeriod='week'">📅 週次・1日複数回</button>
-        <button class="cv-period-tab" :class="{ on: clientViewPeriod==='longterm' }" @click="clientViewPeriod='longterm'">📆 月次・長期（月1回〜）</button>
+        <button class="cv-period-tab" :class="{ on: clientViewPeriod==='longterm' }" @click="clientViewPeriod='longterm'">📆 不定期</button>
       </div>
       <div class="cv-filters" style="margin-top:8px">
         <button class="cv-chip" :class="{ on: clientViewFilter==='all' }"  @click="clientViewFilter='all'">全員</button>
@@ -296,51 +296,43 @@
       </table>
     </div>
 
-    <!-- 月次・長期テーブル -->
+    <!-- 不定期テーブル -->
     <div v-if="clientViewPeriod==='longterm'" class="cv-table-wrap">
       <table class="cv-table">
         <thead>
           <tr>
             <th class="cv-name-col">利用者</th>
-            <th style="text-align:center">頻度</th>
-            <th style="text-align:center">前回訪問日</th>
-            <th style="text-align:center">次回目安</th>
-            <th class="cv-freq-col">状況</th>
+            <th v-for="day in weekDays" :key="day.dateStr"
+              :class="['cv-day-col', { 'cv-today': day.isToday, 'cv-weekend': day.isWeekend }]">
+              {{ ['日','月','火','水','木','金','土'][new Date(day.dateStr+'T00:00:00').getDay()] }}<br>
+              <span class="cv-date">{{ day.shortDate }}</span>
+            </th>
+            <th class="cv-freq-col">今週</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in clientViewLongtermRows" :key="row.client.id" :class="{ 'cv-warn-row': row.status==='warn' }">
+          <tr v-for="row in clientViewLongtermRows" :key="row.client.id">
             <td class="cv-name-cell">{{ row.client.name }}</td>
-            <td style="text-align:center;font-size:12px;color:#64748B">
-              {{ row.client.freqType==='month' ? '月次' : row.client.freqType==='bimonth' ? '2ヶ月に1回' : '3ヶ月に1回' }}
-            </td>
-            <td style="text-align:center;font-size:12px;color:#64748B">
-              {{ row.lastVisitDate ? formatDateJp(row.lastVisitDate) : '―' }}
-            </td>
-            <td style="text-align:center;font-size:12px;color:#64748B">
-              <template v-if="row.client.freqType==='month'">今月中</template>
-              <template v-else>{{ row.nextDueDateStr ? formatDateJp(row.nextDueDateStr) : '―' }}</template>
+            <td v-for="day in row.days" :key="day.dateStr" :class="['cv-cell', { 'cv-today': day.isToday }]">
+              <div v-if="day.visits.length" class="cv-visits">
+                <span v-for="v in day.visits" :key="v.id" class="cv-badge" :style="{ background: v.staffColor }">
+                  {{ v.staffName }}<span class="cv-period">{{ v.period==='morning' ? '午前' : '午後' }}</span>
+                </span>
+              </div>
+              <div v-else class="cv-empty"></div>
             </td>
             <td class="cv-freq-cell">
               <template v-if="row.client.onHold">
                 <span class="cv-freq-badge hold">⏸ 停止中</span>
               </template>
-              <!-- 月次：今月の訪問回数 -->
-              <template v-else-if="row.client.freqType==='month'">
-                <span v-if="row.expected" class="cv-freq-badge" :class="row.status">{{ row.visitCount }}/{{ row.expected }}回</span>
-                <span v-else class="cv-freq-badge none">{{ row.visitCount }}回</span>
-              </template>
-              <!-- 2・3ヶ月：期限ベース -->
               <template v-else>
-                <span class="cv-freq-badge" :class="row.status">
-                  {{ row.status==='ok' ? '期限内' : row.lastVisitDate ? '期限超過' : '未記録' }}
-                </span>
+                <span class="cv-freq-badge none">{{ row.weekCount }}回</span>
               </template>
             </td>
           </tr>
           <tr v-if="clientViewLongtermRows.length === 0">
-            <td colspan="5" style="text-align:center;padding:32px;color:#94A3B8;font-size:13px">
-              月次・長期の利用者が登録されていません
+            <td :colspan="9" style="text-align:center;padding:32px;color:#94A3B8;font-size:13px">
+              不定期の利用者が登録されていません
             </td>
           </tr>
         </tbody>
@@ -573,18 +565,22 @@
           </div>
 
           <select v-model="clientModal.freqType" class="form-input" style="margin-bottom:8px">
-            <option value="week">週次（毎週）</option>
-            <option value="daily">1日複数回（毎日）</option>
-            <option value="month">月次（毎月）</option>
-            <option value="bimonth">長期（2ヶ月に1回）</option>
-            <option value="quarter">長期（3ヶ月に1回）</option>
+            <option value="week">週次（週1〜週6回）</option>
+            <option value="daily">毎日 / 1日複数回</option>
+            <option value="irregular">不定期</option>
           </select>
-          <select v-if="clientModal.freqType !== 'bimonth' && clientModal.freqType !== 'quarter'"
+          <select v-if="clientModal.freqType === 'week'"
                   v-model="clientModal.weeklyVisits" class="form-input">
             <option :value="null">回数：未設定</option>
-            <option v-for="n in (clientModal.freqType==='week' ? [1,2,3,4,5,6,7] : clientModal.freqType==='daily' ? [2,3,4] : [1,2,3,4])" :key="n" :value="n">
-              {{ clientModal.freqType==='week' ? `週${n}回` : clientModal.freqType==='daily' ? `1日${n}回` : `月${n}回` }}
-            </option>
+            <option v-for="n in [1,2,3,4,5,6]" :key="n" :value="n">週{{ n }}回</option>
+          </select>
+          <select v-if="clientModal.freqType === 'daily'"
+                  v-model="clientModal.weeklyVisits" class="form-input">
+            <option :value="null">回数：未設定</option>
+            <option :value="7">毎日（週7回・1日1回）</option>
+            <option :value="2">1日2回</option>
+            <option :value="3">1日3回</option>
+            <option :value="4">1日4回</option>
           </select>
         </div>
       </div>

@@ -101,7 +101,7 @@ createApp({
 
     // 利用者確認ビュー用（週次・1日複数回）
     clientViewRows() {
-      return this.clientList.filter(c => c.freqType === 'week' || c.freqType === 'daily').map(client => {
+      return this.clientList.filter(c => c.freqType === 'week' || c.freqType === 'daily' || (!c.freqType)).map(client => {
         const days = this.weekDays.map(day => {
           const dayVisits = this.visits.filter(v =>
             v.clientId === client.id && v.date === day.dateStr
@@ -141,57 +141,31 @@ createApp({
       });
     },
 
-    // 月次・長期確認ビュー用
+    // 不定期確認ビュー用
     clientViewLongtermRows() {
-      const now = new Date();
-      const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-      const qStart = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3, 1);
-      const qEnd   = new Date(now.getFullYear(), Math.floor(now.getMonth()/3)*3+3, 0);
-
-      return this.clientList.filter(c => c.freqType === 'month' || c.freqType === 'bimonth' || c.freqType === 'quarter').map(client => {
-        // 前回訪問日（全期間で最新）
-        const allVisits = this.visits
-          .filter(v => v.clientId === client.id && v.date)
-          .map(v => v.date)
-          .sort()
-          .reverse();
-        const lastVisitDate = allVisits[0] || null;
-
-        let visitCount = 0;
-        let nextDueDateStr = null;
-        let status = 'none';
-
-        if (client.freqType === 'month') {
-          // 月次：今月の訪問回数で判定
-          visitCount = this.visits.filter(v => v.clientId === client.id && v.date.startsWith(ym)).length;
-          const expected = client.weeklyVisits;
-          if (expected) status = visitCount >= expected ? 'ok' : 'warn';
-        } else {
-          // 2ヶ月・3ヶ月：前回訪問からの経過で判定
-          const intervalMonths = client.freqType === 'bimonth' ? 2 : 3;
-          if (lastVisitDate) {
-            const lastDate = new Date(lastVisitDate + 'T00:00:00');
-            const nextDue  = new Date(lastDate);
-            nextDue.setMonth(nextDue.getMonth() + intervalMonths);
-            nextDueDateStr = this.formatDateStr(nextDue);
-            status = now >= nextDue ? 'warn' : 'ok';
-          } else {
-            status = 'warn'; // 訪問記録なし
-          }
-        }
-
-        if (client.onHold) status = 'hold';
-        const expected = client.freqType === 'month' ? client.weeklyVisits : null;
-        return { client, visitCount, expected, lastVisitDate, nextDueDateStr, status };
-      }).filter(row => {
-        if (this.clientViewFilter === 'warn') return row.status === 'warn';
-        return true;
+      return this.clientList.filter(c => c.freqType === 'irregular').map(client => {
+        const days = this.weekDays.map(day => {
+          const dayVisits = this.visits.filter(v =>
+            v.clientId === client.id && v.date === day.dateStr
+          );
+          return {
+            dateStr: day.dateStr,
+            isToday: day.isToday,
+            dayCount: dayVisits.length,
+            visits: dayVisits.map(v => {
+              const staff = this.staffList.find(s => s.id === v.staffId);
+              return { ...v, staffName: staff?.name || '?', staffColor: staff?.color || '#999' };
+            }),
+          };
+        });
+        const weekCount = days.reduce((sum, d) => sum + d.dayCount, 0);
+        return { client, days, weekCount };
       });
     },
 
     clientViewWarnCount() {
       const weekWarn = this.clientViewRows.filter(r => r.status === 'warn').length;
-      const ltWarn   = this.clientViewLongtermRows.filter(r => r.status === 'warn').length;
+      const ltWarn   = 0;
       return weekWarn + ltWarn;
     },
 
