@@ -178,6 +178,16 @@
         <input v-model="reportAuthor" class="report-author-input"
           placeholder="例：ケアサービス鈴木" />
       </div>
+      <div class="report-author-row">
+        <label class="report-author-label">請求先（元受け会社名）</label>
+        <input v-model="invoiceTo" class="report-author-input"
+          placeholder="例：株式会社〇〇" />
+      </div>
+      <div class="report-author-row">
+        <label class="report-author-label">振込先</label>
+        <textarea v-model="invoiceBank" class="report-author-input"
+          rows="2" placeholder="例：〇〇銀行 〇〇支店 普通 1234567 カブシキカイシャ〇〇"></textarea>
+      </div>
       <button class="print-btn" @click="printReport">🖨️ 印刷 / PDF保存</button>
     </div>
 
@@ -282,6 +292,92 @@
       </div>
 
     </div><!-- /report-area -->
+
+    <!-- ===== 請求書（印刷時は改ページして表示） ===== -->
+    <div id="invoice-area" class="invoice-area">
+
+      <div class="invoice-head">
+        <h1 class="invoice-title">請　求　書</h1>
+      </div>
+
+      <div class="invoice-body">
+        <!-- 宛名・日付 -->
+        <div class="invoice-to-row">
+          <div class="invoice-to">
+            <span v-if="invoiceTo" class="invoice-to-name">{{ invoiceTo }} 御中</span>
+            <span v-else class="invoice-to-name invoice-to-blank">　　　　　　　　　　　　　　御中</span>
+          </div>
+          <div class="invoice-date-block">
+            <div class="invoice-date-label">請求日</div>
+            <div class="invoice-date-val">{{ todayLabel }}</div>
+            <div v-if="reportAuthor" class="invoice-from">{{ reportAuthor }}</div>
+          </div>
+        </div>
+
+        <!-- 件名 -->
+        <div class="invoice-subject">
+          件名：{{ monthLabel }} 見守り訪問サービス費
+        </div>
+
+        <!-- 合計金額 -->
+        <div class="invoice-total-box">
+          <span class="invoice-total-label">ご請求金額</span>
+          <span class="invoice-total-amount">¥ {{ invoiceTotal.toLocaleString() }}（税込）</span>
+        </div>
+
+        <!-- 明細テーブル -->
+        <table class="invoice-table">
+          <thead>
+            <tr>
+              <th>品目・内容</th>
+              <th class="inv-col-qty">数量</th>
+              <th class="inv-col-unit">単価</th>
+              <th class="inv-col-amt">金額</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>見守り訪問サービス（{{ monthLabel }}）</td>
+              <td class="center">{{ invoiceCount }} 名</td>
+              <td class="center">¥2,000</td>
+              <td class="center">¥ {{ invoiceTotal.toLocaleString() }}</td>
+            </tr>
+            <!-- 空行 -->
+            <tr v-for="n in 5" :key="n" class="invoice-blank-row">
+              <td></td><td></td><td></td><td></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="inv-foot-label">小　計</td>
+              <td class="center">¥ {{ invoiceTotal.toLocaleString() }}</td>
+            </tr>
+            <tr>
+              <td colspan="3" class="inv-foot-label">消費税（10%）</td>
+              <td class="center">¥ {{ invoiceTax.toLocaleString() }}</td>
+            </tr>
+            <tr class="inv-grand-total">
+              <td colspan="3" class="inv-foot-label">合　計</td>
+              <td class="center">¥ {{ invoiceGrandTotal.toLocaleString() }}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- 振込先 -->
+        <div v-if="invoiceBank" class="invoice-bank">
+          <div class="invoice-bank-label">■ お振込先</div>
+          <div class="invoice-bank-val" style="white-space:pre-wrap">{{ invoiceBank }}</div>
+        </div>
+
+        <!-- 備考 -->
+        <div class="invoice-note">
+          ※ お支払い期限は請求月末日までとさせていただきます。
+        </div>
+      </div>
+
+    </div><!-- /invoice-area -->
+
+  </div>
   </div>
 
   <!-- =====================================================

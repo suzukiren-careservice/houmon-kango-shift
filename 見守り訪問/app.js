@@ -26,8 +26,10 @@ createApp({
       // タブ
       currentTab: 'schedule',
 
-      // 報告書
+      // 報告書・請求書
       reportAuthor: localStorage.getItem('welfare_report_author') || '',
+      invoiceTo:    localStorage.getItem('welfare_invoice_to')    || '',
+      invoiceBank:  localStorage.getItem('welfare_invoice_bank')  || '',
 
       // データ
       residents: [],
@@ -132,12 +134,26 @@ createApp({
       const d = new Date();
       return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
     },
+    // 請求書
+    invoiceCount() {
+      const ids = new Set(this.reportDone.map(v => v.resident_id));
+      return ids.size;
+    },
+    invoiceTotal() {
+      return this.invoiceCount * 2000;
+    },
+    invoiceTax() {
+      return Math.floor(this.invoiceTotal * 0.1);
+    },
+    invoiceGrandTotal() {
+      return this.invoiceTotal + this.invoiceTax;
+    },
   },
 
   watch: {
-    reportAuthor(v) {
-      localStorage.setItem('welfare_report_author', v);
-    },
+    reportAuthor(v) { localStorage.setItem('welfare_report_author', v); },
+    invoiceTo(v)    { localStorage.setItem('welfare_invoice_to', v); },
+    invoiceBank(v)  { localStorage.setItem('welfare_invoice_bank', v); },
   },
 
   methods: {

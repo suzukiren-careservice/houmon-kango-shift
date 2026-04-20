@@ -654,6 +654,134 @@ body {
 }
 
 /* =============================================
+   請求書
+   ============================================= */
+.invoice-area {
+  padding: 20px 16px;
+  background: var(--card);
+  border-top: 6px solid var(--border);
+  margin-top: 8px;
+}
+.invoice-head {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--text);
+}
+.invoice-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 8px;
+}
+.invoice-body { }
+
+.invoice-to-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.invoice-to { flex: 1; }
+.invoice-to-name {
+  font-size: 17px;
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--text);
+  display: inline-block;
+  padding-bottom: 3px;
+  min-width: 120px;
+}
+.invoice-to-blank { color: transparent; }
+.invoice-date-block {
+  text-align: right;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.invoice-date-label { color: var(--sub); font-size: 11px; }
+.invoice-date-val { font-weight: 600; }
+.invoice-from { font-size: 13px; margin-top: 4px; }
+
+.invoice-subject {
+  font-size: 14px;
+  font-weight: 700;
+  background: #F1F5F9;
+  padding: 10px 14px;
+  border-left: 4px solid var(--primary);
+  margin-bottom: 16px;
+}
+.invoice-total-box {
+  border: 2px solid var(--text);
+  border-radius: 8px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.invoice-total-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sub);
+}
+.invoice-total-amount {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+/* 明細テーブル */
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.invoice-table th, .invoice-table td {
+  border: 1px solid #CBD5E1;
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+.invoice-table th {
+  background: #E2E8F0;
+  font-weight: 700;
+  text-align: center;
+  font-size: 12px;
+}
+.inv-col-qty  { width: 60px; text-align: center; }
+.inv-col-unit { width: 72px; text-align: center; }
+.inv-col-amt  { width: 90px; text-align: center; }
+.invoice-blank-row td { height: 28px; }
+.invoice-table tfoot td {
+  font-weight: 600;
+  background: #F8FAFC;
+}
+.inv-foot-label { text-align: right; font-weight: 700; }
+.inv-grand-total td {
+  background: #EFF6FF !important;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.invoice-bank {
+  background: #F1F5F9;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.invoice-bank-label {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.invoice-bank-val { color: var(--text); line-height: 1.7; }
+.invoice-note {
+  font-size: 12px;
+  color: var(--sub);
+  margin-top: 8px;
+}
+
+/* =============================================
    印刷用スタイル
    ============================================= */
 @media print {
@@ -687,4 +815,13 @@ body {
   /* ページ分割を制御 */
   .report-section { page-break-inside: avoid; }
   tr { page-break-inside: avoid; }
+
+  /* 請求書は必ず改ページ後に出力 */
+  .invoice-area {
+    page-break-before: always;
+    border-top: none !important;
+    margin-top: 0 !important;
+    padding: 15mm 15mm !important;
+  }
+  .invoice-total-amount { font-size: 20px; }
 }
