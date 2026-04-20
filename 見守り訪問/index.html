@@ -58,6 +58,10 @@
         @click="currentTab = 'residents'">
         利用者管理
       </button>
+      <button class="tab-btn" :class="{ active: currentTab === 'report' }"
+        @click="currentTab = 'report'">
+        月次報告書
+      </button>
     </div>
   </header>
 
@@ -162,6 +166,122 @@
       ＋ 利用者を追加
     </button>
 
+  </div>
+
+  <!-- ========== 月次報告書タブ ========== -->
+  <div v-else-if="currentTab === 'report'" class="main-content">
+
+    <!-- 操作バー（印刷時は非表示） -->
+    <div class="report-toolbar no-print">
+      <div class="report-author-row">
+        <label class="report-author-label">作成者・会社名</label>
+        <input v-model="reportAuthor" class="report-author-input"
+          placeholder="例：ケアサービス鈴木" />
+      </div>
+      <button class="print-btn" @click="printReport">🖨️ 印刷 / PDF保存</button>
+    </div>
+
+    <!-- 報告書本体（印刷対象） -->
+    <div id="report-area" class="report-area">
+
+      <!-- ヘッダー -->
+      <div class="report-head">
+        <h1 class="report-title">見守り訪問 月次報告書</h1>
+        <table class="report-meta-table">
+          <tr><td class="rmt-label">対象月</td><td>{{ monthLabel }}</td></tr>
+          <tr><td class="rmt-label">作成日</td><td>{{ todayLabel }}</td></tr>
+          <tr v-if="reportAuthor"><td class="rmt-label">作成者</td><td>{{ reportAuthor }}</td></tr>
+        </table>
+      </div>
+
+      <!-- 訪問完了 -->
+      <div class="report-section">
+        <h2 class="report-section-title">■ 訪問完了者（{{ reportDone.length }} 名）</h2>
+        <div v-if="reportDone.length === 0" class="report-empty">訪問完了者はいません</div>
+        <table v-else class="report-table">
+          <thead>
+            <tr>
+              <th class="col-no">No</th>
+              <th class="col-name">氏名</th>
+              <th class="col-place">建物・号室</th>
+              <th class="col-date">訪問日</th>
+              <th class="col-check">①体の変化</th>
+              <th class="col-check">②気になること</th>
+              <th class="col-check">③病院受診</th>
+              <th class="col-note">特記事項</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(v, i) in reportDone" :key="v.id">
+              <td class="col-no center">{{ i + 1 }}</td>
+              <td class="col-name">
+                {{ v.resident_name }}
+                <div class="report-furigana">{{ v.resident_furigana }}</div>
+              </td>
+              <td class="col-place">
+                <div>{{ v.resident_building }}</div>
+                <div v-if="v.resident_room">{{ v.resident_room }}号室</div>
+              </td>
+              <td class="col-date center">{{ formatDateShort(v.scheduled_date) }}</td>
+              <td class="col-check center" :class="v.body_change === 'yes' ? 'check-yes' : 'check-none'">
+                {{ v.body_change === 'yes' ? 'あり' : 'なし' }}
+                <div v-if="v.body_change_detail" class="report-detail">{{ v.body_change_detail }}</div>
+              </td>
+              <td class="col-check center" :class="v.body_concern === 'yes' ? 'check-yes' : 'check-none'">
+                {{ v.body_concern === 'yes' ? 'あり' : 'なし' }}
+                <div v-if="v.body_concern_detail" class="report-detail">{{ v.body_concern_detail }}</div>
+              </td>
+              <td class="col-check center" :class="v.hospital_visit === 'yes' ? 'check-yes' : 'check-none'">
+                {{ v.hospital_visit === 'yes' ? 'あり' : 'なし' }}
+                <div v-if="v.hospital_detail" class="report-detail">{{ v.hospital_detail }}</div>
+              </td>
+              <td class="col-note">{{ v.visit_notes }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 未訪問 -->
+      <div class="report-section" v-if="reportPending.length > 0">
+        <h2 class="report-section-title">■ 未訪問者（{{ reportPending.length }} 名）</h2>
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th class="col-no">No</th>
+              <th class="col-name">氏名</th>
+              <th class="col-place">建物・号室</th>
+              <th class="col-date">予定日</th>
+              <th>備考</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(v, i) in reportPending" :key="v.id">
+              <td class="col-no center">{{ i + 1 }}</td>
+              <td class="col-name">{{ v.resident_name }}</td>
+              <td class="col-place">
+                <div>{{ v.resident_building }}</div>
+                <div v-if="v.resident_room">{{ v.resident_room }}号室</div>
+              </td>
+              <td class="col-date center">{{ formatDateShort(v.scheduled_date) }}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 署名欄 -->
+      <div class="report-signature">
+        <div class="sig-item">
+          <div class="sig-label">担当者</div>
+          <div class="sig-box"></div>
+        </div>
+        <div class="sig-item">
+          <div class="sig-label">確認印</div>
+          <div class="sig-box"></div>
+        </div>
+      </div>
+
+    </div><!-- /report-area -->
   </div>
 
   <!-- =====================================================

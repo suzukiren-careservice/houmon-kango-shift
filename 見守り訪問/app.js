@@ -26,6 +26,9 @@ createApp({
       // タブ
       currentTab: 'schedule',
 
+      // 報告書
+      reportAuthor: localStorage.getItem('welfare_report_author') || '',
+
       // データ
       residents: [],
       visits: [],
@@ -115,6 +118,26 @@ createApp({
         };
       });
     },
+
+    // 報告書用
+    reportDone() {
+      return this.visits.filter(v => v.visited).sort((a, b) =>
+        a.scheduled_date.localeCompare(b.scheduled_date));
+    },
+    reportPending() {
+      return this.visits.filter(v => !v.visited).sort((a, b) =>
+        a.scheduled_date.localeCompare(b.scheduled_date));
+    },
+    todayLabel() {
+      const d = new Date();
+      return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+    },
+  },
+
+  watch: {
+    reportAuthor(v) {
+      localStorage.setItem('welfare_report_author', v);
+    },
   },
 
   methods: {
@@ -178,7 +201,7 @@ createApp({
 
       const { data, error } = await db
         .from('welfare_visits')
-        .select('*, welfare_residents(name, address, room_number)')
+        .select('*, welfare_residents(name, furigana, building_name, address, room_number)')
         .gte('scheduled_date', firstDay)
         .lte('scheduled_date', lastDay)
         .order('scheduled_date')
@@ -188,6 +211,7 @@ createApp({
         this.visits = (data || []).map(v => ({
           ...v,
           resident_name:     v.welfare_residents?.name          || '（不明）',
+          resident_furigana: v.welfare_residents?.furigana      || '',
           resident_building: v.welfare_residents?.building_name || '',
           resident_address:  v.welfare_residents?.address       || '',
           resident_room:     v.welfare_residents?.room_number   || '',
@@ -328,6 +352,18 @@ createApp({
 
     closeResidentModal() {
       this.residentModal.show = false;
+    },
+
+    // ──────────────────────────────
+    // 報告書
+    // ──────────────────────────────
+    formatDateShort(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T00:00:00');
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    },
+    printReport() {
+      window.print();
     },
 
     async saveResident() {
