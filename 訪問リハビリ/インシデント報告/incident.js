@@ -218,7 +218,7 @@ createApp({
       const incs = this.allIncidents.filter(inc =>
         inc.incident_date?.startsWith(this.analysisMonth)
       );
-      const s = { 'ヒヤリハット': 0, 'インシデント': 0, 'アクシデント': 0, topCat: null };
+      const s = { 'インシデント': 0, 'アクシデント': 0, topCat: null };
       incs.forEach(inc => {
         if (inc.classification && s[inc.classification] !== undefined) s[inc.classification]++;
       });
@@ -652,6 +652,111 @@ createApp({
       if (!dateStr) return '';
       const d = new Date(dateStr + 'T00:00:00');
       return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+    },
+
+    // ===== 印刷 =====
+    printIncident(inc) {
+      const esc = s => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+      const dateStr  = this.fmtDate(inc.incident_date);
+      const time     = inc.incident_time ? inc.incident_time.slice(0, 5) : '';
+      const cats     = this.catNames(inc.category_ids);
+      const html = `<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="UTF-8">
+<title>インシデント報告書</title>
+<style>
+  body { font-family: 'Hiragino Sans','Meiryo',sans-serif; font-size:11pt; padding:15mm 20mm; color:#212121; }
+  h1 { text-align:center; font-size:14pt; border-bottom:2px solid #333; padding-bottom:8px; margin-bottom:20px; }
+  .row { display:flex; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #e0e0e0; }
+  .key { width:110px; font-weight:700; color:#546E7A; flex-shrink:0; padding-top:1px; }
+  .val { flex:1; }
+  .section { margin-top:14px; }
+  .sec-title { font-weight:700; background:#F5F5F5; padding:5px 10px; border-left:4px solid #1565C0; margin-bottom:8px; font-size:10pt; }
+  .sec-body { min-height:36px; padding:8px 10px; border:1px solid #CFD8DC; line-height:1.7; white-space:pre-wrap; font-size:10.5pt; }
+  @media print { @page { margin:15mm 20mm; } }
+</style>
+</head><body>
+<h1>【インシデント報告書】</h1>
+<div class="row"><span class="key">発生日時</span><span class="val">${esc(dateStr)} ${esc(time)}</span></div>
+<div class="row"><span class="key">報告日</span><span class="val">${esc(this.fmtDate(inc.report_date))}</span></div>
+<div class="row"><span class="key">報告者</span><span class="val">${esc(inc.staff_name)}</span></div>
+<div class="row"><span class="key">対象者</span><span class="val">${esc(inc.target_person)}</span></div>
+<div class="row"><span class="key">分類</span><span class="val">${esc(inc.classification)}</span></div>
+<div class="row"><span class="key">カテゴリ</span><span class="val">${esc(cats)}</span></div>
+<div class="section">
+  <div class="sec-title">▲具体的内容・原因</div>
+  <div class="sec-body">${esc(inc.details)}</div>
+</div>
+<div class="section">
+  <div class="sec-title">▲結果</div>
+  <div class="sec-body">${esc(inc.result)}</div>
+</div>
+<div class="section">
+  <div class="sec-title">▲対応・対策方法</div>
+  <div class="sec-body">${esc(inc.response)}</div>
+</div>
+</body></html>`;
+      const w = window.open('', '_blank');
+      if (!w) { alert('ポップアップがブロックされました。ブラウザの設定を確認してください。'); return; }
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      setTimeout(() => { w.print(); }, 600);
+    },
+
+    printAnalysis() {
+      const barImg  = this.$refs.barChart  ? this.$refs.barChart.toDataURL('image/png')  : null;
+      const lineImg = this.$refs.lineChart ? this.$refs.lineChart.toDataURL('image/png') : null;
+      const label   = this.analysisLabel;
+      const total   = this.monthlyTotal;
+      const s       = this.monthlySummary;
+
+      const barSection  = barImg
+        ? `<div class="chart-box"><div class="chart-title">📊 カテゴリ別件数（${label}）</div><img src="${barImg}" style="width:100%;max-width:600px"></div>`
+        : '<div class="no-data">カテゴリ別グラフ：データなし</div>';
+      const lineSection = lineImg
+        ? `<div class="chart-box"><div class="chart-title">📈 月別インシデント件数（過去12ヶ月）</div><img src="${lineImg}" style="width:100%;max-width:600px"></div>`
+        : '';
+
+      const html = `<!DOCTYPE html>
+<html lang="ja"><head>
+<meta charset="UTF-8">
+<title>インシデント分析 ${label}</title>
+<style>
+  body { font-family: 'Hiragino Sans','Meiryo',sans-serif; font-size:11pt; padding:15mm 20mm; color:#212121; }
+  h1 { text-align:center; font-size:14pt; border-bottom:2px solid #333; padding-bottom:8px; margin-bottom:20px; }
+  .chart-box { margin-bottom:24px; }
+  .chart-title { font-weight:700; font-size:12pt; color:#1565C0; margin-bottom:10px; }
+  .summary { border:1px solid #CFD8DC; border-radius:8px; padding:16px; margin-top:24px; }
+  .summary-title { font-weight:700; font-size:12pt; color:#1565C0; margin-bottom:12px; }
+  .summary-grid { display:flex; gap:16px; flex-wrap:wrap; }
+  .summary-item { text-align:center; padding:12px 20px; background:#F5F5F5; border-radius:8px; min-width:80px; }
+  .summary-num { font-size:22pt; font-weight:700; color:#1565C0; }
+  .summary-lbl { font-size:9pt; color:#546E7A; margin-top:4px; }
+  .top-cat { margin-top:12px; font-size:11pt; }
+  .no-data { color:#9E9E9E; font-style:italic; }
+  @media print { @page { margin:15mm 20mm; } }
+</style>
+</head><body>
+<h1>【インシデント分析レポート】${label}</h1>
+${barSection}
+${lineSection}
+<div class="summary">
+  <div class="summary-title">📋 ${label} サマリー</div>
+  <div class="summary-grid">
+    <div class="summary-item"><div class="summary-num">${total}</div><div class="summary-lbl">総件数</div></div>
+    <div class="summary-item"><div class="summary-num">${s['インシデント'] || 0}</div><div class="summary-lbl">インシデント</div></div>
+    <div class="summary-item"><div class="summary-num">${s['アクシデント'] || 0}</div><div class="summary-lbl">アクシデント</div></div>
+  </div>
+  ${s.topCat ? `<div class="top-cat">最多カテゴリ：<strong>${s.topCat}</strong></div>` : ''}
+</div>
+</body></html>`;
+      const w = window.open('', '_blank');
+      if (!w) { alert('ポップアップがブロックされました。ブラウザの設定を確認してください。'); return; }
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      setTimeout(() => { w.print(); }, 600);
     },
   },
 }).mount('#app');

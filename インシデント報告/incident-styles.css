@@ -432,6 +432,16 @@ body {
 .admin-del-btn  { background: #FFEBEE; color: var(--danger); }
 .admin-edit-btn:active, .admin-del-btn:active { opacity: 0.7; }
 
+/* 印刷ボタン */
+.print-btn {
+  border: 1.5px solid #90A4AE; border-radius: 8px;
+  background: #ECEFF1; color: #455A64;
+  padding: 5px 12px; font-size: 12px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  transition: background 0.15s, opacity 0.15s;
+}
+.print-btn:active { opacity: 0.7; }
+
 /* 編集モーダル */
 .edit-modal-box { max-height: 92vh; }
 .edit-section {
@@ -453,7 +463,10 @@ body {
 
 /* ===== Analysis View ===== */
 .analysis-view { padding: 12px; }
-.analysis-controls { margin-bottom: 12px; }
+.analysis-controls {
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
 
 .chart-card {
   background: var(--white);

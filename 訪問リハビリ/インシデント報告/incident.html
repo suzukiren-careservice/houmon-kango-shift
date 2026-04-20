@@ -129,7 +129,6 @@
               <span class="star-label">★分類</span>
               <select v-model="form.classification" class="info-input">
                 <option value="">— 選択 —</option>
-                <option value="ヒヤリハット">ヒヤリハット</option>
                 <option value="インシデント">インシデント</option>
                 <option value="アクシデント">アクシデント</option>
               </select>
@@ -276,6 +275,7 @@
           <select v-model="analysisMonth" class="month-select" @change="onAnalysisMonthChange">
             <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
           </select>
+          <button class="print-btn" @click="printAnalysis()">🖨️ 印刷</button>
         </div>
 
         <!-- カテゴリ別棒グラフ -->
@@ -303,7 +303,7 @@
               <div class="summary-number">{{ monthlyTotal }}</div>
               <div class="summary-label">総件数</div>
             </div>
-            <div class="summary-item" v-for="cls in ['ヒヤリハット','インシデント','アクシデント']" :key="cls">
+            <div class="summary-item" v-for="cls in ['インシデント','アクシデント']" :key="cls">
               <div class="summary-number">{{ monthlySummary[cls] || 0 }}</div>
               <div class="summary-label">{{ cls }}</div>
             </div>
@@ -404,7 +404,6 @@
               <span class="star-label">★分類</span>
               <select v-model="editModal.classification" class="info-input">
                 <option value="">— 選択 —</option>
-                <option value="ヒヤリハット">ヒヤリハット</option>
                 <option value="インシデント">インシデント</option>
                 <option value="アクシデント">アクシデント</option>
               </select>
@@ -473,7 +472,10 @@
         <div class="modal-drag"></div>
         <div class="modal-hdr">
           <h3>インシデント詳細</h3>
-          <button class="modal-close" @click="detail.show = false">✕</button>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="print-btn" @click="printIncident(detail.d)">🖨️ 印刷</button>
+            <button class="modal-close" @click="detail.show = false">✕</button>
+          </div>
         </div>
         <div class="modal-body-content">
           <div class="detail-row">
