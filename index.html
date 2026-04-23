@@ -312,6 +312,17 @@
     .loading-msg { text-align: center; padding: 24px; color: var(--sub); font-size: 13px; }
 
     /* スタッフ管理 */
+    .s-order-btns { display: flex; flex-direction: column; gap: 2px; }
+    .s-order-btn {
+      width: 24px; height: 20px;
+      border: 1.5px solid var(--border); border-radius: 5px;
+      background: #fff; color: var(--sub);
+      font-size: 10px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; padding: 0;
+    }
+    .s-order-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: #EFF6FF; }
+    .s-order-btn:disabled { opacity: 0.2; cursor: not-allowed; }
     .s-actions { display: flex; gap: 6px; }
     .s-act-btn {
       padding: 5px 10px; border-radius: 8px;
@@ -458,7 +469,11 @@
           <div class="sec">
             <div class="sec-label">👥 スタッフ管理</div>
             <p class="sec-note">スタッフの追加・編集・削除ができます</p>
-            <div v-for="s in allStaff" :key="s.id" class="s-row" :class="{ 's-inactive': !s.active }">
+            <div v-for="(s, idx) in allStaff" :key="s.id" class="s-row" :class="{ 's-inactive': !s.active }">
+              <div class="s-order-btns">
+                <button class="s-order-btn" @click="moveStaff(idx, -1)" :disabled="idx === 0">▲</button>
+                <button class="s-order-btn" @click="moveStaff(idx, 1)"  :disabled="idx === allStaff.length - 1">▼</button>
+              </div>
               <div class="s-avatar" :style="{ background: s.color }">{{ s.name.charAt(0) }}</div>
               <span class="s-name">{{ s.name }}</span>
               <span v-if="!s.active" class="s-badge">非稼働</span>
@@ -576,7 +591,7 @@ createApp({
     },
     async loadStaff() {
       this.loadingStaff = true;
-      const { data } = await db.from('staff').select('*').order('name');
+      const { data } = await db.from('staff').select('*').order('sort_order', { ascending: true, nullsFirst: false });
       this.allStaff = data || []; this.loadingStaff = false;
     },
     openAddStaff() {
@@ -599,13 +614,30 @@ createApp({
           const idx = this.allStaff.findIndex(s => s.id === this.staffForm.staffId);
           if (idx !== -1) Object.assign(this.allStaff[idx], payload);
         } else {
-          const { data, error } = await db.from('staff').insert({ ...payload, is_admin: false }).select().single();
+          const maxOrder = this.allStaff.reduce((m, s) => Math.max(m, s.sort_order || 0), 0);
+          const { data, error } = await db.from('staff').insert({ ...payload, is_admin: false, sort_order: maxOrder + 1 }).select().single();
           if (error) throw error;
           this.allStaff.push(data);
         }
         this.staffForm.show = false;
       } catch(e) { alert('保存エラー: ' + e.message); }
       finally { this.staffForm.saving = false; }
+    },
+    async moveStaff(idx, dir) {
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= this.allStaff.length) return;
+      const a = this.allStaff[idx];
+      const b = this.allStaff[targetIdx];
+      const [r1, r2] = await Promise.all([
+        db.from('staff').update({ sort_order: b.sort_order }).eq('id', a.id),
+        db.from('staff').update({ sort_order: a.sort_order }).eq('id', b.id),
+      ]);
+      if (r1.error || r2.error) { alert('更新エラー'); return; }
+      const tmpOrder = a.sort_order;
+      a.sort_order = b.sort_order;
+      b.sort_order = tmpOrder;
+      this.allStaff.splice(idx, 1);
+      this.allStaff.splice(targetIdx, 0, a);
     },
     async deleteStaff(s) {
       if (!confirm(`「${s.name}」を削除しますか？\n関連するシフト・訪問データも削除されます。`)) return;

@@ -296,7 +296,7 @@ createApp({
           { data: shiftData,  error: e3 },
           { data: visitData,  error: e4 },
         ] = await Promise.all([
-          db.from('staff').select('*').order('created_at'),
+          db.from('staff').select('*').order('sort_order', { ascending: true, nullsFirst: false }),
           db.from('clients').select('*').order('created_at'),
           db.from('shifts').select('*'),
           db.from('visits').select('*').order('created_at'),
