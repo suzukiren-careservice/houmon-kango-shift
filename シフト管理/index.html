@@ -164,6 +164,7 @@
                     </div>
                     <div v-if="visit.location" class="visit-location">{{ visit.location }}</div>
                     <div v-if="visit.notes" class="visit-notes">{{ visit.notes }}</div>
+                    <div v-if="hasCrossConflict(visit.clientId, day.dateStr)" class="cross-conflict-badge">⚠ {{ otherTeamLabel }}も訪問</div>
                   </div>
                   <button
                     v-if="isAdmin"
@@ -202,6 +203,7 @@
                     </div>
                     <div v-if="visit.location" class="visit-location">{{ visit.location }}</div>
                     <div v-if="visit.notes" class="visit-notes">{{ visit.notes }}</div>
+                    <div v-if="hasCrossConflict(visit.clientId, day.dateStr)" class="cross-conflict-badge">⚠ {{ otherTeamLabel }}も訪問</div>
                   </div>
                   <button
                     v-if="isAdmin"

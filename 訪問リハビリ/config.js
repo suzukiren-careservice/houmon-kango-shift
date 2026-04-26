@@ -1,2 +1,7 @@
 const SUPABASE_URL = 'https://sssazbednnmzattaiivu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzc2F6YmVkbm5temF0dGFpaXZ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTcxMTMsImV4cCI6MjA5MjE3MzExM30.M9_b0rw9KMoT3Q7maytSzjZzSTtA4KFarmZSXypY7dk';
+
+// 訪問看護DB（同日訪問チェック用）
+const OTHER_SUPABASE_URL = 'https://pxukxjqzdkgbtiudkwzn.supabase.co';
+const OTHER_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4dWt4anF6ZGtnYnRpdWRrd3puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzExNjMsImV4cCI6MjA4OTg0NzE2M30.HcA4RP_NFq_VUsWe66KWQDnX1OGQ4K_kE9YW1h7uXPw';
+const OTHER_TEAM_LABEL = '訪問看護';

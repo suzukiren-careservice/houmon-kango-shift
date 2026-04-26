@@ -1,6 +1,7 @@
 // ===== SUPABASE クライアント =====
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const db  = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const db2 = createClient(OTHER_SUPABASE_URL, OTHER_SUPABASE_ANON_KEY); // 他チームDB
 
 // ===== 定数 =====
 const COLOR_OPTIONS = [
@@ -37,6 +38,8 @@ createApp({
       clientList: [],
       shifts:     {},
       visits:     [],
+      crossConflicts:  {}, // 他チームの同日訪問マップ {正規化名_日付: true}
+      otherTeamLabel: OTHER_TEAM_LABEL,
 
       visitModal: {
         show: false, isEdit: false, visitId: null,
@@ -324,6 +327,26 @@ createApp({
           order:     v.order      || 0,
         }));
 
+        // ===== 他チームの同日訪問チェック =====
+        try {
+          const [{ data: otherVisits }, { data: otherClients }] = await Promise.all([
+            db2.from('visits').select('client_id, date'),
+            db2.from('clients').select('id, name'),
+          ]);
+          const nameMap = {};
+          (otherClients || []).forEach(c => {
+            nameMap[c.id] = c.name.replace(/[\s　]/g, ''); // 半角・全角スペース除去
+          });
+          const conflicts = {};
+          (otherVisits || []).forEach(v => {
+            const name = nameMap[v.client_id];
+            if (name) conflicts[`${name}_${v.date}`] = true;
+          });
+          this.crossConflicts = conflicts;
+        } catch(e) {
+          console.warn('他チームデータ取得エラー（無視）:', e);
+        }
+
       } catch (e) {
         console.error('データ読み込みエラー:', e);
         alert('データの読み込みに失敗しました。\nconfig.js の Supabase 設定を確認してください。');
@@ -373,6 +396,12 @@ createApp({
     },
     getClient(clientId) {
       return this.clientList.find(c => c.id === clientId) || null;
+    },
+    hasCrossConflict(clientId, dateStr) {
+      const client = this.clientList.find(c => c.id === clientId);
+      if (!client) return false;
+      const key = `${client.name.replace(/[\s　]/g, '')}_${dateStr}`;
+      return !!this.crossConflicts[key];
     },
 
     openAddVisit(staffId, dateStr, period) {
