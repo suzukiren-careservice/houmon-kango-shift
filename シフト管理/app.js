@@ -308,6 +308,7 @@ createApp({
 
         this.staffList  = (staffData  || []).map(s => ({ id: s.id, name: s.name, color: s.color, active: s.active, is_admin: s.is_admin }));
         this.clientList = (clientData || []).map(c => ({ id: c.id, name: c.name, address: c.address || '', notes: c.notes || '', weeklyVisits: c.weekly_visits || null, freqType: c.freq_type || 'week', onHold: c.on_hold || false }));
+        this.sortClients();
 
         this.shifts = {};
         (shiftData || []).forEach(s => {
@@ -545,7 +546,11 @@ createApp({
           this.clientList.push({ id: data.id, name: data.name, address: data.address, notes: data.notes, weeklyVisits: data.weekly_visits, freqType: data.freq_type || 'week', onHold: data.on_hold || false });
         }
       } catch (e) { alert('利用者の保存に失敗しました'); return; }
+      this.sortClients();
       this.closeClientModal();
+    },
+    sortClients() {
+      this.clientList.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
     },
     async deleteClient(client) {
       if (!confirm(`「${client.name}」を削除しますか？\n関連する訪問データも削除されます。`)) return;
