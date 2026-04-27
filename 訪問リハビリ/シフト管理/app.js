@@ -296,8 +296,8 @@ createApp({
           date:      v.date,
           period:    v.period,
           location:  v.location   || '',
-          startTime: v.start_time || '',
-          endTime:   v.end_time   || '',
+          startTime: (v.start_time || '').slice(0, 5),
+          endTime:   (v.end_time   || '').slice(0, 5),
           notes:     v.notes      || '',
           order:     v.order      || 0,
         }));
@@ -412,7 +412,7 @@ createApp({
           if (idx !== -1) this.visits.splice(idx, 1, {
             ...this.visits[idx],
             clientId: payload.client_id, location: payload.location,
-            startTime: payload.start_time, endTime: payload.end_time, notes: payload.notes,
+            startTime: (payload.start_time || '').slice(0, 5), endTime: (payload.end_time || '').slice(0, 5), notes: payload.notes,
           });
         } else {
           const order = this.getVisits(payload.staff_id, payload.date, payload.period).length;
@@ -421,8 +421,8 @@ createApp({
           this.visits.push({
             id: data.id, staffId: data.staff_id, clientId: data.client_id,
             date: data.date, period: data.period,
-            location: data.location || '', startTime: data.start_time || '',
-            endTime: data.end_time || '', notes: data.notes || '', order: data.order || 0,
+            location: data.location || '', startTime: (data.start_time || '').slice(0, 5),
+            endTime: (data.end_time || '').slice(0, 5), notes: data.notes || '', order: data.order || 0,
           });
         }
       } catch (e) {
