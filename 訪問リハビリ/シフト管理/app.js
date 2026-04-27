@@ -302,25 +302,8 @@ createApp({
           order:     v.order      || 0,
         }));
 
-        // ===== 他チームの同日訪問チェック =====
-        try {
-          const [{ data: otherVisits }, { data: otherClients }] = await Promise.all([
-            db2.from('visits').select('client_id, date'),
-            db2.from('clients').select('id, name'),
-          ]);
-          const nameMap = {};
-          (otherClients || []).forEach(c => {
-            nameMap[c.id] = c.name.replace(/[\s　]/g, ''); // 半角・全角スペース除去
-          });
-          const conflicts = {};
-          (otherVisits || []).forEach(v => {
-            const name = nameMap[v.client_id];
-            if (name) conflicts[`${name}_${v.date}`] = true;
-          });
-          this.crossConflicts = conflicts;
-        } catch(e) {
-          console.warn('他チームデータ取得エラー（無視）:', e);
-        }
+        // 他チームデータ初回取得
+        await this.loadCrossTeamData();
 
       } catch (e) {
         console.error('データ読み込みエラー:', e);
@@ -538,10 +521,31 @@ createApp({
     closeClientModal() { this.clientModal.show = false; },
 
     // ===== 週ナビ / 印刷 =====
-    prevWeek()     { this.weekOffset--; },
-    nextWeek()     { this.weekOffset++; },
-    goToday()      { this.weekOffset = 0; },
+    prevWeek()  { this.weekOffset--; this.loadCrossTeamData(); },
+    nextWeek()  { this.weekOffset++; this.loadCrossTeamData(); },
+    goToday()   { this.weekOffset = 0; this.loadCrossTeamData(); },
     printSchedule(){ window.print(); },
+    async loadCrossTeamData() {
+      try {
+        const [{ data: otherVisits }, { data: otherClients }] = await Promise.all([
+          db2.from('visits').select('client_id, date'),
+          db2.from('clients').select('id, name'),
+        ]);
+        const nameMap = {};
+        (otherClients || []).forEach(c => {
+          nameMap[c.id] = c.name.replace(/[\s　]/g, '');
+        });
+        const conflicts = {};
+        (otherVisits || []).forEach(v => {
+          const name = nameMap[v.client_id];
+          if (name) conflicts[`${name}_${v.date}`] = true;
+        });
+        console.log(`[他チーム] 利用者${(otherClients||[]).length}名・訪問${(otherVisits||[]).length}件 読み込み完了`);
+        this.crossConflicts = conflicts;
+      } catch(e) {
+        console.warn('他チームデータ取得エラー:', e);
+      }
+    },
   },
 
   async mounted() {
