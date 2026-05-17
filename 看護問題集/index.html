@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>看護学校 問題集</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- ローディング -->
+  <div v-if="loading" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">読み込み中...</p>
+  </div>
+
+  <div v-else>
+
+    <!-- ===== 科目一覧 ===== -->
+    <div v-if="view === 'subjects'">
+      <header class="app-header">
+        <div class="header-left">
+          <span class="header-icon">📖</span>
+          <h1>看護学校 問題集</h1>
+        </div>
+        <button @click="view = 'admin'" class="btn btn-outline">⚙ 管理</button>
+      </header>
+
+      <main class="main-content">
+        <div v-if="subjects.length === 0" class="empty-state">
+          <div class="empty-icon">📚</div>
+          <p>科目がまだ登録されていません</p>
+          <button @click="view = 'admin'" class="btn btn-primary">科目を追加する</button>
+        </div>
+
+        <div v-else class="subjects-grid">
+          <div
+            v-for="s in subjects"
+            :key="s.id"
+            class="subject-card"
+            @click="startQuiz(s)"
+          >
+            <div class="subject-card-icon">{{ s.icon }}</div>
+            <div class="subject-card-body">
+              <h2>{{ s.name }}</h2>
+              <p v-if="s.description" class="subject-desc">{{ s.description }}</p>
+              <p class="subject-count">{{ s.question_count }} 問</p>
+            </div>
+            <div class="subject-card-arrow">›</div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ===== 問題演習 ===== -->
+    <div v-if="view === 'quiz'">
+      <header class="quiz-header">
+        <button @click="exitQuiz" class="btn btn-ghost">← 戻る</button>
+        <span class="quiz-subject-name">{{ currentSubject.name }}</span>
+        <span class="quiz-counter">{{ currentIndex + 1 }} / {{ quizQuestions.length }}</span>
+      </header>
+
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" :style="{ width: progressPercent + '%' }"></div>
+      </div>
+
+      <main class="quiz-main" v-if="currentQuestion">
+        <div class="question-card">
+          <p class="question-num">問題 {{ currentIndex + 1 }}</p>
+          <p class="question-text">{{ currentQuestion.question_text }}</p>
+        </div>
+
+        <div class="choices-list">
+          <button
+            v-for="(choice, i) in currentQuestion.choices"
+            :key="i"
+            class="choice-btn"
+            :class="choiceClass(i)"
+            :disabled="answered"
+            @click="selectAnswer(i)"
+          >
+            <span class="choice-alpha">{{ ['A','B','C','D'][i] }}</span>
+            <span class="choice-text">{{ choice }}</span>
+          </button>
+        </div>
+
+        <div v-if="answered" class="feedback-area">
+          <div
+            class="feedback-banner"
+            :class="selectedIndex === currentQuestion.correct_index ? 'correct' : 'incorrect'"
+          >
+            {{ selectedIndex === currentQuestion.correct_index ? '⭕ 正解！' : '❌ 不正解' }}
+          </div>
+
+          <div v-if="selectedIndex !== currentQuestion.correct_index" class="correct-hint">
+            正解：<strong>{{ ['A','B','C','D'][currentQuestion.correct_index] }}. {{ currentQuestion.choices[currentQuestion.correct_index] }}</strong>
+          </div>
+
+          <div v-if="currentQuestion.explanation" class="explanation-box">
+            <span class="explanation-label">解説</span>
+            <p>{{ currentQuestion.explanation }}</p>
+          </div>
+
+          <button @click="nextQuestion" class="btn btn-primary btn-full">
+            {{ isLastQuestion ? '結果を見る 📊' : '次の問題 →' }}
+          </button>
+        </div>
+      </main>
+    </div>
+
+    <!-- ===== 演習結果 ===== -->
+    <div v-if="view === 'result'">
+      <header class="app-header">
+        <div class="header-left">
+          <h1>演習結果</h1>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <div class="result-subject-name">{{ currentSubject.name }}</div>
+
+        <div class="result-score-card">
+          <div class="score-display">
+            <span class="score-correct">{{ correctCount }}</span>
+            <span class="score-sep">/</span>
+            <span class="score-total">{{ quizQuestions.length }}</span>
+          </div>
+          <p class="score-label">問 正解</p>
+          <div class="score-percent-bar">
+            <div class="score-percent-fill" :style="{ width: scorePercent + '%' }"></div>
+          </div>
+          <p class="score-percent-text">正答率 {{ scorePercent }}%</p>
+        </div>
+
+        <div v-if="wrongAnswers.length > 0" class="wrong-section">
+          <h3>間違えた問題</h3>
+          <div v-for="(q, i) in wrongAnswers" :key="i" class="wrong-card">
+            <p class="wrong-q">{{ q.question_text }}</p>
+            <p class="wrong-ans">
+              正解：<strong>{{ ['A','B','C','D'][q.correct_index] }}. {{ q.choices[q.correct_index] }}</strong>
+            </p>
+            <p v-if="q.explanation" class="wrong-exp">{{ q.explanation }}</p>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <button @click="retryQuiz" class="btn btn-primary">もう一度 🔄</button>
+          <button @click="view = 'subjects'" class="btn btn-outline">科目一覧へ</button>
+        </div>
+      </main>
+    </div>
+
+    <!-- ===== 管理画面 ===== -->
+    <div v-if="view === 'admin'">
+      <header class="app-header">
+        <button @click="view = 'subjects'" class="btn btn-ghost">← 戻る</button>
+        <h1>管理画面</h1>
+        <span></span>
+      </header>
+
+      <div class="admin-tabs">
+        <button
+          class="tab-btn"
+          :class="{ active: adminTab === 'subjects' }"
+          @click="adminTab = 'subjects'"
+        >科目管理</button>
+        <button
+          class="tab-btn"
+          :class="{ active: adminTab === 'questions' }"
+          @click="adminTab = 'questions'"
+        >問題管理</button>
+      </div>
+
+      <main class="main-content">
+
+        <!-- 科目管理 -->
+        <div v-if="adminTab === 'subjects'">
+          <div class="admin-section">
+            <h3 class="section-title">科目を追加</h3>
+            <div class="form-group">
+              <label class="form-label">アイコン（絵文字）</label>
+              <input v-model="newSubject.icon" type="text" class="form-input icon-input" placeholder="💊" maxlength="2" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">科目名 <span class="required">*</span></label>
+              <input v-model="newSubject.name" type="text" class="form-input" placeholder="例: 基礎看護学" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">説明</label>
+              <input v-model="newSubject.description" type="text" class="form-input" placeholder="例: バイタルサイン・清潔ケア等" />
+            </div>
+            <button @click="addSubject" class="btn btn-primary" :disabled="!newSubject.name.trim()">
+              追加する
+            </button>
+          </div>
+
+          <div class="admin-section">
+            <h3 class="section-title">登録済み科目</h3>
+            <div v-if="subjects.length === 0" class="empty-text">科目がありません</div>
+            <div v-for="s in subjects" :key="s.id" class="admin-list-item">
+              <div class="item-info">
+                <span class="item-icon">{{ s.icon }}</span>
+                <div>
+                  <strong>{{ s.name }}</strong>
+                  <span class="item-count">{{ s.question_count }}問</span>
+                </div>
+              </div>
+              <button @click="deleteSubject(s)" class="btn btn-danger btn-sm">削除</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 問題管理 -->
+        <div v-if="adminTab === 'questions'">
+          <div class="admin-section">
+            <h3 class="section-title">問題を追加</h3>
+            <div class="form-group">
+              <label class="form-label">科目 <span class="required">*</span></label>
+              <select v-model="newQuestion.subject_id" class="form-input">
+                <option value="">科目を選択してください</option>
+                <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.icon }} {{ s.name }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">問題文 <span class="required">*</span></label>
+              <textarea
+                v-model="newQuestion.question_text"
+                class="form-input form-textarea"
+                placeholder="問題文を入力してください"
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">選択肢と正解 <span class="required">*</span></label>
+              <p class="hint-text">ラジオボタンで正解を選択してください</p>
+              <div
+                v-for="(_, i) in newQuestion.choices"
+                :key="i"
+                class="choice-input-row"
+              >
+                <label class="radio-label">
+                  <input type="radio" :value="i" v-model="newQuestion.correct_index" />
+                  <span class="choice-alpha-admin">{{ ['A','B','C','D'][i] }}</span>
+                </label>
+                <input
+                  v-model="newQuestion.choices[i]"
+                  type="text"
+                  class="form-input"
+                  :placeholder="['A','B','C','D'][i] + 'の内容を入力'"
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">解説（任意）</label>
+              <textarea
+                v-model="newQuestion.explanation"
+                class="form-input form-textarea"
+                placeholder="解説を入力（省略可）"
+                rows="2"
+              ></textarea>
+            </div>
+            <button @click="addQuestion" class="btn btn-primary" :disabled="!canAddQuestion">
+              追加する
+            </button>
+          </div>
+
+          <div class="admin-section">
+            <h3 class="section-title">登録済み問題</h3>
+            <div class="form-group">
+              <select v-model="filterSubjectId" class="form-input">
+                <option value="">すべての科目</option>
+                <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.icon }} {{ s.name }}</option>
+              </select>
+            </div>
+            <div v-if="filteredQuestions.length === 0" class="empty-text">問題がありません</div>
+            <div v-for="q in filteredQuestions" :key="q.id" class="admin-question-item">
+              <div class="question-item-info">
+                <span class="question-subject-badge">{{ subjectName(q.subject_id) }}</span>
+                <p class="question-preview">{{ q.question_text }}</p>
+              </div>
+              <button @click="deleteQuestion(q)" class="btn btn-danger btn-sm">削除</button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

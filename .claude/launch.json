@@ -6,6 +6,12 @@
       "runtimeExecutable": "C:/Program Files/Git/usr/bin/perl.exe",
       "runtimeArgs": ["serve.pl", "C:/Users/r-suzuki/OneDrive/デスクトップ/Claude"],
       "port": 3001
+    },
+    {
+      "name": "quiz",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["看護問題集/server.js"],
+      "port": 3003
     }
   ]
 }
