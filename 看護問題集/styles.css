@@ -584,6 +584,26 @@ html, body {
   max-width: 360px;
   margin: 60px auto 0;
 }
+.pw-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pw-input-wrap .form-input { flex: 1; }
+.pw-toggle {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  background: var(--border);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+}
+.pw-toggle:hover { background: #cbd5e1; }
 .pw-error {
   color: var(--danger);
   font-size: 13px;

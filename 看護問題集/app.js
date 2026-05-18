@@ -10,6 +10,7 @@ createApp({
       view: 'password', // password | login | subjects | quiz | result | admin
       pwInput: '',
       pwError: false,
+      pwVisible: false,
 
       // ユーザー
       users: [],

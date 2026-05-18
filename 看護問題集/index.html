@@ -31,15 +31,20 @@
       <main class="main-content">
         <div class="login-card pw-card">
           <p class="login-title">🔒 パスワードを入力してください</p>
-          <div class="form-group">
+          <div class="form-group pw-input-wrap">
             <input
               v-model="pwInput"
-              type="password"
+              :type="pwVisible ? 'text' : 'password'"
               class="form-input"
               placeholder="パスワード"
               @keyup.enter="checkPassword"
-              autofocus
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="none"
             />
+            <button type="button" class="pw-toggle" @click="pwVisible = !pwVisible">
+              {{ pwVisible ? '隠す' : '表示' }}
+            </button>
           </div>
           <p v-if="pwError" class="pw-error">パスワードが違います</p>
           <button @click="checkPassword" class="btn btn-primary btn-full">入る</button>
