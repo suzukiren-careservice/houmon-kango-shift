@@ -113,6 +113,55 @@ createApp({
       return this.myResults.filter(r => r.subject_id === subjectId).length;
     },
 
+    // ===== 進捗保存・復元 =====
+    saveProgress() {
+      if (!this.currentUser || !this.currentSubject) return;
+      const data = {
+        subjectId: this.currentSubject.id,
+        questionIds: this.quizQuestions.map(q => q.id),
+        currentIndex: this.currentIndex,
+        answered: this.answered,
+        selectedIndex: this.selectedIndex,
+        results: this.results.map(r => ({ correct: r.correct, questionId: r.question.id })),
+      };
+      localStorage.setItem(`quiz_progress_${this.currentUser.id}`, JSON.stringify(data));
+    },
+
+    clearProgress() {
+      if (!this.currentUser) return;
+      localStorage.removeItem(`quiz_progress_${this.currentUser.id}`);
+    },
+
+    restoreProgress() {
+      if (!this.currentUser) return false;
+      const saved = localStorage.getItem(`quiz_progress_${this.currentUser.id}`);
+      if (!saved) return false;
+      try {
+        const p = JSON.parse(saved);
+        const subject = this.subjects.find(s => s.id === p.subjectId);
+        if (!subject) { this.clearProgress(); return false; }
+
+        const questions = p.questionIds
+          .map(id => this.allQuestions.find(q => q.id === id))
+          .filter(Boolean);
+        if (!questions.length) { this.clearProgress(); return false; }
+
+        this.currentSubject = subject;
+        this.quizQuestions = questions;
+        this.currentIndex = p.currentIndex;
+        this.answered = p.answered || false;
+        this.selectedIndex = p.selectedIndex ?? null;
+        this.results = p.results
+          .map(r => ({ correct: r.correct, question: this.allQuestions.find(q => q.id === r.questionId) }))
+          .filter(r => r.question);
+        this.view = 'quiz';
+        return true;
+      } catch (e) {
+        this.clearProgress();
+        return false;
+      }
+    },
+
     // ===== パスワード =====
     checkPassword() {
       if (this.pwInput === APP_PASSWORD) {
@@ -131,7 +180,7 @@ createApp({
       this.currentUser = user;
       localStorage.setItem('quiz_user_id', user.id);
       await this.loadMyResults();
-      this.view = 'subjects';
+      if (!this.restoreProgress()) this.view = 'subjects';
     },
 
     switchUser() {
@@ -155,6 +204,7 @@ createApp({
       this.selectedIndex = null;
       this.answered = false;
       this.results = [];
+      this.saveProgress();
       this.view = 'quiz';
     },
 
@@ -171,6 +221,7 @@ createApp({
       this.selectedIndex = i;
       this.answered = true;
       this.results.push({ correct: i === this.currentQuestion.correct_index, question: this.currentQuestion });
+      this.saveProgress();
     },
 
     choiceClass(i) {
@@ -182,6 +233,7 @@ createApp({
 
     async nextQuestion() {
       if (this.isLastQuestion) {
+        this.clearProgress();
         await this.saveResult();
         this.view = 'result';
         return;
@@ -189,6 +241,7 @@ createApp({
       this.currentIndex++;
       this.selectedIndex = null;
       this.answered = false;
+      this.saveProgress();
     },
 
     async saveResult() {
@@ -203,12 +256,13 @@ createApp({
     },
 
     exitQuiz() {
-      if (confirm('演習を終了して科目一覧に戻りますか？')) {
+      if (confirm('演習を終了して科目一覧に戻りますか？\n（進捗は保存されています）')) {
         this.view = 'subjects';
       }
     },
 
     retryQuiz() {
+      this.clearProgress();
       this.startQuiz(this.currentSubject);
     },
 
@@ -287,7 +341,6 @@ createApp({
   async mounted() {
     await this.loadData();
 
-    // セッション内で認証済みかチェック
     if (localStorage.getItem('quiz_auth') === '1') {
       const savedId = localStorage.getItem('quiz_user_id');
       if (savedId) {
@@ -295,7 +348,7 @@ createApp({
         if (found) {
           this.currentUser = found;
           await this.loadMyResults();
-          this.view = 'subjects';
+          if (!this.restoreProgress()) this.view = 'subjects';
         } else {
           this.view = 'login';
         }
@@ -303,7 +356,6 @@ createApp({
         this.view = 'login';
       }
     }
-    // localStorage に認証情報がなければ password 画面のまま
 
     this.loading = false;
   },
