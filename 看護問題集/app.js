@@ -115,7 +115,7 @@ createApp({
     // ===== パスワード =====
     checkPassword() {
       if (this.pwInput === APP_PASSWORD) {
-        sessionStorage.setItem('quiz_auth', '1');
+        localStorage.setItem('quiz_auth', '1');
         this.pwInput = '';
         this.pwError = false;
         this.view = 'login';
@@ -287,7 +287,7 @@ createApp({
     await this.loadData();
 
     // セッション内で認証済みかチェック
-    if (sessionStorage.getItem('quiz_auth') === '1') {
+    if (localStorage.getItem('quiz_auth') === '1') {
       const savedId = localStorage.getItem('quiz_user_id');
       if (savedId) {
         const found = this.users.find(u => u.id === savedId);
@@ -302,7 +302,7 @@ createApp({
         this.view = 'login';
       }
     }
-    // sessionStorage に認証情報がなければ password 画面のまま
+    // localStorage に認証情報がなければ password 画面のまま
 
     this.loading = false;
   },
