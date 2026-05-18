@@ -20,6 +20,35 @@
 
   <div v-else>
 
+    <!-- ===== ログイン画面 ===== -->
+    <div v-if="view === 'login'">
+      <header class="app-header">
+        <div class="header-left">
+          <span class="header-icon">📖</span>
+          <h1>看護学校 問題集</h1>
+        </div>
+        <button @click="view = 'admin'" class="btn btn-outline">⚙ 管理</button>
+      </header>
+      <main class="main-content">
+        <div class="login-card">
+          <p class="login-title">あなたの名前を選んでください</p>
+          <div v-if="users.length === 0" class="empty-state">
+            <div class="empty-icon">👥</div>
+            <p>メンバーが登録されていません</p>
+            <button @click="view = 'admin'; adminTab = 'members'" class="btn btn-primary">メンバーを追加する</button>
+          </div>
+          <div v-else class="user-grid">
+            <button
+              v-for="u in users"
+              :key="u.id"
+              class="user-btn"
+              @click="selectUser(u)"
+            >{{ u.name }}</button>
+          </div>
+        </div>
+      </main>
+    </div>
+
     <!-- ===== 科目一覧 ===== -->
     <div v-if="view === 'subjects'">
       <header class="app-header">
@@ -27,7 +56,10 @@
           <span class="header-icon">📖</span>
           <h1>看護学校 問題集</h1>
         </div>
-        <button @click="view = 'admin'" class="btn btn-outline">⚙ 管理</button>
+        <div class="header-right">
+          <button @click="view = 'admin'" class="btn btn-ghost btn-sm">⚙</button>
+          <button @click="switchUser" class="user-tag">{{ currentUser.name }} ▾</button>
+        </div>
       </header>
 
       <main class="main-content">
@@ -48,7 +80,16 @@
             <div class="subject-card-body">
               <h2>{{ s.name }}</h2>
               <p v-if="s.description" class="subject-desc">{{ s.description }}</p>
-              <p class="subject-count">{{ s.question_count }} 問</p>
+              <div class="subject-meta">
+                <span class="subject-count">{{ s.question_count }} 問</span>
+                <span v-if="subjectBestScore(s.id) !== null" class="best-score">
+                  最高 {{ subjectBestScore(s.id) }}%
+                </span>
+                <span v-else class="no-score">未挑戦</span>
+                <span v-if="subjectPlayCount(s.id) > 0" class="play-count">
+                  {{ subjectPlayCount(s.id) }}回
+                </span>
+              </div>
             </div>
             <div class="subject-card-arrow">›</div>
           </div>
@@ -134,6 +175,7 @@
             <div class="score-percent-fill" :style="{ width: scorePercent + '%' }"></div>
           </div>
           <p class="score-percent-text">正答率 {{ scorePercent }}%</p>
+          <p class="score-saved">💾 記録を保存しました</p>
         </div>
 
         <div v-if="wrongAnswers.length > 0" class="wrong-section">
@@ -157,22 +199,15 @@
     <!-- ===== 管理画面 ===== -->
     <div v-if="view === 'admin'">
       <header class="app-header">
-        <button @click="view = 'subjects'" class="btn btn-ghost">← 戻る</button>
+        <button @click="view = currentUser ? 'subjects' : 'login'" class="btn btn-ghost">← 戻る</button>
         <h1>管理画面</h1>
         <span></span>
       </header>
 
       <div class="admin-tabs">
-        <button
-          class="tab-btn"
-          :class="{ active: adminTab === 'subjects' }"
-          @click="adminTab = 'subjects'"
-        >科目管理</button>
-        <button
-          class="tab-btn"
-          :class="{ active: adminTab === 'questions' }"
-          @click="adminTab = 'questions'"
-        >問題管理</button>
+        <button class="tab-btn" :class="{ active: adminTab === 'subjects' }" @click="adminTab = 'subjects'">科目</button>
+        <button class="tab-btn" :class="{ active: adminTab === 'questions' }" @click="adminTab = 'questions'">問題</button>
+        <button class="tab-btn" :class="{ active: adminTab === 'members' }" @click="adminTab = 'members'">メンバー</button>
       </div>
 
       <main class="main-content">
@@ -193,9 +228,7 @@
               <label class="form-label">説明</label>
               <input v-model="newSubject.description" type="text" class="form-input" placeholder="例: バイタルサイン・清潔ケア等" />
             </div>
-            <button @click="addSubject" class="btn btn-primary" :disabled="!newSubject.name.trim()">
-              追加する
-            </button>
+            <button @click="addSubject" class="btn btn-primary" :disabled="!newSubject.name.trim()">追加する</button>
           </div>
 
           <div class="admin-section">
@@ -227,45 +260,24 @@
             </div>
             <div class="form-group">
               <label class="form-label">問題文 <span class="required">*</span></label>
-              <textarea
-                v-model="newQuestion.question_text"
-                class="form-input form-textarea"
-                placeholder="問題文を入力してください"
-                rows="3"
-              ></textarea>
+              <textarea v-model="newQuestion.question_text" class="form-input form-textarea" placeholder="問題文を入力してください" rows="3"></textarea>
             </div>
             <div class="form-group">
               <label class="form-label">選択肢と正解 <span class="required">*</span></label>
               <p class="hint-text">ラジオボタンで正解を選択してください</p>
-              <div
-                v-for="(_, i) in newQuestion.choices"
-                :key="i"
-                class="choice-input-row"
-              >
+              <div v-for="(_, i) in newQuestion.choices" :key="i" class="choice-input-row">
                 <label class="radio-label">
                   <input type="radio" :value="i" v-model="newQuestion.correct_index" />
                   <span class="choice-alpha-admin">{{ ['A','B','C','D'][i] }}</span>
                 </label>
-                <input
-                  v-model="newQuestion.choices[i]"
-                  type="text"
-                  class="form-input"
-                  :placeholder="['A','B','C','D'][i] + 'の内容を入力'"
-                />
+                <input v-model="newQuestion.choices[i]" type="text" class="form-input" :placeholder="['A','B','C','D'][i] + 'の内容を入力'" />
               </div>
             </div>
             <div class="form-group">
               <label class="form-label">解説（任意）</label>
-              <textarea
-                v-model="newQuestion.explanation"
-                class="form-input form-textarea"
-                placeholder="解説を入力（省略可）"
-                rows="2"
-              ></textarea>
+              <textarea v-model="newQuestion.explanation" class="form-input form-textarea" placeholder="解説を入力（省略可）" rows="2"></textarea>
             </div>
-            <button @click="addQuestion" class="btn btn-primary" :disabled="!canAddQuestion">
-              追加する
-            </button>
+            <button @click="addQuestion" class="btn btn-primary" :disabled="!canAddQuestion">追加する</button>
           </div>
 
           <div class="admin-section">
@@ -283,6 +295,36 @@
                 <p class="question-preview">{{ q.question_text }}</p>
               </div>
               <button @click="deleteQuestion(q)" class="btn btn-danger btn-sm">削除</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- メンバー管理 -->
+        <div v-if="adminTab === 'members'">
+          <div class="admin-section">
+            <h3 class="section-title">メンバーを追加</h3>
+            <div class="form-group">
+              <label class="form-label">名前 <span class="required">*</span></label>
+              <input
+                v-model="newUserName"
+                type="text"
+                class="form-input"
+                placeholder="例: 鈴木 花子"
+                @keyup.enter="addUser"
+              />
+            </div>
+            <button @click="addUser" class="btn btn-primary" :disabled="!newUserName.trim()">追加する</button>
+          </div>
+
+          <div class="admin-section">
+            <h3 class="section-title">登録済みメンバー <span class="member-count">{{ users.length }}人</span></h3>
+            <div v-if="users.length === 0" class="empty-text">メンバーがいません</div>
+            <div v-for="u in users" :key="u.id" class="admin-list-item">
+              <div class="item-info">
+                <span class="member-avatar">{{ u.name.charAt(0) }}</span>
+                <strong>{{ u.name }}</strong>
+              </div>
+              <button @click="deleteUser(u)" class="btn btn-danger btn-sm">削除</button>
             </div>
           </div>
         </div>

@@ -7,13 +7,18 @@ createApp({
   data() {
     return {
       loading: true,
-      view: 'subjects', // subjects | quiz | result | admin
+      view: 'login', // login | subjects | quiz | result | admin
 
-      // 科目
+      // ユーザー
+      users: [],
+      currentUser: null,
+
+      // 科目・問題
       subjects: [],
-
-      // 全問題
       allQuestions: [],
+
+      // 自分の演習履歴
+      myResults: [],
 
       // クイズ状態
       currentSubject: null,
@@ -21,7 +26,7 @@ createApp({
       currentIndex: 0,
       selectedIndex: null,
       answered: false,
-      results: [], // { correct: bool, question: obj }
+      results: [],
 
       // 管理
       adminTab: 'subjects',
@@ -34,6 +39,7 @@ createApp({
         correct_index: 0,
         explanation: '',
       },
+      newUserName: '',
     };
   },
 
@@ -60,11 +66,7 @@ createApp({
     },
     canAddQuestion() {
       const q = this.newQuestion;
-      return (
-        q.subject_id &&
-        q.question_text.trim() &&
-        q.choices.every(c => c.trim())
-      );
+      return q.subject_id && q.question_text.trim() && q.choices.every(c => c.trim());
     },
     filteredQuestions() {
       if (!this.filterSubjectId) return this.allQuestions;
@@ -74,31 +76,60 @@ createApp({
 
   methods: {
     async loadData() {
-      // 科目を取得
-      const { data: subjectRows } = await db
-        .from('quiz_subjects')
-        .select('*')
-        .order('created_at');
+      const [subjectRes, questionRes, userRes] = await Promise.all([
+        db.from('quiz_subjects').select('*').order('created_at'),
+        db.from('quiz_questions').select('*').order('created_at'),
+        db.from('quiz_users').select('*').order('name'),
+      ]);
 
-      // 問題を取得
-      const { data: questionRows } = await db
-        .from('quiz_questions')
-        .select('*')
-        .order('created_at');
-
-      this.allQuestions = questionRows || [];
-
-      // 各科目に問題数を付与
-      this.subjects = (subjectRows || []).map(s => ({
+      this.allQuestions = questionRes.data || [];
+      this.users = userRes.data || [];
+      this.subjects = (subjectRes.data || []).map(s => ({
         ...s,
-        question_count: (questionRows || []).filter(q => q.subject_id === s.id).length,
+        question_count: (questionRes.data || []).filter(q => q.subject_id === s.id).length,
       }));
+    },
+
+    async loadMyResults() {
+      if (!this.currentUser) return;
+      const { data } = await db
+        .from('quiz_results')
+        .select('*')
+        .eq('user_id', this.currentUser.id)
+        .order('played_at', { ascending: false });
+      this.myResults = data || [];
+    },
+
+    subjectBestScore(subjectId) {
+      const scores = this.myResults.filter(r => r.subject_id === subjectId);
+      if (!scores.length) return null;
+      return Math.max(...scores.map(r => Math.round(r.correct_count / r.total_questions * 100)));
+    },
+
+    subjectPlayCount(subjectId) {
+      return this.myResults.filter(r => r.subject_id === subjectId).length;
+    },
+
+    // ===== ログイン =====
+    async selectUser(user) {
+      this.currentUser = user;
+      localStorage.setItem('quiz_user_id', user.id);
+      await this.loadMyResults();
+      this.view = 'subjects';
+    },
+
+    switchUser() {
+      if (!confirm(`「${this.currentUser.name}」からログアウトしますか？`)) return;
+      this.currentUser = null;
+      localStorage.removeItem('quiz_user_id');
+      this.myResults = [];
+      this.view = 'login';
     },
 
     // ===== クイズ =====
     startQuiz(subject) {
       const questions = this.allQuestions.filter(q => q.subject_id === subject.id);
-      if (questions.length === 0) {
+      if (!questions.length) {
         alert('この科目にはまだ問題がありません。\n管理画面から問題を追加してください。');
         return;
       }
@@ -123,26 +154,36 @@ createApp({
       if (this.answered) return;
       this.selectedIndex = i;
       this.answered = true;
-      const correct = i === this.currentQuestion.correct_index;
-      this.results.push({ correct, question: this.currentQuestion });
+      this.results.push({ correct: i === this.currentQuestion.correct_index, question: this.currentQuestion });
     },
 
     choiceClass(i) {
       if (!this.answered) return '';
-      const correctIdx = this.currentQuestion.correct_index;
-      if (i === correctIdx) return 'show-correct';
+      if (i === this.currentQuestion.correct_index) return 'show-correct';
       if (i === this.selectedIndex) return 'selected-incorrect';
       return '';
     },
 
-    nextQuestion() {
+    async nextQuestion() {
       if (this.isLastQuestion) {
+        await this.saveResult();
         this.view = 'result';
         return;
       }
       this.currentIndex++;
       this.selectedIndex = null;
       this.answered = false;
+    },
+
+    async saveResult() {
+      if (!this.currentUser) return;
+      const { error } = await db.from('quiz_results').insert({
+        user_id: this.currentUser.id,
+        subject_id: this.currentSubject.id,
+        total_questions: this.quizQuestions.length,
+        correct_count: this.correctCount,
+      });
+      if (!error) await this.loadMyResults();
     },
 
     exitQuiz() {
@@ -157,27 +198,21 @@ createApp({
 
     // ===== 科目管理 =====
     async addSubject() {
-      const { name, description, icon } = this.newSubject;
-      if (!name.trim()) return;
-
+      if (!this.newSubject.name.trim()) return;
       const { error } = await db.from('quiz_subjects').insert({
-        name: name.trim(),
-        description: description.trim(),
-        icon: icon || '📚',
+        name: this.newSubject.name.trim(),
+        description: this.newSubject.description.trim(),
+        icon: this.newSubject.icon || '📚',
       });
-
       if (error) { alert('追加に失敗しました: ' + error.message); return; }
-
       this.newSubject = { icon: '📚', name: '', description: '' };
       await this.loadData();
     },
 
     async deleteSubject(subject) {
       if (!confirm(`「${subject.name}」を削除しますか？\n※この科目の問題もすべて削除されます。`)) return;
-
       const { error } = await db.from('quiz_subjects').delete().eq('id', subject.id);
       if (error) { alert('削除に失敗しました: ' + error.message); return; }
-
       await this.loadData();
     },
 
@@ -185,7 +220,6 @@ createApp({
     async addQuestion() {
       if (!this.canAddQuestion) return;
       const q = this.newQuestion;
-
       const { error } = await db.from('quiz_questions').insert({
         subject_id: q.subject_id,
         question_text: q.question_text.trim(),
@@ -193,36 +227,60 @@ createApp({
         correct_index: q.correct_index,
         explanation: q.explanation.trim(),
       });
-
       if (error) { alert('追加に失敗しました: ' + error.message); return; }
-
       this.newQuestion = {
-        subject_id: q.subject_id, // 同じ科目のまま継続入力しやすいよう保持
-        question_text: '',
-        choices: ['', '', '', ''],
-        correct_index: 0,
-        explanation: '',
+        subject_id: q.subject_id,
+        question_text: '', choices: ['', '', '', ''], correct_index: 0, explanation: '',
       };
       await this.loadData();
     },
 
     async deleteQuestion(question) {
       if (!confirm('この問題を削除しますか？')) return;
-
       const { error } = await db.from('quiz_questions').delete().eq('id', question.id);
       if (error) { alert('削除に失敗しました: ' + error.message); return; }
+      await this.loadData();
+    },
 
+    // ===== メンバー管理 =====
+    async addUser() {
+      if (!this.newUserName.trim()) return;
+      const { error } = await db.from('quiz_users').insert({ name: this.newUserName.trim() });
+      if (error) { alert('追加に失敗しました: ' + error.message); return; }
+      this.newUserName = '';
+      await this.loadData();
+    },
+
+    async deleteUser(user) {
+      if (!confirm(`「${user.name}」を削除しますか？\n※この人の演習記録もすべて削除されます。`)) return;
+      const { error } = await db.from('quiz_users').delete().eq('id', user.id);
+      if (error) { alert('削除に失敗しました: ' + error.message); return; }
+      if (this.currentUser?.id === user.id) {
+        this.currentUser = null;
+        localStorage.removeItem('quiz_user_id');
+        this.myResults = [];
+      }
       await this.loadData();
     },
 
     subjectName(subjectId) {
-      const s = this.subjects.find(s => s.id === subjectId);
-      return s ? s.name : '';
+      return this.subjects.find(s => s.id === subjectId)?.name || '';
     },
   },
 
   async mounted() {
     await this.loadData();
+
+    const savedId = localStorage.getItem('quiz_user_id');
+    if (savedId) {
+      const found = this.users.find(u => u.id === savedId);
+      if (found) {
+        this.currentUser = found;
+        await this.loadMyResults();
+        this.view = 'subjects';
+      }
+    }
+
     this.loading = false;
   },
 }).mount('#app');

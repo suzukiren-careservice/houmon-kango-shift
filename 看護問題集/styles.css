@@ -579,10 +579,131 @@ html, body {
   padding: 20px 0;
 }
 
+/* ===== ログイン ===== */
+.login-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  box-shadow: var(--shadow-md);
+}
+.login-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 20px;
+}
+.user-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.user-btn {
+  padding: 14px 8px;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.user-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+/* ===== ユーザータグ（ヘッダー） ===== */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.user-tag {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: none;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-tag:hover { background: var(--primary); color: #fff; }
+
+/* ===== 科目カード（スコア表示） ===== */
+.subject-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.best-score {
+  font-size: 12px;
+  font-weight: 700;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+.no-score {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--border);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+.play-count {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ===== 結果保存メッセージ ===== */
+.score-saved {
+  font-size: 13px;
+  color: #15803d;
+  margin-top: 8px;
+}
+
+/* ===== メンバー管理 ===== */
+.member-count {
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+}
+.member-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 /* ===== レスポンシブ ===== */
 @media (max-width: 480px) {
   .app-header h1 { font-size: 16px; }
   .question-text { font-size: 16px; }
   .score-correct { font-size: 48px; }
   .score-total { font-size: 32px; }
+  .user-grid { grid-template-columns: repeat(2, 1fr); }
 }
