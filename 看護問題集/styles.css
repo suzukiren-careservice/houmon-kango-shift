@@ -579,6 +579,18 @@ html, body {
   padding: 20px 0;
 }
 
+/* ===== パスワード ===== */
+.pw-card {
+  max-width: 360px;
+  margin: 60px auto 0;
+}
+.pw-error {
+  color: var(--danger);
+  font-size: 13px;
+  text-align: center;
+  margin: -6px 0 8px;
+}
+
 /* ===== ログイン ===== */
 .login-card {
   background: var(--card);

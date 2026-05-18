@@ -7,7 +7,9 @@ createApp({
   data() {
     return {
       loading: true,
-      view: 'login', // login | subjects | quiz | result | admin
+      view: 'password', // password | login | subjects | quiz | result | admin
+      pwInput: '',
+      pwError: false,
 
       // ユーザー
       users: [],
@@ -108,6 +110,19 @@ createApp({
 
     subjectPlayCount(subjectId) {
       return this.myResults.filter(r => r.subject_id === subjectId).length;
+    },
+
+    // ===== パスワード =====
+    checkPassword() {
+      if (this.pwInput === APP_PASSWORD) {
+        sessionStorage.setItem('quiz_auth', '1');
+        this.pwInput = '';
+        this.pwError = false;
+        this.view = 'login';
+      } else {
+        this.pwError = true;
+        this.pwInput = '';
+      }
     },
 
     // ===== ログイン =====
@@ -271,15 +286,23 @@ createApp({
   async mounted() {
     await this.loadData();
 
-    const savedId = localStorage.getItem('quiz_user_id');
-    if (savedId) {
-      const found = this.users.find(u => u.id === savedId);
-      if (found) {
-        this.currentUser = found;
-        await this.loadMyResults();
-        this.view = 'subjects';
+    // セッション内で認証済みかチェック
+    if (sessionStorage.getItem('quiz_auth') === '1') {
+      const savedId = localStorage.getItem('quiz_user_id');
+      if (savedId) {
+        const found = this.users.find(u => u.id === savedId);
+        if (found) {
+          this.currentUser = found;
+          await this.loadMyResults();
+          this.view = 'subjects';
+        } else {
+          this.view = 'login';
+        }
+      } else {
+        this.view = 'login';
       }
     }
+    // sessionStorage に認証情報がなければ password 画面のまま
 
     this.loading = false;
   },

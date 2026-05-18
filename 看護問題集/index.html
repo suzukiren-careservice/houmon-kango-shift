@@ -20,6 +20,33 @@
 
   <div v-else>
 
+    <!-- ===== パスワード画面 ===== -->
+    <div v-if="view === 'password'">
+      <header class="app-header">
+        <div class="header-left">
+          <span class="header-icon">📖</span>
+          <h1>看護学校 問題集</h1>
+        </div>
+      </header>
+      <main class="main-content">
+        <div class="login-card pw-card">
+          <p class="login-title">🔒 パスワードを入力してください</p>
+          <div class="form-group">
+            <input
+              v-model="pwInput"
+              type="password"
+              class="form-input"
+              placeholder="パスワード"
+              @keyup.enter="checkPassword"
+              autofocus
+            />
+          </div>
+          <p v-if="pwError" class="pw-error">パスワードが違います</p>
+          <button @click="checkPassword" class="btn btn-primary btn-full">入る</button>
+        </div>
+      </main>
+    </div>
+
     <!-- ===== ログイン画面 ===== -->
     <div v-if="view === 'login'">
       <header class="app-header">
