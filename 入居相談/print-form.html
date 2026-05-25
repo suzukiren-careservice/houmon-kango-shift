@@ -10,7 +10,7 @@
 
     body {
       font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
-      font-size: 7.5pt;
+      font-size: 8pt;
       color: #000;
       background: #fff;
       padding: 4mm 6mm;
@@ -19,8 +19,7 @@
     @media print {
       .no-print { display: none !important; }
       body { padding: 0; }
-      /* ページ全体を縮小して確実に1枚に収める */
-      html { zoom: 0.82; }
+      html { zoom: 0.96; }
     }
 
     /* ===== 印刷ボタン ===== */
@@ -74,17 +73,17 @@
     .sec {
       border: 1px solid #000;
       border-radius: 2px;
-      margin-bottom: 2px;
+      margin-bottom: 3px;
       page-break-inside: avoid;
     }
     .sh {
       background: #111;
       color: #fff;
-      font-size: 7.5pt;
+      font-size: 8pt;
       font-weight: 700;
-      padding: 2px 5px;
+      padding: 2px 6px;
     }
-    .sb { padding: 2px 4px; }
+    .sb { padding: 3px 5px; }
 
     /* ===== グリッド ===== */
     .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
@@ -97,19 +96,19 @@
     /* ===== フィールド ===== */
     .f { display: flex; flex-direction: column; gap: 1px; }
     .lb {
-      font-size: 6pt;
+      font-size: 6.5pt;
       font-weight: 700;
       color: #333;
       white-space: nowrap;
     }
-    .ln  { border-bottom: 1px solid #000; min-height: 10px; }
-    .lnt { border: 1px solid #000; min-height: 14px; }
-    .ls  { border-bottom: 1px solid #000; min-height: 10px; display: inline-block; }
+    .ln  { border-bottom: 1px solid #000; min-height: 12px; }
+    .lnt { border: 1px solid #000; min-height: 16px; }
+    .ls  { border-bottom: 1px solid #000; min-height: 12px; display: inline-block; }
 
     /* ===== チェックボックス ===== */
     .cg { display: flex; flex-wrap: wrap; gap: 1px 4px; align-items: center; padding: 1px 0; }
-    .ci { display: flex; align-items: center; gap: 2px; white-space: nowrap; font-size: 7pt; }
-    .cb { width: 8px; height: 8px; border: 1px solid #000; border-radius: 1px; flex-shrink: 0; display: inline-block; }
+    .ci { display: flex; align-items: center; gap: 2px; white-space: nowrap; font-size: 7.5pt; }
+    .cb { width: 9px; height: 9px; border: 1px solid #000; border-radius: 1px; flex-shrink: 0; display: inline-block; }
 
     /* ===== サブセクション ===== */
     .sub { font-size: 6.5pt; font-weight: 700; background: #ddd; padding: 1px 4px; margin: 2px -4px 1px; }
@@ -362,7 +361,7 @@
       </div>
 
       <div class="sub">病状・医療的ケア メモ</div>
-      <div class="lnt" style="min-height:12px"></div>
+      <div class="lnt" style="min-height:16px"></div>
 
     </div>
   </div>
@@ -544,7 +543,7 @@
   <div class="sec">
     <div class="sh">⑧ 備考・その他</div>
     <div class="sb">
-      <div class="lnt" style="min-height:18px"></div>
+      <div class="lnt" style="min-height:26px"></div>
     </div>
   </div>
 
