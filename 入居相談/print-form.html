@@ -6,20 +6,43 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    @page { size: A4 portrait; margin: 4mm 6mm; }
+    @page { size: A4 portrait; margin: 6mm 8mm; }
 
     body {
       font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
-      font-size: 8pt;
+      font-size: 8.5pt;
       color: #000;
       background: #fff;
-      padding: 4mm 6mm;
+      padding: 5mm 7mm;
+      /* A4縦（285mm）分の高さを確保してflexで引き伸ばす */
+      min-height: 285mm;
+      display: flex;
+      flex-direction: column;
     }
 
     @media print {
       .no-print { display: none !important; }
-      body { padding: 0; }
-      html { zoom: 0.96; }
+      body {
+        padding: 0;
+        min-height: 281mm;
+      }
+    }
+
+    /* 備考セクションが残りスペースを全部使う */
+    .sec-fill {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .sec-fill .sb {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .sec-fill .lnt-fill {
+      flex: 1;
+      border: 1px solid #000;
+      min-height: 30px;
     }
 
     /* ===== 印刷ボタン ===== */
@@ -73,17 +96,21 @@
     .sec {
       border: 1px solid #000;
       border-radius: 2px;
-      margin-bottom: 3px;
+      margin-bottom: 4px;
       page-break-inside: avoid;
+      flex-shrink: 0;
     }
     .sh {
       background: #111;
       color: #fff;
-      font-size: 8pt;
+      font-size: 8.5pt;
       font-weight: 700;
       padding: 2px 6px;
     }
-    .sb { padding: 3px 5px; }
+    .sb { padding: 3px 6px; }
+
+    /* flex子要素として縮まないもの */
+    .ttl, .sttl, .row-half { flex-shrink: 0; }
 
     /* ===== グリッド ===== */
     .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
@@ -96,18 +123,18 @@
     /* ===== フィールド ===== */
     .f { display: flex; flex-direction: column; gap: 1px; }
     .lb {
-      font-size: 6.5pt;
+      font-size: 7pt;
       font-weight: 700;
       color: #333;
       white-space: nowrap;
     }
-    .ln  { border-bottom: 1px solid #000; min-height: 12px; }
-    .lnt { border: 1px solid #000; min-height: 16px; }
-    .ls  { border-bottom: 1px solid #000; min-height: 12px; display: inline-block; }
+    .ln  { border-bottom: 1px solid #000; min-height: 13px; }
+    .lnt { border: 1px solid #000; min-height: 18px; }
+    .ls  { border-bottom: 1px solid #000; min-height: 13px; display: inline-block; }
 
     /* ===== チェックボックス ===== */
     .cg { display: flex; flex-wrap: wrap; gap: 1px 4px; align-items: center; padding: 1px 0; }
-    .ci { display: flex; align-items: center; gap: 2px; white-space: nowrap; font-size: 7.5pt; }
+    .ci { display: flex; align-items: center; gap: 2px; white-space: nowrap; font-size: 8pt; }
     .cb { width: 9px; height: 9px; border: 1px solid #000; border-radius: 1px; flex-shrink: 0; display: inline-block; }
 
     /* ===== サブセクション ===== */
@@ -361,7 +388,7 @@
       </div>
 
       <div class="sub">病状・医療的ケア メモ</div>
-      <div class="lnt" style="min-height:16px"></div>
+      <div class="lnt" style="min-height:20px"></div>
 
     </div>
   </div>
@@ -539,11 +566,11 @@
 
   </div>
 
-  <!-- ⑧ 備考 -->
-  <div class="sec">
+  <!-- ⑧ 備考（残りスペースを全部使う） -->
+  <div class="sec sec-fill">
     <div class="sh">⑧ 備考・その他</div>
     <div class="sb">
-      <div class="lnt" style="min-height:26px"></div>
+      <div class="lnt-fill"></div>
     </div>
   </div>
 
