@@ -8,194 +8,183 @@
 
     body {
       font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
-      font-size: 10pt;
+      font-size: 8pt;
       color: #000;
       background: #fff;
-      padding: 8mm 10mm;
+      padding: 5mm 7mm;
+      width: 210mm;
     }
 
-    /* ===== 印刷設定 ===== */
     @page {
-      size: A4;
-      margin: 8mm 10mm;
+      size: A4 portrait;
+      margin: 5mm 7mm;
     }
     @media print {
       .no-print { display: none !important; }
       body { padding: 0; }
-      .page-break { page-break-before: always; }
+    }
+
+    /* ===== 印刷ボタン ===== */
+    .print-bar {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .print-bar button {
+      background: #1565C0;
+      color: #fff;
+      border: none;
+      padding: 7px 24px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 0 4px;
+    }
+    .print-bar button.out {
+      background: #fff;
+      color: #1565C0;
+      border: 2px solid #1565C0;
+    }
+    .print-bar p {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
     }
 
     /* ===== タイトル ===== */
     .form-title {
       text-align: center;
-      font-size: 14pt;
+      font-size: 11.5pt;
       font-weight: 900;
       letter-spacing: 2px;
-      border-bottom: 3px double #000;
-      padding-bottom: 4px;
-      margin-bottom: 8px;
+      border-bottom: 2.5px double #000;
+      padding-bottom: 2px;
+      margin-bottom: 3px;
     }
     .form-subtitle {
       text-align: center;
-      font-size: 8pt;
+      font-size: 7pt;
       color: #555;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
     }
 
     /* ===== セクション ===== */
     .section {
-      border: 1.5px solid #000;
-      border-radius: 3px;
-      margin-bottom: 6px;
+      border: 1px solid #000;
+      border-radius: 2px;
+      margin-bottom: 3px;
       page-break-inside: avoid;
     }
-    .section-header {
-      background: #222;
+    .sec-hdr {
+      background: #111;
       color: #fff;
-      font-size: 9.5pt;
+      font-size: 8pt;
       font-weight: 700;
-      padding: 3px 8px;
+      padding: 2px 6px;
       letter-spacing: 0.5px;
     }
-    .section-body {
-      padding: 5px 7px;
+    .sec-body {
+      padding: 3px 5px;
     }
 
     /* ===== グリッド ===== */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px 10px; }
-    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px 10px; }
-    .span-2 { grid-column: span 2; }
-    .span-3 { grid-column: span 3; }
-    .span-4 { grid-column: span 4; }
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px 8px; }
+    .g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 2px 8px; }
+    .s2 { grid-column: span 2; }
+    .s3 { grid-column: span 3; }
+    .s4 { grid-column: span 4; }
 
     /* ===== フィールド ===== */
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-    }
-    .field-label {
-      font-size: 7.5pt;
+    .f { display: flex; flex-direction: column; gap: 1px; }
+    .lbl {
+      font-size: 6.5pt;
       font-weight: 700;
-      color: #444;
+      color: #333;
       white-space: nowrap;
     }
-    .field-line {
-      border-bottom: 1.2px solid #000;
-      min-height: 14px;
-      width: 100%;
+    .line {
+      border-bottom: 1px solid #000;
+      min-height: 11px;
     }
-    .field-line-tall {
-      border: 1.2px solid #000;
-      min-height: 32px;
-      width: 100%;
-      border-radius: 2px;
+    .line-tall {
+      border: 1px solid #000;
+      min-height: 18px;
+      border-radius: 1px;
     }
-    .field-line-short {
-      border-bottom: 1.2px solid #000;
-      min-height: 14px;
-      width: 60px;
+    .line-s {
+      border-bottom: 1px solid #000;
+      min-height: 11px;
       display: inline-block;
     }
 
     /* ===== チェックボックス ===== */
-    .check-group {
+    .cg {
       display: flex;
       flex-wrap: wrap;
-      gap: 2px 8px;
+      gap: 1px 5px;
       align-items: center;
-      padding: 2px 0;
+      padding: 1px 0;
     }
-    .check-item {
+    .ci {
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
       white-space: nowrap;
-      font-size: 9pt;
+      font-size: 7.5pt;
     }
-    .check-box {
-      width: 11px;
-      height: 11px;
-      border: 1.5px solid #000;
+    .cb {
+      width: 9px;
+      height: 9px;
+      border: 1px solid #000;
       border-radius: 1px;
       flex-shrink: 0;
       display: inline-block;
     }
 
     /* ===== サブセクション ===== */
-    .subsection-label {
-      font-size: 8pt;
+    .sub {
+      font-size: 7pt;
       font-weight: 700;
-      background: #e8e8e8;
-      padding: 2px 6px;
-      margin: 4px -7px 3px;
+      background: #ddd;
+      padding: 1px 5px;
+      margin: 3px -5px 2px;
     }
 
-    /* ===== 医療処置チェック ===== */
-    .med-proc-grid {
+    /* ===== 医療処置 ===== */
+    .med-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 2px 4px;
-      margin: 3px 0;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1px 3px;
+      margin: 2px 0;
+    }
+
+    /* ===== インライン ===== */
+    .il {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      font-size: 7.5pt;
     }
 
     /* ===== カンファ ===== */
-    .conf-row {
+    .cr {
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-bottom: 3px;
-      font-size: 9pt;
-    }
-    .conf-num {
-      font-weight: 900;
-      min-width: 16px;
-    }
-    .conf-line { border-bottom: 1px solid #000; min-height: 14px; flex: 1; }
-
-    /* ===== 印刷ボタン ===== */
-    .print-bar {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    .print-bar button {
-      background: #1976D2;
-      color: #fff;
-      border: none;
-      padding: 10px 32px;
-      font-size: 13px;
-      font-weight: 700;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 0 6px;
-    }
-    .print-bar button.outline {
-      background: #fff;
-      color: #1976D2;
-      border: 2px solid #1976D2;
-    }
-    .print-bar p {
-      font-size: 12px;
-      color: #666;
-      margin-top: 8px;
-    }
-
-    .inline-field {
-      display: flex;
-      align-items: flex-end;
       gap: 4px;
-      font-size: 9pt;
+      margin-bottom: 1px;
+      font-size: 7.5pt;
     }
+    .cr-line { border-bottom: 1px solid #000; flex: 1; min-height: 11px; }
 
-    hr.thin { border: none; border-top: 0.5px solid #ccc; margin: 4px 0; }
-
-    .note-box {
-      font-size: 7pt;
-      color: #777;
-      text-align: right;
-      margin-top: 2px;
+    /* ===== ⑥⑦ 横並び ===== */
+    .row-67 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+      margin-bottom: 3px;
     }
+    .row-67 .section { margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -203,72 +192,71 @@
   <!-- 印刷ボタン（画面のみ） -->
   <div class="print-bar no-print">
     <button onclick="window.print()">🖨️ 印刷する（A4）</button>
-    <button class="outline" onclick="window.close()">✕ 閉じる</button>
-    <p>※ 印刷する前にブラウザの「余白：なし」または「最小」に設定することをおすすめします。</p>
+    <button class="out" onclick="window.close()">✕ 閉じる</button>
+    <p>印刷前にブラウザの「余白：最小」に設定してください。</p>
   </div>
 
-  <!-- タイトル -->
   <div class="form-title">入所問い合わせチェック表</div>
-  <div class="form-subtitle">ケアフル / わが家 / 大ちゃん家　〔AIスキャン対応版〕</div>
+  <div class="form-subtitle">ケアフル ／ わが家 ／ 大ちゃん家</div>
 
   <!-- ① 基本情報 -->
   <div class="section">
-    <div class="section-header">① 基本情報</div>
-    <div class="section-body">
-      <div class="grid-4" style="gap:4px 12px">
+    <div class="sec-hdr">① 基本情報</div>
+    <div class="sec-body">
+      <div class="g4" style="gap:2px 10px">
 
-        <div class="field">
-          <div class="field-label">★相談日時</div>
-          <div class="inline-field">
-            <span class="field-line-short" style="width:80px"></span>年
-            <span class="field-line-short" style="width:30px"></span>月
-            <span class="field-line-short" style="width:30px"></span>日
+        <div class="f">
+          <div class="lbl">★相談日時</div>
+          <div class="il">
+            <span class="line-s" style="width:46px"></span>年
+            <span class="line-s" style="width:20px"></span>月
+            <span class="line-s" style="width:20px"></span>日
           </div>
         </div>
 
-        <div class="field">
-          <div class="field-label">受付方法</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>来訪</span>
-            <span class="check-item"><span class="check-box"></span>TEL</span>
+        <div class="f">
+          <div class="lbl">受付方法</div>
+          <div class="cg">
+            <span class="ci"><span class="cb"></span>来訪</span>
+            <span class="ci"><span class="cb"></span>TEL</span>
           </div>
         </div>
 
-        <div class="field">
-          <div class="field-label">対応スタッフ</div>
-          <div class="field-line"></div>
+        <div class="f">
+          <div class="lbl">対応スタッフ</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field">
-          <div class="field-label">★進捗ステータス</div>
-          <div class="check-group" style="gap:2px 6px">
-            <span class="check-item"><span class="check-box"></span>対応中</span>
-            <span class="check-item"><span class="check-box"></span>見学予定</span>
-            <span class="check-item"><span class="check-box"></span>入居決定</span>
-            <span class="check-item"><span class="check-box"></span>保留中</span>
-            <span class="check-item"><span class="check-box"></span>連絡不通</span>
-            <span class="check-item"><span class="check-box"></span>辞退・無し</span>
+        <div class="f">
+          <div class="lbl">対象施設</div>
+          <div class="cg" style="gap:1px 4px">
+            <span class="ci"><span class="cb"></span>ケアフル</span>
+            <span class="ci"><span class="cb"></span>わが家</span>
+            <span class="ci"><span class="cb"></span>大ちゃん家</span>
+            <span class="ci"><span class="cb"></span>どちらでも</span>
           </div>
         </div>
 
-        <div class="field span-2">
-          <div class="field-label">★対象施設</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>ケアフル</span>
-            <span class="check-item"><span class="check-box"></span>わが家</span>
-            <span class="check-item"><span class="check-box"></span>大ちゃん家</span>
-            <span class="check-item"><span class="check-box"></span>どちらの施設でも</span>
+        <div class="f s2">
+          <div class="lbl">★進捗ステータス</div>
+          <div class="cg" style="gap:1px 4px">
+            <span class="ci"><span class="cb"></span>対応中</span>
+            <span class="ci"><span class="cb"></span>見学予定</span>
+            <span class="ci"><span class="cb"></span>入居決定</span>
+            <span class="ci"><span class="cb"></span>保留中</span>
+            <span class="ci"><span class="cb"></span>連絡不通</span>
+            <span class="ci"><span class="cb"></span>辞退・無し</span>
           </div>
         </div>
 
-        <div class="field">
-          <div class="field-label">相談者名</div>
-          <div class="field-line"></div>
+        <div class="f">
+          <div class="lbl">相談者名</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field">
-          <div class="field-label">利用予定者との関係</div>
-          <div class="field-line"></div>
+        <div class="f">
+          <div class="lbl">利用予定者との関係</div>
+          <div class="line"></div>
         </div>
 
       </div>
@@ -277,41 +265,39 @@
 
   <!-- ② 利用予定者情報 -->
   <div class="section">
-    <div class="section-header">② 利用予定者情報</div>
-    <div class="section-body">
-      <div class="grid-4">
+    <div class="sec-hdr">② 利用予定者情報</div>
+    <div class="sec-body">
+      <div class="g4">
 
-        <div class="field span-2">
-          <div class="field-label">★利用予定者名</div>
-          <div class="field-line"></div>
+        <div class="f s2">
+          <div class="lbl">★利用予定者名</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field">
-          <div class="field-label">性別</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>男</span>
-            <span class="check-item"><span class="check-box"></span>女</span>
+        <div class="f">
+          <div class="lbl">性別</div>
+          <div class="cg">
+            <span class="ci"><span class="cb"></span>男</span>
+            <span class="ci"><span class="cb"></span>女</span>
           </div>
         </div>
 
-        <div class="field">
-          <div class="field-label">年齢</div>
-          <div class="inline-field">
-            <span class="field-line-short" style="width:40px"></span>歳
-          </div>
+        <div class="f">
+          <div class="lbl">年齢</div>
+          <div class="il"><span class="line-s" style="width:28px"></span>歳</div>
         </div>
 
-        <div class="field span-3">
-          <div class="field-label">生年月日</div>
-          <div class="inline-field">
-            <span class="check-item"><span class="check-box"></span>T（大正）</span>
-            <span class="check-item"><span class="check-box"></span>S（昭和）</span>
-            <span class="check-item"><span class="check-box"></span>H（平成）</span>
-            <span class="check-item"><span class="check-box"></span>R（令和）</span>
+        <div class="f s4">
+          <div class="lbl">生年月日</div>
+          <div class="il" style="gap:3px 6px">
+            <span class="ci"><span class="cb"></span>T（大正）</span>
+            <span class="ci"><span class="cb"></span>S（昭和）</span>
+            <span class="ci"><span class="cb"></span>H（平成）</span>
+            <span class="ci"><span class="cb"></span>R（令和）</span>
             &nbsp;
-            <span class="field-line-short" style="width:35px"></span>年
-            <span class="field-line-short" style="width:30px"></span>月
-            <span class="field-line-short" style="width:30px"></span>日
+            <span class="line-s" style="width:28px"></span>年
+            <span class="line-s" style="width:22px"></span>月
+            <span class="line-s" style="width:22px"></span>日
           </div>
         </div>
 
@@ -321,161 +307,156 @@
 
   <!-- ③ 病状・医療情報 -->
   <div class="section">
-    <div class="section-header">③ 病状・医療情報</div>
-    <div class="section-body">
-      <div class="grid-4">
+    <div class="sec-hdr">③ 病状・医療情報</div>
+    <div class="sec-body">
+      <div class="g4" style="gap:2px 10px">
 
-        <div class="field span-4">
-          <div class="field-label">病名・疾病名</div>
-          <div class="field-line"></div>
+        <div class="f s4">
+          <div class="lbl">病名・疾病名</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field">
-          <div class="field-label">現在の状況</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>入院中</span>
-            <span class="check-item"><span class="check-box"></span>在宅</span>
-            <span class="check-item"><span class="check-box"></span>施設</span>
+        <div class="f">
+          <div class="lbl">現在の状況</div>
+          <div class="cg">
+            <span class="ci"><span class="cb"></span>入院中</span>
+            <span class="ci"><span class="cb"></span>在宅</span>
+            <span class="ci"><span class="cb"></span>施設</span>
           </div>
         </div>
 
-        <div class="field span-2">
-          <div class="field-label">入院先 / 施設名</div>
-          <div class="field-line"></div>
+        <div class="f s2">
+          <div class="lbl">入院先 / 施設名</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field">
-          <div class="field-label">担当相談員</div>
-          <div class="field-line"></div>
+        <div class="f">
+          <div class="lbl">担当相談員</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field span-2">
-          <div class="field-label">担当ケアマネージャー</div>
-          <div class="field-line"></div>
+        <div class="f s2">
+          <div class="lbl">担当ケアマネージャー</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field span-2">
-          <div class="field-label">居宅介護支援事業所</div>
-          <div class="field-line"></div>
+        <div class="f s2">
+          <div class="lbl">居宅介護支援事業所</div>
+          <div class="line"></div>
         </div>
 
       </div>
 
-      <div class="subsection-label">介護度・福祉情報</div>
-      <div class="grid-4" style="align-items:start">
+      <div class="sub">介護度・福祉情報</div>
+      <div class="g4" style="gap:2px 10px">
 
-        <div class="field span-2">
-          <div class="field-label">介護保険</div>
-          <div class="check-group" style="gap:2px 5px">
-            <span class="check-item"><span class="check-box"></span>支援1</span>
-            <span class="check-item"><span class="check-box"></span>支援2</span>
-            <span class="check-item"><span class="check-box"></span>介護1</span>
-            <span class="check-item"><span class="check-box"></span>介護2</span>
-            <span class="check-item"><span class="check-box"></span>介護3</span>
-            <span class="check-item"><span class="check-box"></span>介護4</span>
-            <span class="check-item"><span class="check-box"></span>介護5</span>
-            <span class="check-item"><span class="check-box"></span>申請中</span>
-            <span class="check-item"><span class="check-box"></span>申請未</span>
-            <span class="check-item"><span class="check-box"></span>区変中</span>
+        <div class="f s2">
+          <div class="lbl">介護保険</div>
+          <div class="cg" style="gap:1px 4px">
+            <span class="ci"><span class="cb"></span>支援1</span>
+            <span class="ci"><span class="cb"></span>支援2</span>
+            <span class="ci"><span class="cb"></span>介護1</span>
+            <span class="ci"><span class="cb"></span>介護2</span>
+            <span class="ci"><span class="cb"></span>介護3</span>
+            <span class="ci"><span class="cb"></span>介護4</span>
+            <span class="ci"><span class="cb"></span>介護5</span>
+            <span class="ci"><span class="cb"></span>申請中</span>
+            <span class="ci"><span class="cb"></span>申請未</span>
+            <span class="ci"><span class="cb"></span>区変中</span>
           </div>
         </div>
 
-        <div class="field">
-          <div class="field-label">身障手帳</div>
-          <div class="inline-field">
-            <span class="field-line-short" style="width:35px"></span>級
+        <div class="f">
+          <div class="lbl">身障手帳</div>
+          <div class="il"><span class="line-s" style="width:26px"></span>級</div>
+        </div>
+
+        <div class="f">
+          <div class="lbl">福祉医療受給者証</div>
+          <div class="cg">
+            <span class="ci"><span class="cb"></span>有</span>
+            <span class="ci"><span class="cb"></span>無</span>
           </div>
         </div>
 
-        <div class="field">
-          <div class="field-label">福祉医療受給者証</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>有</span>
-            <span class="check-item"><span class="check-box"></span>無</span>
+        <div class="f">
+          <div class="lbl">生活保護受給</div>
+          <div class="cg">
+            <span class="ci"><span class="cb"></span>有</span>
+            <span class="ci"><span class="cb"></span>無</span>
           </div>
         </div>
 
-        <div class="field">
-          <div class="field-label">生活保護受給</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>有</span>
-            <span class="check-item"><span class="check-box"></span>無</span>
-          </div>
-        </div>
-
-        <div class="field span-2">
-          <div class="field-label">主治医</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>正翔会</span>
-            <span class="check-item"><span class="check-box"></span>みのかも西CL</span>
-            <span class="check-item"><span class="check-box"></span>その他 ➜</span>
-            <span class="field-line-short" style="width:100px"></span>
+        <div class="f s3">
+          <div class="lbl">主治医</div>
+          <div class="il" style="gap:3px 8px">
+            <span class="ci"><span class="cb"></span>正翔会</span>
+            <span class="ci"><span class="cb"></span>みのかも西CL</span>
+            <span class="ci"><span class="cb"></span>その他 ➜</span>
+            <span class="line-s" style="width:90px"></span>
           </div>
         </div>
 
       </div>
 
-      <div class="subsection-label">医療処置（該当するものにチェック）</div>
-      <div class="med-proc-grid">
-        <span class="check-item"><span class="check-box"></span>在宅酸素</span>
-        <span class="check-item"><span class="check-box"></span>人工呼吸器</span>
-        <span class="check-item"><span class="check-box"></span>人工肛門</span>
-        <span class="check-item"><span class="check-box"></span>バルンカテーテル</span>
-        <span class="check-item"><span class="check-box"></span>褥瘡</span>
-        <span class="check-item"><span class="check-box"></span>吸引</span>
-        <span class="check-item"><span class="check-box"></span>胃ろう</span>
-        <span class="check-item"><span class="check-box"></span>鼻注</span>
-        <span class="check-item"><span class="check-box"></span>中心静脈栄養(CVポート)</span>
-        <span class="check-item"><span class="check-box"></span>中心静脈栄養(CVカテーテル)</span>
-        <span class="check-item"><span class="check-box"></span>末梢点滴</span>
-        <span class="check-item"><span class="check-box"></span>気管切開</span>
-        <span class="check-item"><span class="check-box"></span>人工透析</span>
-        <span class="check-item" style="grid-column:span 3">
-          　透析曜日：<span class="field-line-short" style="width:120px"></span>
-        </span>
+      <div class="sub">医療処置（該当するものにチェック）</div>
+      <div class="med-grid">
+        <span class="ci"><span class="cb"></span>在宅酸素</span>
+        <span class="ci"><span class="cb"></span>人工呼吸器</span>
+        <span class="ci"><span class="cb"></span>人工肛門</span>
+        <span class="ci"><span class="cb"></span>バルンカテーテル</span>
+        <span class="ci"><span class="cb"></span>褥瘡</span>
+        <span class="ci"><span class="cb"></span>吸引</span>
+        <span class="ci"><span class="cb"></span>胃ろう</span>
+        <span class="ci"><span class="cb"></span>鼻注</span>
+        <span class="ci"><span class="cb"></span>CV(ポート)</span>
+        <span class="ci"><span class="cb"></span>CV(カテーテル)</span>
+        <span class="ci"><span class="cb"></span>末梢点滴</span>
+        <span class="ci"><span class="cb"></span>気管切開</span>
+        <span class="ci" style="grid-column:span 2"><span class="cb"></span>人工透析　透析曜日：<span class="line-s" style="width:80px"></span></span>
       </div>
 
-      <div class="subsection-label">病状・医療的ケア メモ</div>
-      <div class="field-line-tall" style="min-height:28px"></div>
+      <div class="sub">病状・医療的ケア メモ</div>
+      <div class="line-tall" style="min-height:14px"></div>
 
     </div>
   </div>
 
   <!-- ④ 生活状況 -->
   <div class="section">
-    <div class="section-header">④ 生活状況</div>
-    <div class="section-body">
-      <div class="grid-4">
+    <div class="sec-hdr">④ 生活状況</div>
+    <div class="sec-body">
+      <div class="g4">
 
-        <div class="field">
-          <div class="field-label">食事形態</div>
-          <div class="field-line"></div>
+        <div class="f">
+          <div class="lbl">食事形態</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field">
-          <div class="field-label">移動動作</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>歩行</span>
-            <span class="check-item"><span class="check-box"></span>車椅子</span>
-            <span class="check-item"><span class="check-box"></span>全介助</span>
+        <div class="f">
+          <div class="lbl">移動動作</div>
+          <div class="cg">
+            <span class="ci"><span class="cb"></span>歩行</span>
+            <span class="ci"><span class="cb"></span>車椅子</span>
+            <span class="ci"><span class="cb"></span>全介助</span>
           </div>
         </div>
 
-        <div class="field">
-          <div class="field-label">排泄</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>トイレ歩行</span>
-            <span class="check-item"><span class="check-box"></span>ポータブル</span>
-            <span class="check-item"><span class="check-box"></span>オムツ</span>
+        <div class="f">
+          <div class="lbl">排泄</div>
+          <div class="cg">
+            <span class="ci"><span class="cb"></span>トイレ歩行</span>
+            <span class="ci"><span class="cb"></span>ポータブル</span>
+            <span class="ci"><span class="cb"></span>オムツ</span>
           </div>
         </div>
 
-        <div class="field">
-          <div class="field-label">入浴</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>施設入浴</span>
-            <span class="check-item"><span class="check-box"></span>シャワー浴</span>
-            <span class="check-item"><span class="check-box"></span>訪問入浴</span>
+        <div class="f">
+          <div class="lbl">入浴</div>
+          <div class="cg">
+            <span class="ci"><span class="cb"></span>施設入浴</span>
+            <span class="ci"><span class="cb"></span>シャワー浴</span>
+            <span class="ci"><span class="cb"></span>訪問入浴</span>
           </div>
         </div>
 
@@ -485,126 +466,129 @@
 
   <!-- ⑤ 連絡先・キーパーソン -->
   <div class="section">
-    <div class="section-header">⑤ 連絡先・キーパーソン</div>
-    <div class="section-body">
-      <div class="grid-4">
+    <div class="sec-hdr">⑤ 連絡先・キーパーソン</div>
+    <div class="sec-body">
+      <div class="g4">
 
-        <div class="field span-2">
-          <div class="field-label">自宅住所</div>
-          <div class="field-line"></div>
+        <div class="f s2">
+          <div class="lbl">自宅住所</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field">
-          <div class="field-label">キーパーソン名</div>
-          <div class="field-line"></div>
+        <div class="f">
+          <div class="lbl">キーパーソン名</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field">
-          <div class="field-label">続柄</div>
-          <div class="field-line"></div>
+        <div class="f">
+          <div class="lbl">続柄</div>
+          <div class="line"></div>
         </div>
 
-        <div class="field span-2">
-          <div class="field-label">キーパーソン連絡先</div>
-          <div class="field-line"></div>
+        <div class="f s2">
+          <div class="lbl">キーパーソン連絡先</div>
+          <div class="line"></div>
         </div>
 
       </div>
     </div>
   </div>
 
-  <!-- ⑥ 見学・部屋希望 / ⑦ カンファレンス（横並び） -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+  <!-- ⑥⑦ 横並び -->
+  <div class="row-67">
 
-    <!-- ⑥ 見学 -->
-    <div class="section" style="margin-bottom:0">
-      <div class="section-header">⑥ 見学・部屋希望</div>
-      <div class="section-body">
+    <!-- ⑥ 見学・部屋希望 -->
+    <div class="section">
+      <div class="sec-hdr">⑥ 見学・部屋希望</div>
+      <div class="sec-body">
 
-        <div class="field" style="margin-bottom:4px">
-          <div class="field-label">見学希望</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>有</span>
-            <span class="check-item"><span class="check-box"></span>無</span>
+        <div class="g2" style="gap:2px 8px">
+
+          <div class="f">
+            <div class="lbl">見学希望</div>
+            <div class="cg">
+              <span class="ci"><span class="cb"></span>有</span>
+              <span class="ci"><span class="cb"></span>無</span>
+            </div>
           </div>
-        </div>
 
-        <div class="field" style="margin-bottom:4px">
-          <div class="field-label">見学希望日時</div>
-          <div class="inline-field">
-            <span class="field-line-short" style="width:70px"></span>年
-            <span class="field-line-short" style="width:25px"></span>月
-            <span class="field-line-short" style="width:25px"></span>日
-            <span class="field-line-short" style="width:35px"></span>時
+          <div class="f">
+            <div class="lbl">希望部屋</div>
+            <div class="cg">
+              <span class="ci"><span class="cb"></span>1階</span>
+              <span class="ci"><span class="cb"></span>2階</span>
+              <span class="ci"><span class="cb"></span>どちらでも</span>
+            </div>
           </div>
-        </div>
 
-        <div class="field" style="margin-bottom:4px">
-          <div class="field-label">予定見学者</div>
-          <div class="field-line"></div>
-        </div>
-
-        <div class="field" style="margin-bottom:4px">
-          <div class="field-label">見学者連絡先</div>
-          <div class="field-line"></div>
-        </div>
-
-        <div class="field">
-          <div class="field-label">希望部屋</div>
-          <div class="check-group">
-            <span class="check-item"><span class="check-box"></span>1階</span>
-            <span class="check-item"><span class="check-box"></span>2階</span>
-            <span class="check-item"><span class="check-box"></span>どちらでも</span>
+          <div class="f s2">
+            <div class="lbl">見学希望日時</div>
+            <div class="il">
+              <span class="line-s" style="width:50px"></span>年
+              <span class="line-s" style="width:18px"></span>月
+              <span class="line-s" style="width:18px"></span>日
+              <span class="line-s" style="width:26px"></span>時
+            </div>
           </div>
+
+          <div class="f">
+            <div class="lbl">予定見学者</div>
+            <div class="line"></div>
+          </div>
+
+          <div class="f">
+            <div class="lbl">見学者連絡先</div>
+            <div class="line"></div>
+          </div>
+
         </div>
 
       </div>
     </div>
 
     <!-- ⑦ カンファレンス -->
-    <div class="section" style="margin-bottom:0">
-      <div class="section-header">⑦ カンファレンス・面談</div>
-      <div class="section-body">
+    <div class="section">
+      <div class="sec-hdr">⑦ カンファレンス・面談</div>
+      <div class="sec-body">
 
-        <div class="field" style="margin-bottom:4px">
-          <div class="field-label">事前面談（日程）</div>
-          <div class="inline-field">
-            <span class="field-line-short" style="width:70px"></span>年
-            <span class="field-line-short" style="width:25px"></span>月
-            <span class="field-line-short" style="width:25px"></span>日
-            <span class="field-line-short" style="width:35px"></span>時
+        <div class="f" style="margin-bottom:3px">
+          <div class="lbl">事前面談（日程）</div>
+          <div class="il">
+            <span class="line-s" style="width:50px"></span>年
+            <span class="line-s" style="width:18px"></span>月
+            <span class="line-s" style="width:18px"></span>日
+            <span class="line-s" style="width:26px"></span>時
           </div>
         </div>
 
-        <div class="field" style="margin-bottom:6px">
-          <div class="field-label">ENTカンファレンス（日程）</div>
-          <div class="inline-field">
-            <span class="field-line-short" style="width:70px"></span>年
-            <span class="field-line-short" style="width:25px"></span>月
-            <span class="field-line-short" style="width:25px"></span>日
-            <span class="field-line-short" style="width:35px"></span>時
+        <div class="f" style="margin-bottom:4px">
+          <div class="lbl">ENTカンファレンス（日程）</div>
+          <div class="il">
+            <span class="line-s" style="width:50px"></span>年
+            <span class="line-s" style="width:18px"></span>月
+            <span class="line-s" style="width:18px"></span>日
+            <span class="line-s" style="width:26px"></span>時
           </div>
         </div>
 
-        <div class="field-label" style="margin-bottom:3px">退院調整カンファレンス 候補日</div>
-
-        <div class="conf-row">
-          <span class="conf-num">①</span>
-          <span class="field-line-short" style="width:80px"></span>
-          <span style="font-size:8pt">出席：</span>
-          <span class="conf-line"></span>
+        <div class="lbl" style="margin-bottom:2px">退院調整カンファレンス 候補日</div>
+        <div class="cr">
+          <span style="font-weight:900;min-width:14px">①</span>
+          <span class="line-s" style="width:72px"></span>
+          <span style="font-size:7pt">出席：</span>
+          <span class="cr-line"></span>
         </div>
-        <div class="conf-row">
-          <span class="conf-num">②</span>
-          <span class="field-line-short" style="width:80px"></span>
-          <span style="font-size:8pt">出席：</span>
-          <span class="conf-line"></span>
+        <div class="cr">
+          <span style="font-weight:900;min-width:14px">②</span>
+          <span class="line-s" style="width:72px"></span>
+          <span style="font-size:7pt">出席：</span>
+          <span class="cr-line"></span>
         </div>
-        <div class="conf-row">
-          <span class="conf-num">③</span>
-          <span class="field-line-short" style="width:80px"></span>
-          <span style="font-size:8pt">出席：</span>
-          <span class="conf-line"></span>
+        <div class="cr">
+          <span style="font-weight:900;min-width:14px">③</span>
+          <span class="line-s" style="width:72px"></span>
+          <span style="font-size:7pt">出席：</span>
+          <span class="cr-line"></span>
         </div>
 
       </div>
@@ -614,14 +598,10 @@
 
   <!-- ⑧ 備考 -->
   <div class="section">
-    <div class="section-header">⑧ 備考・その他</div>
-    <div class="section-body">
-      <div class="field-line-tall" style="min-height:40px"></div>
+    <div class="sec-hdr">⑧ 備考・その他</div>
+    <div class="sec-body">
+      <div class="line-tall" style="min-height:20px"></div>
     </div>
-  </div>
-
-  <div class="note-box no-print" style="text-align:center;margin-top:8px;font-size:11px;color:#888">
-    このフォームを印刷 → 手書き → スキャン（またはスマホ撮影）→ アプリに画像アップロードで自動入力
   </div>
 
 </body>
