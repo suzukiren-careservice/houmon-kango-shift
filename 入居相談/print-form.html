@@ -6,86 +6,85 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    @page { size: A4 portrait; margin: 4mm 6mm; }
+
     body {
       font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', sans-serif;
-      font-size: 8pt;
+      font-size: 7.5pt;
       color: #000;
       background: #fff;
-      padding: 5mm 7mm;
-      width: 210mm;
+      padding: 4mm 6mm;
     }
 
-    @page {
-      size: A4 portrait;
-      margin: 5mm 7mm;
-    }
     @media print {
       .no-print { display: none !important; }
       body { padding: 0; }
+      /* ページ全体を縮小して確実に1枚に収める */
+      html { zoom: 0.82; }
     }
 
     /* ===== 印刷ボタン ===== */
     .print-bar {
       text-align: center;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
+      padding: 8px;
+      background: #EEF2FF;
+      border-radius: 8px;
     }
     .print-bar button {
       background: #1565C0;
       color: #fff;
       border: none;
-      padding: 7px 24px;
-      font-size: 12px;
+      padding: 8px 22px;
+      font-size: 13px;
       font-weight: 700;
       border-radius: 6px;
       cursor: pointer;
       margin: 0 4px;
     }
-    .print-bar button.out {
+    .print-bar .out {
       background: #fff;
       color: #1565C0;
       border: 2px solid #1565C0;
     }
     .print-bar p {
       font-size: 11px;
-      color: #666;
-      margin-top: 4px;
+      color: #555;
+      margin-top: 6px;
     }
 
     /* ===== タイトル ===== */
-    .form-title {
+    .ttl {
       text-align: center;
-      font-size: 11.5pt;
+      font-size: 12pt;
       font-weight: 900;
       letter-spacing: 2px;
       border-bottom: 2.5px double #000;
       padding-bottom: 2px;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
-    .form-subtitle {
+    .sttl {
       text-align: center;
-      font-size: 7pt;
+      font-size: 6.5pt;
       color: #555;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     /* ===== セクション ===== */
-    .section {
+    .sec {
       border: 1px solid #000;
       border-radius: 2px;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
       page-break-inside: avoid;
     }
-    .sec-hdr {
+    .sh {
       background: #111;
       color: #fff;
-      font-size: 8pt;
+      font-size: 7.5pt;
       font-weight: 700;
-      padding: 2px 6px;
-      letter-spacing: 0.5px;
+      padding: 2px 5px;
     }
-    .sec-body {
-      padding: 3px 5px;
-    }
+    .sb { padding: 2px 4px; }
 
     /* ===== グリッド ===== */
     .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; }
@@ -97,94 +96,42 @@
 
     /* ===== フィールド ===== */
     .f { display: flex; flex-direction: column; gap: 1px; }
-    .lbl {
-      font-size: 6.5pt;
+    .lb {
+      font-size: 6pt;
       font-weight: 700;
       color: #333;
       white-space: nowrap;
     }
-    .line {
-      border-bottom: 1px solid #000;
-      min-height: 11px;
-    }
-    .line-tall {
-      border: 1px solid #000;
-      min-height: 18px;
-      border-radius: 1px;
-    }
-    .line-s {
-      border-bottom: 1px solid #000;
-      min-height: 11px;
-      display: inline-block;
-    }
+    .ln  { border-bottom: 1px solid #000; min-height: 10px; }
+    .lnt { border: 1px solid #000; min-height: 14px; }
+    .ls  { border-bottom: 1px solid #000; min-height: 10px; display: inline-block; }
 
     /* ===== チェックボックス ===== */
-    .cg {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1px 5px;
-      align-items: center;
-      padding: 1px 0;
-    }
-    .ci {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      white-space: nowrap;
-      font-size: 7.5pt;
-    }
-    .cb {
-      width: 9px;
-      height: 9px;
-      border: 1px solid #000;
-      border-radius: 1px;
-      flex-shrink: 0;
-      display: inline-block;
-    }
+    .cg { display: flex; flex-wrap: wrap; gap: 1px 4px; align-items: center; padding: 1px 0; }
+    .ci { display: flex; align-items: center; gap: 2px; white-space: nowrap; font-size: 7pt; }
+    .cb { width: 8px; height: 8px; border: 1px solid #000; border-radius: 1px; flex-shrink: 0; display: inline-block; }
 
     /* ===== サブセクション ===== */
-    .sub {
-      font-size: 7pt;
-      font-weight: 700;
-      background: #ddd;
-      padding: 1px 5px;
-      margin: 3px -5px 2px;
-    }
+    .sub { font-size: 6.5pt; font-weight: 700; background: #ddd; padding: 1px 4px; margin: 2px -4px 1px; }
 
-    /* ===== 医療処置 ===== */
-    .med-grid {
+    /* ===== 医療処置（6列）===== */
+    .med {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 1px 3px;
-      margin: 2px 0;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1px 2px;
+      margin: 1px 0;
     }
 
     /* ===== インライン ===== */
-    .il {
-      display: flex;
-      align-items: flex-end;
-      gap: 2px;
-      font-size: 7.5pt;
-    }
+    .il { display: flex; align-items: flex-end; gap: 2px; font-size: 7pt; flex-wrap: wrap; }
 
     /* ===== カンファ ===== */
-    .cr {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-bottom: 1px;
-      font-size: 7.5pt;
-    }
-    .cr-line { border-bottom: 1px solid #000; flex: 1; min-height: 11px; }
+    .cr { display: flex; align-items: center; gap: 3px; margin-bottom: 1px; font-size: 7pt; }
+    .crl { border-bottom: 1px solid #000; flex: 1; min-height: 10px; }
 
-    /* ===== ⑥⑦ 横並び ===== */
-    .row-67 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3px;
-      margin-bottom: 3px;
-    }
-    .row-67 .section { margin-bottom: 0; }
+    /* ===== 横並びレイアウト ===== */
+    .row-half { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-bottom: 2px; }
+    .row-half .sec { margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -193,29 +140,30 @@
   <div class="print-bar no-print">
     <button onclick="window.print()">🖨️ 印刷する（A4）</button>
     <button class="out" onclick="window.close()">✕ 閉じる</button>
-    <p>印刷前にブラウザの「余白：最小」に設定してください。</p>
+    <p>印刷ダイアログの「余白：デフォルト」のままで1枚に収まります。<br>
+       収まらない場合は「余白：最小」に変更してください。</p>
   </div>
 
-  <div class="form-title">入所問い合わせチェック表</div>
-  <div class="form-subtitle">ケアフル ／ わが家 ／ 大ちゃん家</div>
+  <div class="ttl">入所問い合わせチェック表</div>
+  <div class="sttl">ケアフル ／ わが家 ／ 大ちゃん家</div>
 
   <!-- ① 基本情報 -->
-  <div class="section">
-    <div class="sec-hdr">① 基本情報</div>
-    <div class="sec-body">
-      <div class="g4" style="gap:2px 10px">
+  <div class="sec">
+    <div class="sh">① 基本情報</div>
+    <div class="sb">
+      <div class="g4" style="gap:2px 8px">
 
         <div class="f">
-          <div class="lbl">★相談日時</div>
+          <div class="lb">★相談日時</div>
           <div class="il">
-            <span class="line-s" style="width:46px"></span>年
-            <span class="line-s" style="width:20px"></span>月
-            <span class="line-s" style="width:20px"></span>日
+            <span class="ls" style="width:40px"></span>年
+            <span class="ls" style="width:18px"></span>月
+            <span class="ls" style="width:18px"></span>日
           </div>
         </div>
 
         <div class="f">
-          <div class="lbl">受付方法</div>
+          <div class="lb">受付方法</div>
           <div class="cg">
             <span class="ci"><span class="cb"></span>来訪</span>
             <span class="ci"><span class="cb"></span>TEL</span>
@@ -223,13 +171,13 @@
         </div>
 
         <div class="f">
-          <div class="lbl">対応スタッフ</div>
-          <div class="line"></div>
+          <div class="lb">対応スタッフ</div>
+          <div class="ln"></div>
         </div>
 
         <div class="f">
-          <div class="lbl">対象施設</div>
-          <div class="cg" style="gap:1px 4px">
+          <div class="lb">★対象施設</div>
+          <div class="cg" style="gap:1px 3px">
             <span class="ci"><span class="cb"></span>ケアフル</span>
             <span class="ci"><span class="cb"></span>わが家</span>
             <span class="ci"><span class="cb"></span>大ちゃん家</span>
@@ -238,8 +186,8 @@
         </div>
 
         <div class="f s2">
-          <div class="lbl">★進捗ステータス</div>
-          <div class="cg" style="gap:1px 4px">
+          <div class="lb">★進捗ステータス</div>
+          <div class="cg" style="gap:1px 3px">
             <span class="ci"><span class="cb"></span>対応中</span>
             <span class="ci"><span class="cb"></span>見学予定</span>
             <span class="ci"><span class="cb"></span>入居決定</span>
@@ -250,13 +198,13 @@
         </div>
 
         <div class="f">
-          <div class="lbl">相談者名</div>
-          <div class="line"></div>
+          <div class="lb">相談者名</div>
+          <div class="ln"></div>
         </div>
 
         <div class="f">
-          <div class="lbl">利用予定者との関係</div>
-          <div class="line"></div>
+          <div class="lb">利用予定者との関係</div>
+          <div class="ln"></div>
         </div>
 
       </div>
@@ -264,18 +212,18 @@
   </div>
 
   <!-- ② 利用予定者情報 -->
-  <div class="section">
-    <div class="sec-hdr">② 利用予定者情報</div>
-    <div class="sec-body">
-      <div class="g4">
+  <div class="sec">
+    <div class="sh">② 利用予定者情報</div>
+    <div class="sb">
+      <div class="g4" style="gap:2px 8px">
 
         <div class="f s2">
-          <div class="lbl">★利用予定者名</div>
-          <div class="line"></div>
+          <div class="lb">★利用予定者名</div>
+          <div class="ln"></div>
         </div>
 
         <div class="f">
-          <div class="lbl">性別</div>
+          <div class="lb">性別</div>
           <div class="cg">
             <span class="ci"><span class="cb"></span>男</span>
             <span class="ci"><span class="cb"></span>女</span>
@@ -283,21 +231,20 @@
         </div>
 
         <div class="f">
-          <div class="lbl">年齢</div>
-          <div class="il"><span class="line-s" style="width:28px"></span>歳</div>
+          <div class="lb">年齢</div>
+          <div class="il"><span class="ls" style="width:24px"></span>歳</div>
         </div>
 
         <div class="f s4">
-          <div class="lbl">生年月日</div>
-          <div class="il" style="gap:3px 6px">
+          <div class="lb">生年月日</div>
+          <div class="il" style="gap:1px 5px">
             <span class="ci"><span class="cb"></span>T（大正）</span>
             <span class="ci"><span class="cb"></span>S（昭和）</span>
             <span class="ci"><span class="cb"></span>H（平成）</span>
-            <span class="ci"><span class="cb"></span>R（令和）</span>
-            &nbsp;
-            <span class="line-s" style="width:28px"></span>年
-            <span class="line-s" style="width:22px"></span>月
-            <span class="line-s" style="width:22px"></span>日
+            <span class="ci"><span class="cb"></span>R（令和）</span>&nbsp;
+            <span class="ls" style="width:26px"></span>年
+            <span class="ls" style="width:20px"></span>月
+            <span class="ls" style="width:20px"></span>日
           </div>
         </div>
 
@@ -306,18 +253,18 @@
   </div>
 
   <!-- ③ 病状・医療情報 -->
-  <div class="section">
-    <div class="sec-hdr">③ 病状・医療情報</div>
-    <div class="sec-body">
-      <div class="g4" style="gap:2px 10px">
+  <div class="sec">
+    <div class="sh">③ 病状・医療情報</div>
+    <div class="sb">
+      <div class="g4" style="gap:2px 8px">
 
         <div class="f s4">
-          <div class="lbl">病名・疾病名</div>
-          <div class="line"></div>
+          <div class="lb">病名・疾病名</div>
+          <div class="ln"></div>
         </div>
 
         <div class="f">
-          <div class="lbl">現在の状況</div>
+          <div class="lb">現在の状況</div>
           <div class="cg">
             <span class="ci"><span class="cb"></span>入院中</span>
             <span class="ci"><span class="cb"></span>在宅</span>
@@ -326,33 +273,31 @@
         </div>
 
         <div class="f s2">
-          <div class="lbl">入院先 / 施設名</div>
-          <div class="line"></div>
+          <div class="lb">入院先 / 施設名</div>
+          <div class="ln"></div>
         </div>
 
         <div class="f">
-          <div class="lbl">担当相談員</div>
-          <div class="line"></div>
+          <div class="lb">担当相談員</div>
+          <div class="ln"></div>
         </div>
 
         <div class="f s2">
-          <div class="lbl">担当ケアマネージャー</div>
-          <div class="line"></div>
+          <div class="lb">担当ケアマネージャー</div>
+          <div class="ln"></div>
         </div>
 
         <div class="f s2">
-          <div class="lbl">居宅介護支援事業所</div>
-          <div class="line"></div>
+          <div class="lb">居宅介護支援事業所</div>
+          <div class="ln"></div>
         </div>
 
-      </div>
-
-      <div class="sub">介護度・福祉情報</div>
-      <div class="g4" style="gap:2px 10px">
+        <!-- 介護度・福祉（同じgrid内で継続） -->
+        <div class="f s4"><div class="sub" style="margin:2px -4px 1px">介護度・福祉情報</div></div>
 
         <div class="f s2">
-          <div class="lbl">介護保険</div>
-          <div class="cg" style="gap:1px 4px">
+          <div class="lb">介護保険</div>
+          <div class="cg" style="gap:1px 3px">
             <span class="ci"><span class="cb"></span>支援1</span>
             <span class="ci"><span class="cb"></span>支援2</span>
             <span class="ci"><span class="cb"></span>介護1</span>
@@ -367,40 +312,40 @@
         </div>
 
         <div class="f">
-          <div class="lbl">身障手帳</div>
-          <div class="il"><span class="line-s" style="width:26px"></span>級</div>
+          <div class="lb">身障手帳</div>
+          <div class="il"><span class="ls" style="width:22px"></span>級</div>
         </div>
 
         <div class="f">
-          <div class="lbl">福祉医療受給者証</div>
+          <div class="lb">福祉医療受給者証</div>
           <div class="cg">
             <span class="ci"><span class="cb"></span>有</span>
             <span class="ci"><span class="cb"></span>無</span>
           </div>
         </div>
 
-        <div class="f">
-          <div class="lbl">生活保護受給</div>
+        <div class="f s2">
+          <div class="lb">生活保護受給</div>
           <div class="cg">
             <span class="ci"><span class="cb"></span>有</span>
             <span class="ci"><span class="cb"></span>無</span>
           </div>
         </div>
 
-        <div class="f s3">
-          <div class="lbl">主治医</div>
-          <div class="il" style="gap:3px 8px">
+        <div class="f s4">
+          <div class="lb">主治医</div>
+          <div class="il" style="gap:2px 7px">
             <span class="ci"><span class="cb"></span>正翔会</span>
             <span class="ci"><span class="cb"></span>みのかも西CL</span>
             <span class="ci"><span class="cb"></span>その他 ➜</span>
-            <span class="line-s" style="width:90px"></span>
+            <span class="ls" style="width:100px"></span>
           </div>
         </div>
 
       </div>
 
       <div class="sub">医療処置（該当するものにチェック）</div>
-      <div class="med-grid">
+      <div class="med">
         <span class="ci"><span class="cb"></span>在宅酸素</span>
         <span class="ci"><span class="cb"></span>人工呼吸器</span>
         <span class="ci"><span class="cb"></span>人工肛門</span>
@@ -413,99 +358,100 @@
         <span class="ci"><span class="cb"></span>CV(カテーテル)</span>
         <span class="ci"><span class="cb"></span>末梢点滴</span>
         <span class="ci"><span class="cb"></span>気管切開</span>
-        <span class="ci" style="grid-column:span 2"><span class="cb"></span>人工透析　透析曜日：<span class="line-s" style="width:80px"></span></span>
+        <span class="ci" style="grid-column:span 3"><span class="cb"></span>人工透析　透析曜日：<span class="ls" style="width:90px"></span></span>
       </div>
 
       <div class="sub">病状・医療的ケア メモ</div>
-      <div class="line-tall" style="min-height:14px"></div>
+      <div class="lnt" style="min-height:12px"></div>
 
     </div>
   </div>
 
-  <!-- ④ 生活状況 -->
-  <div class="section">
-    <div class="sec-hdr">④ 生活状況</div>
-    <div class="sec-body">
-      <div class="g4">
+  <!-- ④ 生活状況  +  ⑤ 連絡先・キーパーソン　横並び -->
+  <div class="row-half">
 
-        <div class="f">
-          <div class="lbl">食事形態</div>
-          <div class="line"></div>
-        </div>
-
-        <div class="f">
-          <div class="lbl">移動動作</div>
-          <div class="cg">
-            <span class="ci"><span class="cb"></span>歩行</span>
-            <span class="ci"><span class="cb"></span>車椅子</span>
-            <span class="ci"><span class="cb"></span>全介助</span>
-          </div>
-        </div>
-
-        <div class="f">
-          <div class="lbl">排泄</div>
-          <div class="cg">
-            <span class="ci"><span class="cb"></span>トイレ歩行</span>
-            <span class="ci"><span class="cb"></span>ポータブル</span>
-            <span class="ci"><span class="cb"></span>オムツ</span>
-          </div>
-        </div>
-
-        <div class="f">
-          <div class="lbl">入浴</div>
-          <div class="cg">
-            <span class="ci"><span class="cb"></span>施設入浴</span>
-            <span class="ci"><span class="cb"></span>シャワー浴</span>
-            <span class="ci"><span class="cb"></span>訪問入浴</span>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- ⑤ 連絡先・キーパーソン -->
-  <div class="section">
-    <div class="sec-hdr">⑤ 連絡先・キーパーソン</div>
-    <div class="sec-body">
-      <div class="g4">
-
-        <div class="f s2">
-          <div class="lbl">自宅住所</div>
-          <div class="line"></div>
-        </div>
-
-        <div class="f">
-          <div class="lbl">キーパーソン名</div>
-          <div class="line"></div>
-        </div>
-
-        <div class="f">
-          <div class="lbl">続柄</div>
-          <div class="line"></div>
-        </div>
-
-        <div class="f s2">
-          <div class="lbl">キーパーソン連絡先</div>
-          <div class="line"></div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- ⑥⑦ 横並び -->
-  <div class="row-67">
-
-    <!-- ⑥ 見学・部屋希望 -->
-    <div class="section">
-      <div class="sec-hdr">⑥ 見学・部屋希望</div>
-      <div class="sec-body">
-
+    <div class="sec">
+      <div class="sh">④ 生活状況</div>
+      <div class="sb">
         <div class="g2" style="gap:2px 8px">
 
           <div class="f">
-            <div class="lbl">見学希望</div>
+            <div class="lb">食事形態</div>
+            <div class="ln"></div>
+          </div>
+
+          <div class="f">
+            <div class="lb">移動動作</div>
+            <div class="cg">
+              <span class="ci"><span class="cb"></span>歩行</span>
+              <span class="ci"><span class="cb"></span>車椅子</span>
+              <span class="ci"><span class="cb"></span>全介助</span>
+            </div>
+          </div>
+
+          <div class="f">
+            <div class="lb">排泄</div>
+            <div class="cg">
+              <span class="ci"><span class="cb"></span>トイレ歩行</span>
+              <span class="ci"><span class="cb"></span>ポータブル</span>
+              <span class="ci"><span class="cb"></span>オムツ</span>
+            </div>
+          </div>
+
+          <div class="f">
+            <div class="lb">入浴</div>
+            <div class="cg">
+              <span class="ci"><span class="cb"></span>施設入浴</span>
+              <span class="ci"><span class="cb"></span>シャワー浴</span>
+              <span class="ci"><span class="cb"></span>訪問入浴</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sh">⑤ 連絡先・キーパーソン</div>
+      <div class="sb">
+        <div class="g2" style="gap:2px 8px">
+
+          <div class="f s2">
+            <div class="lb">自宅住所</div>
+            <div class="ln"></div>
+          </div>
+
+          <div class="f">
+            <div class="lb">キーパーソン名</div>
+            <div class="ln"></div>
+          </div>
+
+          <div class="f">
+            <div class="lb">続柄</div>
+            <div class="ln"></div>
+          </div>
+
+          <div class="f s2">
+            <div class="lb">キーパーソン連絡先</div>
+            <div class="ln"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ⑥ 見学・部屋希望  +  ⑦ カンファレンス　横並び -->
+  <div class="row-half">
+
+    <div class="sec">
+      <div class="sh">⑥ 見学・部屋希望</div>
+      <div class="sb">
+        <div class="g2" style="gap:2px 8px">
+
+          <div class="f">
+            <div class="lb">見学希望</div>
             <div class="cg">
               <span class="ci"><span class="cb"></span>有</span>
               <span class="ci"><span class="cb"></span>無</span>
@@ -513,7 +459,7 @@
           </div>
 
           <div class="f">
-            <div class="lbl">希望部屋</div>
+            <div class="lb">希望部屋</div>
             <div class="cg">
               <span class="ci"><span class="cb"></span>1階</span>
               <span class="ci"><span class="cb"></span>2階</span>
@@ -522,73 +468,71 @@
           </div>
 
           <div class="f s2">
-            <div class="lbl">見学希望日時</div>
+            <div class="lb">見学希望日時</div>
             <div class="il">
-              <span class="line-s" style="width:50px"></span>年
-              <span class="line-s" style="width:18px"></span>月
-              <span class="line-s" style="width:18px"></span>日
-              <span class="line-s" style="width:26px"></span>時
+              <span class="ls" style="width:44px"></span>年
+              <span class="ls" style="width:16px"></span>月
+              <span class="ls" style="width:16px"></span>日
+              <span class="ls" style="width:24px"></span>時
             </div>
           </div>
 
           <div class="f">
-            <div class="lbl">予定見学者</div>
-            <div class="line"></div>
+            <div class="lb">予定見学者</div>
+            <div class="ln"></div>
           </div>
 
           <div class="f">
-            <div class="lbl">見学者連絡先</div>
-            <div class="line"></div>
+            <div class="lb">見学者連絡先</div>
+            <div class="ln"></div>
           </div>
 
         </div>
-
       </div>
     </div>
 
-    <!-- ⑦ カンファレンス -->
-    <div class="section">
-      <div class="sec-hdr">⑦ カンファレンス・面談</div>
-      <div class="sec-body">
+    <div class="sec">
+      <div class="sh">⑦ カンファレンス・面談</div>
+      <div class="sb">
 
         <div class="f" style="margin-bottom:3px">
-          <div class="lbl">事前面談（日程）</div>
+          <div class="lb">事前面談（日程）</div>
           <div class="il">
-            <span class="line-s" style="width:50px"></span>年
-            <span class="line-s" style="width:18px"></span>月
-            <span class="line-s" style="width:18px"></span>日
-            <span class="line-s" style="width:26px"></span>時
+            <span class="ls" style="width:44px"></span>年
+            <span class="ls" style="width:16px"></span>月
+            <span class="ls" style="width:16px"></span>日
+            <span class="ls" style="width:24px"></span>時
           </div>
         </div>
 
         <div class="f" style="margin-bottom:4px">
-          <div class="lbl">ENTカンファレンス（日程）</div>
+          <div class="lb">ENTカンファレンス（日程）</div>
           <div class="il">
-            <span class="line-s" style="width:50px"></span>年
-            <span class="line-s" style="width:18px"></span>月
-            <span class="line-s" style="width:18px"></span>日
-            <span class="line-s" style="width:26px"></span>時
+            <span class="ls" style="width:44px"></span>年
+            <span class="ls" style="width:16px"></span>月
+            <span class="ls" style="width:16px"></span>日
+            <span class="ls" style="width:24px"></span>時
           </div>
         </div>
 
-        <div class="lbl" style="margin-bottom:2px">退院調整カンファレンス 候補日</div>
+        <div class="lb" style="margin-bottom:2px">退院調整カンファレンス 候補日</div>
         <div class="cr">
-          <span style="font-weight:900;min-width:14px">①</span>
-          <span class="line-s" style="width:72px"></span>
-          <span style="font-size:7pt">出席：</span>
-          <span class="cr-line"></span>
+          <span style="font-weight:900;min-width:12px;font-size:7pt">①</span>
+          <span class="ls" style="width:66px"></span>
+          <span style="font-size:6.5pt">出席：</span>
+          <span class="crl"></span>
         </div>
         <div class="cr">
-          <span style="font-weight:900;min-width:14px">②</span>
-          <span class="line-s" style="width:72px"></span>
-          <span style="font-size:7pt">出席：</span>
-          <span class="cr-line"></span>
+          <span style="font-weight:900;min-width:12px;font-size:7pt">②</span>
+          <span class="ls" style="width:66px"></span>
+          <span style="font-size:6.5pt">出席：</span>
+          <span class="crl"></span>
         </div>
         <div class="cr">
-          <span style="font-weight:900;min-width:14px">③</span>
-          <span class="line-s" style="width:72px"></span>
-          <span style="font-size:7pt">出席：</span>
-          <span class="cr-line"></span>
+          <span style="font-weight:900;min-width:12px;font-size:7pt">③</span>
+          <span class="ls" style="width:66px"></span>
+          <span style="font-size:6.5pt">出席：</span>
+          <span class="crl"></span>
         </div>
 
       </div>
@@ -597,10 +541,10 @@
   </div>
 
   <!-- ⑧ 備考 -->
-  <div class="section">
-    <div class="sec-hdr">⑧ 備考・その他</div>
-    <div class="sec-body">
-      <div class="line-tall" style="min-height:20px"></div>
+  <div class="sec">
+    <div class="sh">⑧ 備考・その他</div>
+    <div class="sb">
+      <div class="lnt" style="min-height:18px"></div>
     </div>
   </div>
 
