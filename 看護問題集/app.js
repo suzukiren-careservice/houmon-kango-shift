@@ -195,7 +195,7 @@ createApp({
     startQuiz(subject) {
       const questions = this.allQuestions.filter(q => q.subject_id === subject.id);
       if (!questions.length) {
-        alert('この科目にはまだ問題がありません。\n管理画面から問題を追加してください。');
+        alert('この科目はまだ準備中です 🔜\nもう少しお待ちください！');
         return;
       }
       this.currentSubject = subject;
