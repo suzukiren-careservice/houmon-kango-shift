@@ -59,7 +59,6 @@
           <span class="header-icon">📖</span>
           <h1>看護学校 問題集</h1>
         </div>
-        <button @click="view = 'admin'" class="btn btn-outline">⚙ 管理</button>
       </header>
       <main class="main-content">
         <div class="login-card">
@@ -67,7 +66,6 @@
           <div v-if="users.length === 0" class="empty-state">
             <div class="empty-icon">👥</div>
             <p>メンバーが登録されていません</p>
-            <button @click="view = 'admin'; adminTab = 'members'" class="btn btn-primary">メンバーを追加する</button>
           </div>
           <div v-else class="user-grid">
             <button
@@ -89,21 +87,19 @@
           <h1>看護学校 問題集</h1>
         </div>
         <div class="header-right">
-          <button @click="view = 'admin'" class="btn btn-ghost btn-sm">⚙</button>
           <button @click="switchUser" class="user-tag">{{ currentUser.name }} ▾</button>
         </div>
       </header>
 
       <main class="main-content">
-        <div v-if="subjects.length === 0" class="empty-state">
+        <div v-if="visibleSubjects.length === 0" class="empty-state">
           <div class="empty-icon">📚</div>
           <p>科目がまだ登録されていません</p>
-          <button @click="view = 'admin'" class="btn btn-primary">科目を追加する</button>
         </div>
 
         <div v-else class="subjects-grid">
           <div
-            v-for="s in subjects"
+            v-for="s in visibleSubjects"
             :key="s.id"
             class="subject-card"
             @click="startQuiz(s)"
@@ -225,142 +221,6 @@
           <button @click="retryQuiz" class="btn btn-primary">もう一度 🔄</button>
           <button @click="view = 'subjects'" class="btn btn-outline">科目一覧へ</button>
         </div>
-      </main>
-    </div>
-
-    <!-- ===== 管理画面 ===== -->
-    <div v-if="view === 'admin'">
-      <header class="app-header">
-        <button @click="view = currentUser ? 'subjects' : 'login'" class="btn btn-ghost">← 戻る</button>
-        <h1>管理画面</h1>
-        <span></span>
-      </header>
-
-      <div class="admin-tabs">
-        <button class="tab-btn" :class="{ active: adminTab === 'subjects' }" @click="adminTab = 'subjects'">科目</button>
-        <button class="tab-btn" :class="{ active: adminTab === 'questions' }" @click="adminTab = 'questions'">問題</button>
-        <button class="tab-btn" :class="{ active: adminTab === 'members' }" @click="adminTab = 'members'">メンバー</button>
-      </div>
-
-      <main class="main-content">
-
-        <!-- 科目管理 -->
-        <div v-if="adminTab === 'subjects'">
-          <div class="admin-section">
-            <h3 class="section-title">科目を追加</h3>
-            <div class="form-group">
-              <label class="form-label">アイコン（絵文字）</label>
-              <input v-model="newSubject.icon" type="text" class="form-input icon-input" placeholder="💊" maxlength="2" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">科目名 <span class="required">*</span></label>
-              <input v-model="newSubject.name" type="text" class="form-input" placeholder="例: 基礎看護学" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">説明</label>
-              <input v-model="newSubject.description" type="text" class="form-input" placeholder="例: バイタルサイン・清潔ケア等" />
-            </div>
-            <button @click="addSubject" class="btn btn-primary" :disabled="!newSubject.name.trim()">追加する</button>
-          </div>
-
-          <div class="admin-section">
-            <h3 class="section-title">登録済み科目</h3>
-            <div v-if="subjects.length === 0" class="empty-text">科目がありません</div>
-            <div v-for="s in subjects" :key="s.id" class="admin-list-item">
-              <div class="item-info">
-                <span class="item-icon">{{ s.icon }}</span>
-                <div>
-                  <strong>{{ s.name }}</strong>
-                  <span class="item-count">{{ s.question_count }}問</span>
-                </div>
-              </div>
-              <button @click="deleteSubject(s)" class="btn btn-danger btn-sm">削除</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 問題管理 -->
-        <div v-if="adminTab === 'questions'">
-          <div class="admin-section">
-            <h3 class="section-title">問題を追加</h3>
-            <div class="form-group">
-              <label class="form-label">科目 <span class="required">*</span></label>
-              <select v-model="newQuestion.subject_id" class="form-input">
-                <option value="">科目を選択してください</option>
-                <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.icon }} {{ s.name }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">問題文 <span class="required">*</span></label>
-              <textarea v-model="newQuestion.question_text" class="form-input form-textarea" placeholder="問題文を入力してください" rows="3"></textarea>
-            </div>
-            <div class="form-group">
-              <label class="form-label">選択肢と正解 <span class="required">*</span></label>
-              <p class="hint-text">ラジオボタンで正解を選択してください</p>
-              <div v-for="(_, i) in newQuestion.choices" :key="i" class="choice-input-row">
-                <label class="radio-label">
-                  <input type="radio" :value="i" v-model="newQuestion.correct_index" />
-                  <span class="choice-alpha-admin">{{ ['A','B','C','D'][i] }}</span>
-                </label>
-                <input v-model="newQuestion.choices[i]" type="text" class="form-input" :placeholder="['A','B','C','D'][i] + 'の内容を入力'" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">解説（任意）</label>
-              <textarea v-model="newQuestion.explanation" class="form-input form-textarea" placeholder="解説を入力（省略可）" rows="2"></textarea>
-            </div>
-            <button @click="addQuestion" class="btn btn-primary" :disabled="!canAddQuestion">追加する</button>
-          </div>
-
-          <div class="admin-section">
-            <h3 class="section-title">登録済み問題</h3>
-            <div class="form-group">
-              <select v-model="filterSubjectId" class="form-input">
-                <option value="">すべての科目</option>
-                <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.icon }} {{ s.name }}</option>
-              </select>
-            </div>
-            <div v-if="filteredQuestions.length === 0" class="empty-text">問題がありません</div>
-            <div v-for="q in filteredQuestions" :key="q.id" class="admin-question-item">
-              <div class="question-item-info">
-                <span class="question-subject-badge">{{ subjectName(q.subject_id) }}</span>
-                <p class="question-preview">{{ q.question_text }}</p>
-              </div>
-              <button @click="deleteQuestion(q)" class="btn btn-danger btn-sm">削除</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- メンバー管理 -->
-        <div v-if="adminTab === 'members'">
-          <div class="admin-section">
-            <h3 class="section-title">メンバーを追加</h3>
-            <div class="form-group">
-              <label class="form-label">名前 <span class="required">*</span></label>
-              <input
-                v-model="newUserName"
-                type="text"
-                class="form-input"
-                placeholder="例: 鈴木 花子"
-                @keyup.enter="addUser"
-              />
-            </div>
-            <button @click="addUser" class="btn btn-primary" :disabled="!newUserName.trim()">追加する</button>
-          </div>
-
-          <div class="admin-section">
-            <h3 class="section-title">登録済みメンバー <span class="member-count">{{ users.length }}人</span></h3>
-            <div v-if="users.length === 0" class="empty-text">メンバーがいません</div>
-            <div v-for="u in users" :key="u.id" class="admin-list-item">
-              <div class="item-info">
-                <span class="member-avatar">{{ u.name.charAt(0) }}</span>
-                <strong>{{ u.name }}</strong>
-              </div>
-              <button @click="deleteUser(u)" class="btn btn-danger btn-sm">削除</button>
-            </div>
-          </div>
-        </div>
-
       </main>
     </div>
 

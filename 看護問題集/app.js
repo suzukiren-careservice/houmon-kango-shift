@@ -7,7 +7,7 @@ createApp({
   data() {
     return {
       loading: true,
-      view: 'password', // password | login | subjects | quiz | result | admin
+      view: 'password', // password | login | subjects | quiz | result
       pwInput: '',
       pwError: false,
       pwVisible: false,
@@ -30,23 +30,13 @@ createApp({
       selectedIndex: null,
       answered: false,
       results: [],
-
-      // 管理
-      adminTab: 'subjects',
-      filterSubjectId: '',
-      newSubject: { icon: '📚', name: '', description: '' },
-      newQuestion: {
-        subject_id: '',
-        question_text: '',
-        choices: ['', '', '', ''],
-        correct_index: 0,
-        explanation: '',
-      },
-      newUserName: '',
     };
   },
 
   computed: {
+    visibleSubjects() {
+      return this.subjects.filter(s => !s.hidden);
+    },
     progressPercent() {
       if (!this.quizQuestions.length) return 0;
       return Math.round((this.currentIndex / this.quizQuestions.length) * 100);
@@ -66,14 +56,6 @@ createApp({
     scorePercent() {
       if (!this.quizQuestions.length) return 0;
       return Math.round((this.correctCount / this.quizQuestions.length) * 100);
-    },
-    canAddQuestion() {
-      const q = this.newQuestion;
-      return q.subject_id && q.question_text.trim() && q.choices.every(c => c.trim());
-    },
-    filteredQuestions() {
-      if (!this.filterSubjectId) return this.allQuestions;
-      return this.allQuestions.filter(q => q.subject_id === this.filterSubjectId);
     },
   },
 
@@ -266,76 +248,6 @@ createApp({
       this.startQuiz(this.currentSubject);
     },
 
-    // ===== 科目管理 =====
-    async addSubject() {
-      if (!this.newSubject.name.trim()) return;
-      const { error } = await db.from('quiz_subjects').insert({
-        name: this.newSubject.name.trim(),
-        description: this.newSubject.description.trim(),
-        icon: this.newSubject.icon || '📚',
-      });
-      if (error) { alert('追加に失敗しました: ' + error.message); return; }
-      this.newSubject = { icon: '📚', name: '', description: '' };
-      await this.loadData();
-    },
-
-    async deleteSubject(subject) {
-      if (!confirm(`「${subject.name}」を削除しますか？\n※この科目の問題もすべて削除されます。`)) return;
-      const { error } = await db.from('quiz_subjects').delete().eq('id', subject.id);
-      if (error) { alert('削除に失敗しました: ' + error.message); return; }
-      await this.loadData();
-    },
-
-    // ===== 問題管理 =====
-    async addQuestion() {
-      if (!this.canAddQuestion) return;
-      const q = this.newQuestion;
-      const { error } = await db.from('quiz_questions').insert({
-        subject_id: q.subject_id,
-        question_text: q.question_text.trim(),
-        choices: q.choices.map(c => c.trim()),
-        correct_index: q.correct_index,
-        explanation: q.explanation.trim(),
-      });
-      if (error) { alert('追加に失敗しました: ' + error.message); return; }
-      this.newQuestion = {
-        subject_id: q.subject_id,
-        question_text: '', choices: ['', '', '', ''], correct_index: 0, explanation: '',
-      };
-      await this.loadData();
-    },
-
-    async deleteQuestion(question) {
-      if (!confirm('この問題を削除しますか？')) return;
-      const { error } = await db.from('quiz_questions').delete().eq('id', question.id);
-      if (error) { alert('削除に失敗しました: ' + error.message); return; }
-      await this.loadData();
-    },
-
-    // ===== メンバー管理 =====
-    async addUser() {
-      if (!this.newUserName.trim()) return;
-      const { error } = await db.from('quiz_users').insert({ name: this.newUserName.trim() });
-      if (error) { alert('追加に失敗しました: ' + error.message); return; }
-      this.newUserName = '';
-      await this.loadData();
-    },
-
-    async deleteUser(user) {
-      if (!confirm(`「${user.name}」を削除しますか？\n※この人の演習記録もすべて削除されます。`)) return;
-      const { error } = await db.from('quiz_users').delete().eq('id', user.id);
-      if (error) { alert('削除に失敗しました: ' + error.message); return; }
-      if (this.currentUser?.id === user.id) {
-        this.currentUser = null;
-        localStorage.removeItem('quiz_user_id');
-        this.myResults = [];
-      }
-      await this.loadData();
-    },
-
-    subjectName(subjectId) {
-      return this.subjects.find(s => s.id === subjectId)?.name || '';
-    },
   },
 
   async mounted() {
