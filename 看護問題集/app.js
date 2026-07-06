@@ -30,6 +30,7 @@ createApp({
       selectedIndex: null,
       answered: false,
       results: [],
+      savingResult: false,
     };
   },
 
@@ -214,9 +215,12 @@ createApp({
     },
 
     async nextQuestion() {
+      if (this.savingResult) return;
       if (this.isLastQuestion) {
+        this.savingResult = true;
         this.clearProgress();
         await this.saveResult();
+        this.savingResult = false;
         this.view = 'result';
         return;
       }

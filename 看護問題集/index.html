@@ -174,7 +174,7 @@
             <p>{{ currentQuestion.explanation }}</p>
           </div>
 
-          <button @click="nextQuestion" class="btn btn-primary btn-full">
+          <button @click="nextQuestion" class="btn btn-primary btn-full" :disabled="savingResult">
             {{ isLastQuestion ? '結果を見る 📊' : '次の問題 →' }}
           </button>
         </div>
