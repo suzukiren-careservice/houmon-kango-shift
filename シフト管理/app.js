@@ -45,7 +45,7 @@ createApp({
       currentStaff: null,
       currentTab: 'timeline',
       tabs: [
-        { id: 'timeline',   label: '③ タイムライン' },
+        { id: 'timeline',   label: 'タイムライン' },
         { id: 'clientview', label: '利用者確認' },
         { id: 'clients',    label: '利用者管理' },
       ],
