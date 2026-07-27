@@ -94,7 +94,7 @@
       <span class="tl-date-label">{{ tlDateLabel }}</span>
       <button class="btn btn-secondary" @click="tlNextDay">翌日 &#9654;</button>
       <input type="date" v-model="timelineDate" class="tl-date-input" />
-      <button v-if="isAdmin" class="btn btn-accent" @click="openBulkModal">① 一括入力/削除</button>
+      <button v-if="isAdmin" class="btn btn-accent" @click="openBulkModal">一括入力/削除</button>
       <button class="btn btn-secondary" @click="printSchedule">&#128438; 印刷</button>
     </div>
 
@@ -616,7 +616,7 @@
     </div>
   </div>
 
-  <!-- ========== ① 一括入力/削除 MODAL ========== -->
+  <!-- ========== 一括入力/削除 MODAL ========== -->
   <div v-if="bulkModal.show" class="modal-overlay" @click.self="closeBulkModal">
     <div class="modal modal-wide">
       <div class="modal-header">
