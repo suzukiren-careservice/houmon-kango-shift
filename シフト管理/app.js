@@ -76,7 +76,7 @@ createApp({
         show: false, isEdit: false, clientId: null,
         name: '', address: '', notes: '', weeklyVisits: null,
         freqType: 'week', onHold: false,
-        specialTasks: [],
+        specialTasks: [], areaColor: '',
       },
       bulkModal: {
         show: false,
@@ -84,7 +84,6 @@ createApp({
         year: new Date().getFullYear(),
         month: new Date().getMonth(),
         selectedDates: [],
-        period: 'morning',
         staffMode: 'single',
         staffId: '',
         perDayStaff: {},
@@ -325,6 +324,7 @@ createApp({
           weeklyVisits:c.weekly_visits||null, freqType:c.freq_type||'week',
           onHold:c.on_hold||false,
           specialTasks:Array.isArray(c.special_tasks)?c.special_tasks:[],
+          areaColor:c.area_color||'',
         }));
         this.sortClients();
 
@@ -354,6 +354,21 @@ createApp({
       if (this.shifts[key]!==undefined) return this.shifts[key];
       const isWe=this.isWeekend(dateStr);
       return {morning:!isWe, afternoon:!isWe};
+    },
+
+    async toggleShiftAll(staffId, dateStr) {
+      const current=this.getShift(staffId,dateStr);
+      const bothOff=!current.morning&&!current.afternoon;
+      const next={morning:bothOff, afternoon:bothOff};
+      const key=`${staffId}_${dateStr}`;
+      this.shifts={...this.shifts,[key]:next};
+      try {
+        const {error}=await db.from('shifts').upsert(
+          {staff_id:staffId,date:dateStr,morning:next.morning,afternoon:next.afternoon},
+          {onConflict:'staff_id,date'}
+        );
+        if (error) throw error;
+      } catch(e) { this.shifts={...this.shifts,[key]:current}; alert('シフトの更新に失敗しました'); }
     },
 
     async toggleShift(staffId, dateStr, period) {
@@ -426,6 +441,14 @@ createApp({
 
     getClientName(clientId) { return this.clientList.find(c=>c.id===clientId)?.name||'（利用者不明）'; },
     getClient(clientId) { return this.clientList.find(c=>c.id===clientId)||null; },
+    getAreaColor(clientId) { return this.getClient(clientId)?.areaColor||''; },
+    hexToRgba(hex, alpha) {
+      if (!hex||hex.length<7) return 'white';
+      const r=parseInt(hex.slice(1,3),16);
+      const g=parseInt(hex.slice(3,5),16);
+      const b=parseInt(hex.slice(5,7),16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    },
 
     hasCrossConflict(clientId, dateStr) {
       const client=this.clientList.find(c=>c.id===clientId);
@@ -571,10 +594,10 @@ createApp({
 
     // ===== 利用者 =====
     openAddClient() {
-      this.clientModal={show:true,isEdit:false,clientId:null,name:'',address:'',notes:'',weeklyVisits:null,freqType:'week',onHold:false,specialTasks:[]};
+      this.clientModal={show:true,isEdit:false,clientId:null,name:'',address:'',notes:'',weeklyVisits:null,freqType:'week',onHold:false,specialTasks:[],areaColor:''};
     },
     openEditClient(client) {
-      this.clientModal={show:true,isEdit:true,clientId:client.id,name:client.name,address:client.address||'',notes:client.notes||'',weeklyVisits:client.weeklyVisits||null,freqType:client.freqType||'week',onHold:client.onHold||false,specialTasks:[...(client.specialTasks||[])]};
+      this.clientModal={show:true,isEdit:true,clientId:client.id,name:client.name,address:client.address||'',notes:client.notes||'',weeklyVisits:client.weeklyVisits||null,freqType:client.freqType||'week',onHold:client.onHold||false,specialTasks:[...(client.specialTasks||[])],areaColor:client.areaColor||''};
     },
     toggleClientTask(taskId) {
       const idx=this.clientModal.specialTasks.indexOf(taskId);
@@ -589,6 +612,7 @@ createApp({
         notes:this.clientModal.notes.trim(), weekly_visits:wv,
         freq_type:this.clientModal.freqType||'week', on_hold:this.clientModal.onHold||false,
         special_tasks:this.clientModal.specialTasks||[],
+        area_color:this.clientModal.areaColor||'',
       };
       try {
         if (this.clientModal.isEdit) {
@@ -599,12 +623,12 @@ createApp({
             id:this.clientModal.clientId,...this.clientList[idx],
             name:payload.name, address:payload.address, notes:payload.notes,
             weeklyVisits:wv, freqType:payload.freq_type, onHold:payload.on_hold,
-            specialTasks:payload.special_tasks,
+            specialTasks:payload.special_tasks, areaColor:payload.area_color,
           });
         } else {
           const {data,error}=await db.from('clients').insert(payload).select().single();
           if (error) throw error;
-          this.clientList.push({id:data.id,name:data.name,address:data.address||'',notes:data.notes||'',weeklyVisits:data.weekly_visits,freqType:data.freq_type||'week',onHold:data.on_hold||false,specialTasks:data.special_tasks||[]});
+          this.clientList.push({id:data.id,name:data.name,address:data.address||'',notes:data.notes||'',weeklyVisits:data.weekly_visits,freqType:data.freq_type||'week',onHold:data.on_hold||false,specialTasks:data.special_tasks||[],areaColor:data.area_color||''});
         }
       } catch(e) { alert('利用者の保存に失敗しました'); return; }
       this.sortClients();
@@ -674,7 +698,7 @@ createApp({
       this.bulkModal={
         show:true, clientId:'',
         year:today.getFullYear(), month:today.getMonth(),
-        selectedDates:[], period:'morning',
+        selectedDates:[],
         staffMode:'single', staffId:this.currentStaff?.id||'',
         perDayStaff:{}, startTime:'', endTime:'', saving:false,
       };
@@ -708,22 +732,21 @@ createApp({
         const missing=this.bulkModal.selectedDates.filter(d=>!this.bulkModal.perDayStaff[d]);
         if (missing.length) { alert(`${missing.length}日分のスタッフが未設定です。`); return; }
       }
-      const periods=this.bulkModal.period==='both'?['morning','afternoon']:[this.bulkModal.period];
+      const derivePeriod=t=>t&&parseInt(t.split(':')[0])>=12?'afternoon':'morning';
       const clientTasks=this.getClient(this.bulkModal.clientId)?.specialTasks||[];
       const records=[];
       const bulkStart=this.bulkModal.startTime||'';
       const bulkEnd  =this.bulkModal.endTime||'';
       for (const dateStr of this.bulkModal.selectedDates) {
         const staffId=this.bulkModal.staffMode==='single'?this.bulkModal.staffId:this.bulkModal.perDayStaff[dateStr];
-        for (const period of periods) {
-          records.push({
-            staff_id:staffId, client_id:this.bulkModal.clientId,
-            date:dateStr, period,
-            start_time:bulkStart, end_time:bulkEnd,
-            order:this.getVisits(staffId,dateStr,period).length,
-            special_tasks:clientTasks,
-          });
-        }
+        const period=derivePeriod(bulkStart);
+        records.push({
+          staff_id:staffId, client_id:this.bulkModal.clientId,
+          date:dateStr, period,
+          start_time:bulkStart, end_time:bulkEnd,
+          order:this.getVisits(staffId,dateStr,period).length,
+          special_tasks:clientTasks,
+        });
       }
       this.bulkModal.saving=true;
       try {
@@ -746,11 +769,9 @@ createApp({
     async deleteBulk() {
       if (!this.bulkModal.clientId) { alert('利用者を選択してください。'); return; }
       if (!this.bulkModal.selectedDates.length) { alert('日付を選択してください。'); return; }
-      const periods=this.bulkModal.period==='both'?['morning','afternoon']:[this.bulkModal.period];
       const toDelete=this.visits.filter(v=>
         v.clientId===this.bulkModal.clientId&&
-        this.bulkModal.selectedDates.includes(v.date)&&
-        periods.includes(v.period)
+        this.bulkModal.selectedDates.includes(v.date)
       );
       if (!toDelete.length) { alert('該当する訪問が見つかりません。'); return; }
       if (!confirm(`${toDelete.length}件の訪問を削除しますか？`)) return;

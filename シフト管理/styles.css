@@ -1511,6 +1511,46 @@ html, body {
 .tl-task-dot.task-cat-medical   { background: #B91C1C; }
 .tl-task-dot.task-cat-procedure { background: #7C3AED; }
 
+/* 終日休みボタン（アクティブ状態） */
+.tl-shift-allday {
+  background: #FEE2E2; color: #B91C1C;
+  border: 1px solid #FECACA !important;
+  font-size: 10px !important; padding: 2px 7px !important;
+  min-height: 24px !important; flex: 1;
+}
+
+/* 休日オーバーレイ */
+.tl-off-overlay {
+  position: absolute; left: 0; right: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(148,163,184,0.10) 0px,
+    rgba(148,163,184,0.10) 4px,
+    rgba(241,245,249,0.55) 4px,
+    rgba(241,245,249,0.55) 10px
+  );
+  z-index: 4;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.tl-off-label {
+  font-size: 11px; font-weight: 700; color: #CBD5E1;
+  background: rgba(255,255,255,0.85);
+  padding: 3px 10px; border-radius: 20px;
+  border: 1px solid #E2E8F0;
+}
+
+/* 地区カラー「なし」スウォッチ */
+.area-swatch-none {
+  width: auto; height: 36px; padding: 0 10px;
+  border-radius: 8px; border: 1.5px solid var(--border);
+  background: white; color: var(--text-secondary);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.area-swatch-none.selected {
+  border-color: var(--text-primary);
+}
+
 /* 日付入力 */
 .tl-date-input {
   height: 40px; border: 1px solid var(--border);

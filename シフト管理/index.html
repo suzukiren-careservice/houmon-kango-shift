@@ -125,20 +125,12 @@
               <span>{{ staff.name }}</span>
             </div>
             <div class="tl-shift-row">
-              <button
-                v-if="isAdmin"
-                class="shift-toggle tl-shift-btn"
-                :class="getShift(staff.id, timelineDate).morning ? 'toggle-on' : 'toggle-off'"
-                @click="toggleShift(staff.id, timelineDate, 'morning')"
-              >午前{{ getShift(staff.id, timelineDate).morning ? '' : '休' }}</button>
-              <span v-else class="tl-shift-badge" :class="getShift(staff.id, timelineDate).morning ? 'tl-shift-on' : 'tl-shift-off'">午前{{ getShift(staff.id, timelineDate).morning ? '' : '休' }}</span>
-              <button
-                v-if="isAdmin"
-                class="shift-toggle tl-shift-btn"
-                :class="getShift(staff.id, timelineDate).afternoon ? 'toggle-on' : 'toggle-off'"
-                @click="toggleShift(staff.id, timelineDate, 'afternoon')"
-              >午後{{ getShift(staff.id, timelineDate).afternoon ? '' : '休' }}</button>
-              <span v-else class="tl-shift-badge" :class="getShift(staff.id, timelineDate).afternoon ? 'tl-shift-on' : 'tl-shift-off'">午後{{ getShift(staff.id, timelineDate).afternoon ? '' : '休' }}</span>
+              <button v-if="isAdmin" class="shift-toggle tl-shift-btn" :class="getShift(staff.id, timelineDate).morning ? 'toggle-on' : 'toggle-off'" @click="toggleShift(staff.id, timelineDate, 'morning')">午前</button>
+              <span v-else class="tl-shift-badge" :class="getShift(staff.id, timelineDate).morning ? 'tl-shift-on' : 'tl-shift-off'">午前</span>
+              <button v-if="isAdmin" class="shift-toggle tl-shift-btn" :class="getShift(staff.id, timelineDate).afternoon ? 'toggle-on' : 'toggle-off'" @click="toggleShift(staff.id, timelineDate, 'afternoon')">午後</button>
+              <span v-else class="tl-shift-badge" :class="getShift(staff.id, timelineDate).afternoon ? 'tl-shift-on' : 'tl-shift-off'">午後</span>
+              <button v-if="isAdmin" class="shift-toggle tl-shift-btn" :class="!getShift(staff.id, timelineDate).morning && !getShift(staff.id, timelineDate).afternoon ? 'tl-shift-allday' : 'toggle-off'" @click="toggleShiftAll(staff.id, timelineDate)">終日</button>
+              <span v-else-if="!getShift(staff.id, timelineDate).morning && !getShift(staff.id, timelineDate).afternoon" class="tl-shift-badge tl-shift-off">終日休</span>
             </div>
           </div>
 
@@ -164,6 +156,14 @@
             <!-- グリッド線 -->
             <div v-for="h in tlHours" :key="h" class="tl-grid-line" :style="{ top: ((h - 8) * 60 * 0.8) + 'px' }"></div>
 
+            <!-- 休日オーバーレイ -->
+            <div v-if="!getShift(staff.id, timelineDate).morning" class="tl-off-overlay" style="top:0;height:192px">
+              <span class="tl-off-label">午前休</span>
+            </div>
+            <div v-if="!getShift(staff.id, timelineDate).afternoon" class="tl-off-overlay" style="top:192px;height:288px">
+              <span class="tl-off-label">午後休</span>
+            </div>
+
             <!-- 空き時間バンド -->
             <div
               v-for="(gap, gi) in tlGetGaps(staff.id)"
@@ -179,7 +179,7 @@
               v-for="item in tlLaneLayout(staff.id)"
               :key="item.visit.id"
               class="tl-visit-block"
-              :style="[item.style, { borderLeftColor: staff.color }]"
+              :style="[item.style, { borderLeftColor: staff.color, background: getAreaColor(item.visit.clientId) ? hexToRgba(getAreaColor(item.visit.clientId), 0.15) : 'white' }]"
               @click="isAdmin ? openEditVisit(item.visit) : null"
             >
               <!-- 特別作業カテゴリドット -->
@@ -199,8 +199,7 @@
 
           <!-- 訪問追加ボタン -->
           <div v-if="isAdmin" class="tl-staff-footer">
-            <button class="tl-add-btn" @click="openAddVisit(staff.id, timelineDate, 'morning')">＋ 午前</button>
-            <button class="tl-add-btn" @click="openAddVisit(staff.id, timelineDate, 'afternoon')">＋ 午後</button>
+            <button class="tl-add-btn" @click="openAddVisit(staff.id, timelineDate, 'morning')">＋ 追加</button>
           </div>
         </div>
 
@@ -577,6 +576,16 @@
             >{{ task.label }}</button>
           </div>
         </div>
+        <!-- ③ 地区カラー -->
+        <div class="form-group">
+          <label>③ 地区カラー（訪問エリアの識別）</label>
+          <p class="form-hint">タイムラインの訪問ブロック背景色として表示されます。</p>
+          <div class="color-swatches">
+            <button type="button" class="color-swatch area-swatch-none" :class="{ selected: !clientModal.areaColor }" @click="clientModal.areaColor = ''">なし</button>
+            <button v-for="color in colorOptions" :key="color" type="button" class="color-swatch" :class="{ selected: clientModal.areaColor === color }" :style="{ backgroundColor: color }" @click="clientModal.areaColor = color"></button>
+          </div>
+        </div>
+
         <div class="form-group">
           <label>訪問頻度（利用者確認ビュー用）</label>
           <div class="form-group" style="margin-bottom:12px">
@@ -632,16 +641,6 @@
             <option value="">― 選択してください ―</option>
             <option v-for="c in clientList" :key="c.id" :value="c.id">{{ c.name }}</option>
           </select>
-        </div>
-
-        <!-- 時間帯 -->
-        <div class="form-group">
-          <label>時間帯</label>
-          <div class="bulk-period-btns">
-            <button type="button" class="btn" :class="bulkModal.period==='morning' ? 'btn-primary' : 'btn-cancel'" @click="bulkModal.period='morning'">午前</button>
-            <button type="button" class="btn" :class="bulkModal.period==='afternoon' ? 'btn-primary' : 'btn-cancel'" @click="bulkModal.period='afternoon'">午後</button>
-            <button type="button" class="btn" :class="bulkModal.period==='both' ? 'btn-primary' : 'btn-cancel'" @click="bulkModal.period='both'">両方</button>
-          </div>
         </div>
 
         <!-- スタッフ設定 -->
