@@ -95,6 +95,7 @@
       <button class="btn btn-secondary" @click="goToday">今週</button>
       <span class="week-label">{{ weekLabel }}</span>
       <button class="btn btn-secondary" @click="nextWeek">次週 &#9654;</button>
+      <button v-if="isAdmin" class="btn btn-accent" @click="openBulkModal">① 一括入力/削除</button>
       <button class="btn btn-secondary print-btn" @click="printSchedule">&#128438; 印刷</button>
     </div>
 
@@ -155,6 +156,7 @@
                     v-for="visit in getVisits(staff.id, day.dateStr, 'morning')"
                     :key="visit.id"
                     class="visit-card"
+                    :class="{ 'visit-has-tasks': getVisitDisplayTasks(visit).length > 0 }"
                     :style="{ borderLeftColor: staff.color }"
                     @click="isAdmin ? openEditVisit(visit) : null"
                   >
@@ -164,6 +166,9 @@
                     </div>
                     <div v-if="visit.location" class="visit-location">{{ visit.location }}</div>
                     <div v-if="visit.notes" class="visit-notes">{{ visit.notes }}</div>
+                    <div v-if="getVisitDisplayTasks(visit).length" class="visit-task-chips">
+                      <span v-for="t in getVisitDisplayTasks(visit)" :key="t.id" class="task-chip" :class="'task-cat-' + t.category">{{ t.label }}</span>
+                    </div>
                     <div v-if="hasCrossConflict(visit.clientId, day.dateStr)" class="cross-conflict-badge">⚠ {{ otherTeamLabel }}も訪問</div>
                   </div>
                   <button
@@ -194,6 +199,7 @@
                     v-for="visit in getVisits(staff.id, day.dateStr, 'afternoon')"
                     :key="visit.id"
                     class="visit-card"
+                    :class="{ 'visit-has-tasks': getVisitDisplayTasks(visit).length > 0 }"
                     :style="{ borderLeftColor: staff.color }"
                     @click="isAdmin ? openEditVisit(visit) : null"
                   >
@@ -203,6 +209,9 @@
                     </div>
                     <div v-if="visit.location" class="visit-location">{{ visit.location }}</div>
                     <div v-if="visit.notes" class="visit-notes">{{ visit.notes }}</div>
+                    <div v-if="getVisitDisplayTasks(visit).length" class="visit-task-chips">
+                      <span v-for="t in getVisitDisplayTasks(visit)" :key="t.id" class="task-chip" :class="'task-cat-' + t.category">{{ t.label }}</span>
+                    </div>
                     <div v-if="hasCrossConflict(visit.clientId, day.dateStr)" class="cross-conflict-badge">⚠ {{ otherTeamLabel }}も訪問</div>
                   </div>
                   <button
@@ -217,6 +226,86 @@
           </tr>
         </tbody>
       </table>
+    </div>
+  </main>
+
+  <!-- ========== TIMELINE VIEW ========== -->
+  <main v-if="currentTab === 'timeline'" class="view-timeline no-print">
+    <div class="tl-nav">
+      <button class="btn btn-secondary" @click="tlPrevDay">&#9664; 前日</button>
+      <button class="btn btn-secondary" @click="tlToday">今日</button>
+      <span class="tl-date-label">{{ tlDateLabel }}</span>
+      <button class="btn btn-secondary" @click="tlNextDay">翌日 &#9654;</button>
+    </div>
+
+    <div class="tl-scroll-wrap">
+      <!-- 時刻軸 + スタッフ列 -->
+      <div class="tl-grid">
+        <!-- 時刻ヘッダー行 -->
+        <div class="tl-time-col">
+          <div class="tl-staff-header-placeholder"></div>
+          <div class="tl-time-axis" :style="{ height: tlTotalHeight + 'px' }">
+            <div
+              v-for="h in tlHours"
+              :key="h"
+              class="tl-hour-mark"
+              :style="{ top: ((h - 8) * 60 * 0.8) + 'px' }"
+            >{{ String(h).padStart(2,'0') }}:00</div>
+          </div>
+        </div>
+
+        <!-- スタッフ列 -->
+        <div
+          v-for="staff in activeStaff"
+          :key="staff.id"
+          class="tl-staff-col"
+        >
+          <div class="tl-staff-header" :style="{ borderBottomColor: staff.color }">
+            <span class="tl-staff-dot" :style="{ background: staff.color }"></span>
+            {{ staff.name }}
+          </div>
+          <div class="tl-lane" :style="{ height: tlTotalHeight + 'px' }">
+            <!-- 1時間ごとのグリッド線 -->
+            <div
+              v-for="h in tlHours"
+              :key="h"
+              class="tl-grid-line"
+              :style="{ top: ((h - 8) * 60 * 0.8) + 'px' }"
+            ></div>
+
+            <!-- 空き時間バンド -->
+            <div
+              v-for="(gap, gi) in tlGetGaps(staff.id)"
+              :key="'gap-' + gi"
+              class="tl-gap-block"
+              :style="{ top: gap.topPx + 'px', height: gap.height + 'px' }"
+            >
+              <span class="tl-gap-label">{{ gap.label }}</span>
+            </div>
+
+            <!-- 訪問ブロック -->
+            <div
+              v-for="visit in getVisitsForDay(staff.id, timelineDate)"
+              :key="visit.id"
+              class="tl-visit-block"
+              :style="tlBlockStyle(visit)"
+              :class="{ 'tl-no-time': !visit.startTime }"
+              @click="isAdmin ? openEditVisit(visit) : null"
+            >
+              <div class="tl-visit-client">{{ getClientName(visit.clientId) }}</div>
+              <div v-if="visit.startTime" class="tl-visit-time">{{ visit.startTime }}〜{{ visit.endTime || '?' }}</div>
+              <div v-if="getVisitDisplayTasks(visit).length" class="tl-visit-tasks">
+                <span v-for="t in getVisitDisplayTasks(visit)" :key="t.id" class="task-chip task-chip-sm" :class="'task-cat-' + t.category">{{ t.label }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- スタッフがいない場合 -->
+        <div v-if="activeStaff.length === 0" class="tl-empty-msg">
+          スタッフが登録されていません
+        </div>
+      </div>
     </div>
   </main>
 
@@ -270,7 +359,6 @@
                 </span>
               </div>
               <div v-else class="cv-empty"></div>
-              <!-- 1日複数回：日ごとのカウントバッジ -->
               <div v-if="row.client.freqType === 'daily' && row.client.weeklyVisits"
                    class="cv-day-count" :class="day.dayStatus">
                 {{ day.dayCount }}/{{ row.client.weeklyVisits }}回
@@ -327,12 +415,10 @@
               <template v-if="row.client.onHold">
                 <span class="cv-freq-badge hold">⏸ 停止中</span>
               </template>
-              <!-- 月次：今月の訪問回数 -->
               <template v-else-if="row.client.freqType==='month'">
                 <span v-if="row.expected" class="cv-freq-badge" :class="row.status">{{ row.visitCount }}/{{ row.expected }}回</span>
                 <span v-else class="cv-freq-badge none">{{ row.visitCount }}回</span>
               </template>
-              <!-- 2・3ヶ月：期限ベース -->
               <template v-else>
                 <span class="cv-freq-badge" :class="row.status">
                   {{ row.status==='ok' ? '期限内' : row.lastVisitDate ? '期限超過' : '未記録' }}
@@ -361,7 +447,6 @@
     </div>
   </main>
 
-  <!-- ========== STAFF MANAGEMENT VIEW ========== -->
   <!-- ========== CLIENT MANAGEMENT VIEW ========== -->
   <main v-if="currentTab === 'clients'" class="view-manage no-print">
     <div class="manage-header">
@@ -371,12 +456,21 @@
     <div class="manage-list">
       <div v-for="client in clientList" :key="client.id" class="manage-item client-item" :class="{ 'client-on-hold': client.onHold }">
         <div class="client-info">
-          <div style="display:flex;align-items:center;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span class="manage-item-name">{{ client.name }}</span>
             <span v-if="client.onHold" class="hold-badge">⏸ 停止中</span>
           </div>
           <span v-if="client.address" class="client-address">{{ client.address }}</span>
           <span v-if="client.notes" class="client-notes-preview">{{ client.notes }}</span>
+          <!-- ② 特別作業タグ -->
+          <div v-if="client.specialTasks && client.specialTasks.length" class="client-task-chips">
+            <span
+              v-for="taskId in client.specialTasks"
+              :key="taskId"
+              class="task-chip"
+              :class="'task-cat-' + (specialTasks.find(t=>t.id===taskId)?.category||'medical')"
+            >{{ specialTasks.find(t=>t.id===taskId)?.label || taskId }}</span>
+          </div>
         </div>
         <div v-if="isAdmin" class="manage-item-actions">
           <button class="btn btn-edit" @click="openEditClient(client)">編集</button>
@@ -387,7 +481,7 @@
     </div>
   </main>
 
-  <!-- ========== PRINT VIEW (hidden on screen) ========== -->
+  <!-- ========== PRINT VIEW ========== -->
   <div class="print-only" id="print-area">
     <div class="print-title">訪問看護週間スケジュール ― {{ weekLabel }}</div>
     <table class="print-table">
@@ -406,11 +500,7 @@
             <div class="print-period">
               <div class="print-period-label">午前</div>
               <template v-if="getShift(staff.id, day.dateStr).morning">
-                <div
-                  v-for="visit in getVisits(staff.id, day.dateStr, 'morning')"
-                  :key="visit.id"
-                  class="print-visit"
-                >
+                <div v-for="visit in getVisits(staff.id, day.dateStr, 'morning')" :key="visit.id" class="print-visit">
                   <span v-if="visit.startTime || visit.endTime" class="print-time">{{ visit.startTime || '?' }}〜{{ visit.endTime || '?' }} </span><strong>{{ getClientName(visit.clientId) }}</strong>
                 </div>
                 <div v-if="getVisits(staff.id, day.dateStr, 'morning').length === 0" class="print-empty">―</div>
@@ -420,11 +510,7 @@
             <div class="print-period">
               <div class="print-period-label">午後</div>
               <template v-if="getShift(staff.id, day.dateStr).afternoon">
-                <div
-                  v-for="visit in getVisits(staff.id, day.dateStr, 'afternoon')"
-                  :key="visit.id"
-                  class="print-visit"
-                >
+                <div v-for="visit in getVisits(staff.id, day.dateStr, 'afternoon')" :key="visit.id" class="print-visit">
                   <span v-if="visit.startTime || visit.endTime" class="print-time">{{ visit.startTime || '?' }}〜{{ visit.endTime || '?' }} </span><strong>{{ getClientName(visit.clientId) }}</strong>
                 </div>
                 <div v-if="getVisits(staff.id, day.dateStr, 'afternoon').length === 0" class="print-empty">―</div>
@@ -439,7 +525,7 @@
 
   <!-- ========== VISIT MODAL ========== -->
   <div v-if="visitModal.show" class="modal-overlay" @click.self="closeVisitModal">
-    <div class="modal">
+    <div class="modal modal-wide">
       <div class="modal-header">
         <h3>
           {{ visitModal.staffName }} ―
@@ -481,6 +567,21 @@
         <div class="form-group">
           <label>訪問特記事項</label>
           <textarea v-model="visitModal.notes" class="form-textarea" rows="3" placeholder="この訪問に関するメモ"></textarea>
+        </div>
+        <!-- ② 特別作業 -->
+        <div class="form-group">
+          <label>② 特別作業</label>
+          <p class="form-hint">利用者デフォルトを引継ぎ。この訪問だけ変更できます。</p>
+          <div class="task-toggle-grid">
+            <button
+              v-for="task in specialTasks"
+              :key="task.id"
+              type="button"
+              class="task-toggle-btn"
+              :class="['task-cat-' + task.category, { 'task-toggle-on': visitModal.specialTasks.includes(task.id) }]"
+              @click="toggleVisitTask(task.id)"
+            >{{ task.label }}</button>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -541,7 +642,7 @@
 
   <!-- ========== CLIENT MODAL ========== -->
   <div v-if="clientModal.show" class="modal-overlay" @click.self="closeClientModal">
-    <div class="modal">
+    <div class="modal modal-wide">
       <div class="modal-header">
         <h3>{{ clientModal.isEdit ? '利用者編集' : '利用者追加' }}</h3>
         <button class="modal-close" @click="closeClientModal">✕</button>
@@ -559,9 +660,23 @@
           <label>特記事項（永続）</label>
           <textarea v-model="clientModal.notes" class="form-textarea" rows="4" placeholder="注意事項、処置内容など"></textarea>
         </div>
+        <!-- ② 特別作業デフォルト -->
+        <div class="form-group">
+          <label>② 特別作業（デフォルト）</label>
+          <p class="form-hint">ここで設定した作業は訪問登録時に自動引継ぎされます。</p>
+          <div class="task-toggle-grid">
+            <button
+              v-for="task in specialTasks"
+              :key="task.id"
+              type="button"
+              class="task-toggle-btn"
+              :class="['task-cat-' + task.category, { 'task-toggle-on': clientModal.specialTasks.includes(task.id) }]"
+              @click="toggleClientTask(task.id)"
+            >{{ task.label }}</button>
+          </div>
+        </div>
         <div class="form-group">
           <label>訪問頻度（利用者確認ビュー用）</label>
-          <!-- 訪問ストップ -->
           <div class="form-group" style="margin-bottom:12px">
             <button
               type="button"
@@ -573,7 +688,6 @@
               {{ clientModal.onHold ? '🔴 訪問ストップ中（タップで解除）' : '⏸ 訪問ストップ（DS・入院など）' }}
             </button>
           </div>
-
           <select v-model="clientModal.freqType" class="form-input" style="margin-bottom:8px">
             <option value="week">週次（毎週）</option>
             <option value="daily">1日複数回（毎日）</option>
@@ -595,6 +709,97 @@
         <div class="modal-footer-right">
           <button class="btn btn-cancel" @click="closeClientModal">キャンセル</button>
           <button class="btn btn-primary" @click="saveClient">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ① 一括入力/削除 MODAL ========== -->
+  <div v-if="bulkModal.show" class="modal-overlay" @click.self="closeBulkModal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h3>① 一括入力 / 削除</h3>
+        <button class="modal-close" @click="closeBulkModal">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- 利用者選択 -->
+        <div class="form-group">
+          <label>利用者 <span class="required">*</span></label>
+          <select v-model="bulkModal.clientId" class="form-select">
+            <option value="">― 選択してください ―</option>
+            <option v-for="c in clientList" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+
+        <!-- 時間帯 -->
+        <div class="form-group">
+          <label>時間帯</label>
+          <div class="bulk-period-btns">
+            <button type="button" class="btn" :class="bulkModal.period==='morning' ? 'btn-primary' : 'btn-cancel'" @click="bulkModal.period='morning'">午前</button>
+            <button type="button" class="btn" :class="bulkModal.period==='afternoon' ? 'btn-primary' : 'btn-cancel'" @click="bulkModal.period='afternoon'">午後</button>
+            <button type="button" class="btn" :class="bulkModal.period==='both' ? 'btn-primary' : 'btn-cancel'" @click="bulkModal.period='both'">両方</button>
+          </div>
+        </div>
+
+        <!-- スタッフ設定 -->
+        <div class="form-group">
+          <label>スタッフ割り当て</label>
+          <div class="bulk-staff-mode">
+            <button type="button" class="btn btn-sm" :class="bulkModal.staffMode==='single' ? 'btn-primary' : 'btn-cancel'" @click="bulkModal.staffMode='single'">全日同じスタッフ</button>
+            <button type="button" class="btn btn-sm" :class="bulkModal.staffMode==='perday' ? 'btn-primary' : 'btn-cancel'" @click="bulkModal.staffMode='perday'">日付ごとに設定</button>
+          </div>
+          <select v-if="bulkModal.staffMode==='single'" v-model="bulkModal.staffId" class="form-select" style="margin-top:8px">
+            <option value="">― スタッフ選択 ―</option>
+            <option v-for="s in activeStaff" :key="s.id" :value="s.id">{{ s.name }}</option>
+          </select>
+        </div>
+
+        <!-- カレンダー -->
+        <div class="form-group">
+          <div class="bulk-cal-nav">
+            <button type="button" class="btn btn-secondary" @click="prevBulkMonth">&#9664;</button>
+            <span class="bulk-month-label">{{ bulkMonthLabel }}</span>
+            <button type="button" class="btn btn-secondary" @click="nextBulkMonth">&#9654;</button>
+          </div>
+          <div class="bulk-cal-header">
+            <span v-for="d in ['日','月','火','水','木','金','土']" :key="d" class="bulk-cal-dow">{{ d }}</span>
+          </div>
+          <div class="bulk-cal-grid">
+            <div v-for="(day, di) in bulkCalDays" :key="di" class="bulk-cal-cell">
+              <template v-if="day">
+                <button
+                  type="button"
+                  class="bulk-cal-day"
+                  :class="{
+                    'bulk-cal-selected': bulkModal.selectedDates.includes(day.dateStr),
+                    'bulk-cal-weekend': day.dow===0||day.dow===6
+                  }"
+                  @click="toggleBulkDate(day.dateStr)"
+                >{{ day.date }}</button>
+                <!-- 日付ごとスタッフ選択 -->
+                <select
+                  v-if="bulkModal.staffMode==='perday' && bulkModal.selectedDates.includes(day.dateStr)"
+                  v-model="bulkModal.perDayStaff[day.dateStr]"
+                  class="bulk-day-staff-select"
+                >
+                  <option value="">―</option>
+                  <option v-for="s in activeStaff" :key="s.id" :value="s.id">{{ s.name }}</option>
+                </select>
+              </template>
+            </div>
+          </div>
+          <p class="bulk-selected-count">選択中: {{ bulkModal.selectedDates.length }}日</p>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" :disabled="bulkModal.saving" @click="deleteBulk">一括削除</button>
+        <div class="modal-footer-right">
+          <button class="btn btn-cancel" @click="closeBulkModal">キャンセル</button>
+          <button class="btn btn-primary" :disabled="bulkModal.saving" @click="saveBulk">
+            {{ bulkModal.saving ? '登録中...' : '一括登録' }}
+          </button>
         </div>
       </div>
     </div>
