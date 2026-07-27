@@ -399,6 +399,31 @@ createApp({
       return this.getVisitsForDay(staffId, dateStr).filter(v=>!v.startTime);
     },
 
+    // 重複訪問を横に並べてレイアウト計算
+    tlLaneLayout(staffId) {
+      const visits = this.getVisitsWithTime(staffId, this.timelineDate);
+      if (!visits.length) return [];
+      const toMin = t => { const [h,m]=t.split(':').map(Number); return h*60+m; };
+      const colEnds = [];
+      const placed = visits.map(v => {
+        const startMin = toMin(v.startTime);
+        const endMin   = v.endTime ? toMin(v.endTime) : startMin+30;
+        let col = colEnds.findIndex(e => startMin >= e);
+        if (col === -1) col = colEnds.length;
+        colEnds[col] = endMin;
+        return { visit: v, col };
+      });
+      const totalCols = colEnds.length;
+      return placed.map(({ visit, col }) => ({
+        visit,
+        style: {
+          ...this.tlBlockStyle(visit),
+          left:  `calc(${(col/totalCols)*100}% + 3px)`,
+          right: `calc(${((totalCols-col-1)/totalCols)*100}% + 3px)`,
+        },
+      }));
+    },
+
     getClientName(clientId) { return this.clientList.find(c=>c.id===clientId)?.name||'（利用者不明）'; },
     getClient(clientId) { return this.clientList.find(c=>c.id===clientId)||null; },
 

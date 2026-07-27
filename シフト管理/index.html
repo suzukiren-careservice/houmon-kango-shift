@@ -93,6 +93,7 @@
       <button class="btn btn-secondary" @click="tlToday">今日</button>
       <span class="tl-date-label">{{ tlDateLabel }}</span>
       <button class="btn btn-secondary" @click="tlNextDay">翌日 &#9654;</button>
+      <input type="date" v-model="timelineDate" class="tl-date-input" />
       <button v-if="isAdmin" class="btn btn-accent" @click="openBulkModal">① 一括入力/削除</button>
       <button class="btn btn-secondary" @click="printSchedule">&#128438; 印刷</button>
     </div>
@@ -173,19 +174,26 @@
               <span class="tl-gap-label">{{ gap.label }}</span>
             </div>
 
-            <!-- 訪問ブロック（時刻あり） -->
+            <!-- 訪問ブロック（時刻あり・重複横並び） -->
             <div
-              v-for="visit in getVisitsWithTime(staff.id, timelineDate)"
-              :key="visit.id"
+              v-for="item in tlLaneLayout(staff.id)"
+              :key="item.visit.id"
               class="tl-visit-block"
-              :style="tlBlockStyle(visit)"
-              @click="isAdmin ? openEditVisit(visit) : null"
+              :style="[item.style, { borderLeftColor: staff.color }]"
+              @click="isAdmin ? openEditVisit(item.visit) : null"
             >
-              <div class="tl-visit-client">{{ getClientName(visit.clientId) }}</div>
-              <div class="tl-visit-time">{{ visit.startTime }}〜{{ visit.endTime || '?' }}</div>
-              <div v-if="getVisitDisplayTasks(visit).length" class="tl-visit-tasks">
-                <span v-for="t in getVisitDisplayTasks(visit)" :key="t.id" class="task-chip task-chip-sm" :class="'task-cat-' + t.category">{{ t.label }}</span>
+              <!-- 特別作業カテゴリドット -->
+              <div v-if="getVisitDisplayTasks(item.visit).length" class="tl-task-dots">
+                <span
+                  v-for="t in getVisitDisplayTasks(item.visit)"
+                  :key="t.id"
+                  class="tl-task-dot"
+                  :class="'task-cat-' + t.category"
+                  :title="t.label"
+                ></span>
               </div>
+              <div class="tl-visit-client">{{ getClientName(item.visit.clientId) }}</div>
+              <div class="tl-visit-time">{{ item.visit.startTime }}〜{{ item.visit.endTime || '?' }}</div>
             </div>
           </div>
 
