@@ -43,10 +43,9 @@ createApp({
       pwdInput: '',
       pwdError: false,
       currentStaff: null,
-      currentTab: 'schedule',
+      currentTab: 'timeline',
       tabs: [
-        { id: 'schedule',   label: '週間スケジュール' },
-        { id: 'timeline',   label: 'タイムライン' },
+        { id: 'timeline',   label: '③ タイムライン' },
         { id: 'clientview', label: '利用者確認' },
         { id: 'clients',    label: '利用者管理' },
       ],
@@ -89,6 +88,8 @@ createApp({
         staffMode: 'single',
         staffId: '',
         perDayStaff: {},
+        startTime: '',
+        endTime: '',
         saving: false,
       },
       clientViewFilter: 'all',
@@ -256,6 +257,15 @@ createApp({
     currentTimeOptions() {
       return this.visitModal.period==='morning' ? this.morningTimeOptions : this.afternoonTimeOptions;
     },
+
+    allTimeOptions() {
+      const opts=[];
+      for (let h=6; h<=20; h++) for (let m=0; m<60; m+=5) {
+        if (h===20&&m>0) break;
+        opts.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+      }
+      return opts;
+    },
   },
 
   methods: {
@@ -379,6 +389,14 @@ createApp({
           if (a.startTime) return -1; if (b.startTime) return 1;
           return 0;
         });
+    },
+
+    getVisitsWithTime(staffId, dateStr) {
+      return this.getVisitsForDay(staffId, dateStr).filter(v=>v.startTime);
+    },
+
+    getVisitsNoTime(staffId, dateStr) {
+      return this.getVisitsForDay(staffId, dateStr).filter(v=>!v.startTime);
     },
 
     getClientName(clientId) { return this.clientList.find(c=>c.id===clientId)?.name||'（利用者不明）'; },
@@ -633,7 +651,7 @@ createApp({
         year:today.getFullYear(), month:today.getMonth(),
         selectedDates:[], period:'morning',
         staffMode:'single', staffId:this.currentStaff?.id||'',
-        perDayStaff:{}, saving:false,
+        perDayStaff:{}, startTime:'', endTime:'', saving:false,
       };
     },
     closeBulkModal() { this.bulkModal.show=false; },
@@ -668,12 +686,15 @@ createApp({
       const periods=this.bulkModal.period==='both'?['morning','afternoon']:[this.bulkModal.period];
       const clientTasks=this.getClient(this.bulkModal.clientId)?.specialTasks||[];
       const records=[];
+      const bulkStart=this.bulkModal.startTime||'';
+      const bulkEnd  =this.bulkModal.endTime||'';
       for (const dateStr of this.bulkModal.selectedDates) {
         const staffId=this.bulkModal.staffMode==='single'?this.bulkModal.staffId:this.bulkModal.perDayStaff[dateStr];
         for (const period of periods) {
           records.push({
             staff_id:staffId, client_id:this.bulkModal.clientId,
             date:dateStr, period,
+            start_time:bulkStart, end_time:bulkEnd,
             order:this.getVisits(staffId,dateStr,period).length,
             special_tasks:clientTasks,
           });
@@ -687,7 +708,8 @@ createApp({
           this.visits.push({
             id:v.id, staffId:v.staff_id, clientId:v.client_id,
             date:v.date, period:v.period, location:'',
-            startTime:'', endTime:'', notes:'', order:v.order||0,
+            startTime:v.start_time||'', endTime:v.end_time||'',
+            notes:'', order:v.order||0,
             specialTasks:v.special_tasks||[],
           });
         });

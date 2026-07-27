@@ -86,149 +86,6 @@
     </div>
   </header>
 
-  <!-- ========== WEEKLY SCHEDULE VIEW ========== -->
-  <main v-if="currentTab === 'schedule'" class="view-schedule no-print">
-
-    <!-- Week navigation -->
-    <div class="week-nav">
-      <button class="btn btn-secondary" @click="prevWeek">&#9664; 前週</button>
-      <button class="btn btn-secondary" @click="goToday">今週</button>
-      <span class="week-label">{{ weekLabel }}</span>
-      <button class="btn btn-secondary" @click="nextWeek">次週 &#9654;</button>
-      <button v-if="isAdmin" class="btn btn-accent" @click="openBulkModal">① 一括入力/削除</button>
-      <button class="btn btn-secondary print-btn" @click="printSchedule">&#128438; 印刷</button>
-    </div>
-
-    <!-- Grid wrapper for both-direction scroll -->
-    <div class="grid-wrapper">
-      <table class="schedule-table">
-        <thead>
-          <tr>
-            <th class="corner-cell sticky-col sticky-row">スタッフ</th>
-            <th
-              v-for="day in weekDays"
-              :key="day.dateStr"
-              class="day-header sticky-row"
-              :class="{ 'today-col': day.isToday, 'weekend-col': day.isWeekend }"
-            >
-              <div class="day-header-inner">
-                <span class="day-name">{{ day.dayName }}</span>
-                <span class="day-date">{{ day.shortDate }}</span>
-              </div>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(staff, slotIdx) in staffSlots" :key="staff.isEmpty ? 'empty-' + slotIdx : staff.id" :class="{ 'empty-staff-row': staff.isEmpty }">
-            <td class="staff-cell sticky-col" :class="{ 'empty-staff-cell': staff.isEmpty }">
-              <template v-if="!staff.isEmpty">
-                <div class="staff-name-wrapper">
-                  <span class="staff-color-dot" :style="{ backgroundColor: staff.color }"></span>
-                  <span class="staff-name-text">{{ staff.name }}</span>
-                </div>
-              </template>
-              <div v-else-if="isAdmin" class="empty-staff-placeholder" @click="openAddStaff">＋ 登録</div>
-            </td>
-            <td
-              v-for="day in weekDays"
-              :key="day.dateStr"
-              class="schedule-cell"
-              :class="{ 'today-col': day.isToday, 'weekend-col': day.isWeekend, 'empty-slot-day': staff.isEmpty }"
-            >
-              <template v-if="!staff.isEmpty">
-              <!-- Morning block -->
-              <div
-                class="period-block period-morning"
-                :class="{ 'period-off': !getShift(staff.id, day.dateStr).morning }"
-              >
-                <div class="period-header">
-                  <span class="period-label">午前</span>
-                  <button
-                    v-if="isAdmin"
-                    class="shift-toggle"
-                    :class="getShift(staff.id, day.dateStr).morning ? 'toggle-on' : 'toggle-off'"
-                    @click="toggleShift(staff.id, day.dateStr, 'morning')"
-                  >{{ getShift(staff.id, day.dateStr).morning ? '出勤' : '休み' }}</button>
-                  <span v-else class="shift-label-readonly">{{ getShift(staff.id, day.dateStr).morning ? '出勤' : '休み' }}</span>
-                </div>
-                <div v-if="getShift(staff.id, day.dateStr).morning" class="visit-list">
-                  <div
-                    v-for="visit in getVisits(staff.id, day.dateStr, 'morning')"
-                    :key="visit.id"
-                    class="visit-card"
-                    :class="{ 'visit-has-tasks': getVisitDisplayTasks(visit).length > 0 }"
-                    :style="{ borderLeftColor: staff.color }"
-                    @click="isAdmin ? openEditVisit(visit) : null"
-                  >
-                    <div class="visit-header-line">
-                      <span v-if="visit.startTime || visit.endTime" class="visit-time">{{ visit.startTime || '?' }}〜{{ visit.endTime || '?' }}</span>
-                      <span class="visit-client">{{ getClientName(visit.clientId) }}</span>
-                    </div>
-                    <div v-if="visit.location" class="visit-location">{{ visit.location }}</div>
-                    <div v-if="visit.notes" class="visit-notes">{{ visit.notes }}</div>
-                    <div v-if="getVisitDisplayTasks(visit).length" class="visit-task-chips">
-                      <span v-for="t in getVisitDisplayTasks(visit)" :key="t.id" class="task-chip" :class="'task-cat-' + t.category">{{ t.label }}</span>
-                    </div>
-                    <div v-if="hasCrossConflict(visit.clientId, day.dateStr)" class="cross-conflict-badge">⚠ {{ otherTeamLabel }}も訪問</div>
-                  </div>
-                  <button
-                    v-if="isAdmin"
-                    class="add-visit-btn"
-                    @click="openAddVisit(staff.id, day.dateStr, 'morning')"
-                  >＋</button>
-                </div>
-              </div>
-
-              <!-- Afternoon block -->
-              <div
-                class="period-block period-afternoon"
-                :class="{ 'period-off': !getShift(staff.id, day.dateStr).afternoon }"
-              >
-                <div class="period-header">
-                  <span class="period-label">午後</span>
-                  <button
-                    v-if="isAdmin"
-                    class="shift-toggle"
-                    :class="getShift(staff.id, day.dateStr).afternoon ? 'toggle-on' : 'toggle-off'"
-                    @click="toggleShift(staff.id, day.dateStr, 'afternoon')"
-                  >{{ getShift(staff.id, day.dateStr).afternoon ? '出勤' : '休み' }}</button>
-                  <span v-else class="shift-label-readonly">{{ getShift(staff.id, day.dateStr).afternoon ? '出勤' : '休み' }}</span>
-                </div>
-                <div v-if="getShift(staff.id, day.dateStr).afternoon" class="visit-list">
-                  <div
-                    v-for="visit in getVisits(staff.id, day.dateStr, 'afternoon')"
-                    :key="visit.id"
-                    class="visit-card"
-                    :class="{ 'visit-has-tasks': getVisitDisplayTasks(visit).length > 0 }"
-                    :style="{ borderLeftColor: staff.color }"
-                    @click="isAdmin ? openEditVisit(visit) : null"
-                  >
-                    <div class="visit-header-line">
-                      <span v-if="visit.startTime || visit.endTime" class="visit-time">{{ visit.startTime || '?' }}〜{{ visit.endTime || '?' }}</span>
-                      <span class="visit-client">{{ getClientName(visit.clientId) }}</span>
-                    </div>
-                    <div v-if="visit.location" class="visit-location">{{ visit.location }}</div>
-                    <div v-if="visit.notes" class="visit-notes">{{ visit.notes }}</div>
-                    <div v-if="getVisitDisplayTasks(visit).length" class="visit-task-chips">
-                      <span v-for="t in getVisitDisplayTasks(visit)" :key="t.id" class="task-chip" :class="'task-cat-' + t.category">{{ t.label }}</span>
-                    </div>
-                    <div v-if="hasCrossConflict(visit.clientId, day.dateStr)" class="cross-conflict-badge">⚠ {{ otherTeamLabel }}も訪問</div>
-                  </div>
-                  <button
-                    v-if="isAdmin"
-                    class="add-visit-btn"
-                    @click="openAddVisit(staff.id, day.dateStr, 'afternoon')"
-                  >＋</button>
-                </div>
-              </div>
-              </template>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </main>
-
   <!-- ========== TIMELINE VIEW ========== -->
   <main v-if="currentTab === 'timeline'" class="view-timeline no-print">
     <div class="tl-nav">
@@ -236,12 +93,14 @@
       <button class="btn btn-secondary" @click="tlToday">今日</button>
       <span class="tl-date-label">{{ tlDateLabel }}</span>
       <button class="btn btn-secondary" @click="tlNextDay">翌日 &#9654;</button>
+      <button v-if="isAdmin" class="btn btn-accent" @click="openBulkModal">① 一括入力/削除</button>
+      <button class="btn btn-secondary" @click="printSchedule">&#128438; 印刷</button>
     </div>
 
     <div class="tl-scroll-wrap">
       <!-- 時刻軸 + スタッフ列 -->
       <div class="tl-grid">
-        <!-- 時刻ヘッダー行 -->
+        <!-- 時刻軸 -->
         <div class="tl-time-col">
           <div class="tl-staff-header-placeholder"></div>
           <div class="tl-time-axis" :style="{ height: tlTotalHeight + 'px' }">
@@ -252,26 +111,57 @@
               :style="{ top: ((h - 8) * 60 * 0.8) + 'px' }"
             >{{ String(h).padStart(2,'0') }}:00</div>
           </div>
+          <div class="tl-time-footer-placeholder"></div>
         </div>
 
         <!-- スタッフ列 -->
-        <div
-          v-for="staff in activeStaff"
-          :key="staff.id"
-          class="tl-staff-col"
-        >
+        <div v-for="staff in activeStaff" :key="staff.id" class="tl-staff-col">
+
+          <!-- ヘッダー：スタッフ名 + シフトトグル -->
           <div class="tl-staff-header" :style="{ borderBottomColor: staff.color }">
-            <span class="tl-staff-dot" :style="{ background: staff.color }"></span>
-            {{ staff.name }}
+            <div class="tl-staff-name-row">
+              <span class="tl-staff-dot" :style="{ background: staff.color }"></span>
+              <span>{{ staff.name }}</span>
+            </div>
+            <div class="tl-shift-row">
+              <button
+                v-if="isAdmin"
+                class="shift-toggle tl-shift-btn"
+                :class="getShift(staff.id, timelineDate).morning ? 'toggle-on' : 'toggle-off'"
+                @click="toggleShift(staff.id, timelineDate, 'morning')"
+              >午前{{ getShift(staff.id, timelineDate).morning ? '' : '休' }}</button>
+              <span v-else class="tl-shift-badge" :class="getShift(staff.id, timelineDate).morning ? 'tl-shift-on' : 'tl-shift-off'">午前{{ getShift(staff.id, timelineDate).morning ? '' : '休' }}</span>
+              <button
+                v-if="isAdmin"
+                class="shift-toggle tl-shift-btn"
+                :class="getShift(staff.id, timelineDate).afternoon ? 'toggle-on' : 'toggle-off'"
+                @click="toggleShift(staff.id, timelineDate, 'afternoon')"
+              >午後{{ getShift(staff.id, timelineDate).afternoon ? '' : '休' }}</button>
+              <span v-else class="tl-shift-badge" :class="getShift(staff.id, timelineDate).afternoon ? 'tl-shift-on' : 'tl-shift-off'">午後{{ getShift(staff.id, timelineDate).afternoon ? '' : '休' }}</span>
+            </div>
           </div>
-          <div class="tl-lane" :style="{ height: tlTotalHeight + 'px' }">
-            <!-- 1時間ごとのグリッド線 -->
+
+          <!-- 時刻未設定の訪問（タイムライン外に表示） -->
+          <div v-if="getVisitsNoTime(staff.id, timelineDate).length" class="tl-notime-list">
             <div
-              v-for="h in tlHours"
-              :key="h"
-              class="tl-grid-line"
-              :style="{ top: ((h - 8) * 60 * 0.8) + 'px' }"
-            ></div>
+              v-for="visit in getVisitsNoTime(staff.id, timelineDate)"
+              :key="visit.id"
+              class="tl-notime-item"
+              :style="{ borderLeftColor: staff.color }"
+              @click="isAdmin ? openEditVisit(visit) : null"
+            >
+              <span class="tl-notime-period">{{ visit.period === 'morning' ? '午前' : '午後' }}</span>
+              <span class="tl-notime-client">{{ getClientName(visit.clientId) }}</span>
+              <div v-if="getVisitDisplayTasks(visit).length" class="tl-visit-tasks">
+                <span v-for="t in getVisitDisplayTasks(visit)" :key="t.id" class="task-chip task-chip-sm" :class="'task-cat-' + t.category">{{ t.label }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- タイムライン本体 -->
+          <div class="tl-lane" :style="{ height: tlTotalHeight + 'px' }">
+            <!-- グリッド線 -->
+            <div v-for="h in tlHours" :key="h" class="tl-grid-line" :style="{ top: ((h - 8) * 60 * 0.8) + 'px' }"></div>
 
             <!-- 空き時間バンド -->
             <div
@@ -283,25 +173,29 @@
               <span class="tl-gap-label">{{ gap.label }}</span>
             </div>
 
-            <!-- 訪問ブロック -->
+            <!-- 訪問ブロック（時刻あり） -->
             <div
-              v-for="visit in getVisitsForDay(staff.id, timelineDate)"
+              v-for="visit in getVisitsWithTime(staff.id, timelineDate)"
               :key="visit.id"
               class="tl-visit-block"
               :style="tlBlockStyle(visit)"
-              :class="{ 'tl-no-time': !visit.startTime }"
               @click="isAdmin ? openEditVisit(visit) : null"
             >
               <div class="tl-visit-client">{{ getClientName(visit.clientId) }}</div>
-              <div v-if="visit.startTime" class="tl-visit-time">{{ visit.startTime }}〜{{ visit.endTime || '?' }}</div>
+              <div class="tl-visit-time">{{ visit.startTime }}〜{{ visit.endTime || '?' }}</div>
               <div v-if="getVisitDisplayTasks(visit).length" class="tl-visit-tasks">
                 <span v-for="t in getVisitDisplayTasks(visit)" :key="t.id" class="task-chip task-chip-sm" :class="'task-cat-' + t.category">{{ t.label }}</span>
               </div>
             </div>
           </div>
+
+          <!-- 訪問追加ボタン -->
+          <div v-if="isAdmin" class="tl-staff-footer">
+            <button class="tl-add-btn" @click="openAddVisit(staff.id, timelineDate, 'morning')">＋ 午前</button>
+            <button class="tl-add-btn" @click="openAddVisit(staff.id, timelineDate, 'afternoon')">＋ 午後</button>
+          </div>
         </div>
 
-        <!-- スタッフがいない場合 -->
         <div v-if="activeStaff.length === 0" class="tl-empty-msg">
           スタッフが登録されていません
         </div>
@@ -753,6 +647,22 @@
             <option value="">― スタッフ選択 ―</option>
             <option v-for="s in activeStaff" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
+        </div>
+
+        <!-- 訪問時刻 -->
+        <div class="form-group">
+          <label>訪問時刻（任意）</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <select v-model="bulkModal.startTime" class="form-select" style="flex:1;">
+              <option value="">― 開始未設定 ―</option>
+              <option v-for="t in allTimeOptions" :key="t" :value="t">{{ t }}</option>
+            </select>
+            <span style="color:#64748B;font-size:14px;flex-shrink:0;">〜</span>
+            <select v-model="bulkModal.endTime" class="form-select" style="flex:1;">
+              <option value="">― 終了未設定 ―</option>
+              <option v-for="t in allTimeOptions" :key="t" :value="t">{{ t }}</option>
+            </select>
+          </div>
         </div>
 
         <!-- カレンダー -->
