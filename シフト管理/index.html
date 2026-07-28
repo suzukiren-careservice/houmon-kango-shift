@@ -555,7 +555,7 @@
         </div>
         <div class="form-group">
           <label>住所</label>
-          <input type="text" v-model="clientModal.address" class="form-input" placeholder="住所" />
+          <input type="text" v-model="clientModal.address" class="form-input" placeholder="住所" @change="onClientAddressChange" />
         </div>
         <div class="form-group">
           <label>特記事項（永続）</label>
@@ -579,9 +579,10 @@
         <!-- ③ 地区カラー -->
         <div class="form-group">
           <label>③ 地区カラー（訪問エリアの識別）</label>
-          <p class="form-hint">タイムラインの訪問ブロック背景色として表示されます。</p>
+          <p class="form-hint">住所を入力すると市区町村単位で自動割り当てします。🔄 で再割り当て、手動変更も可能です。</p>
           <div class="color-swatches">
             <button type="button" class="color-swatch area-swatch-none" :class="{ selected: !clientModal.areaColor }" @click="clientModal.areaColor = ''">なし</button>
+            <button type="button" class="color-swatch area-swatch-auto" :title="'住所から自動設定: ' + (extractArea(clientModal.address)||'住所未入力')" @click="clientModal.areaColor = autoAssignAreaColor(clientModal.address)">🔄</button>
             <button v-for="color in colorOptions" :key="color" type="button" class="color-swatch" :class="{ selected: clientModal.areaColor === color }" :style="{ backgroundColor: color }" @click="clientModal.areaColor = color"></button>
           </div>
         </div>

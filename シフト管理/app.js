@@ -442,6 +442,46 @@ createApp({
     getClientName(clientId) { return this.clientList.find(c=>c.id===clientId)?.name||'（利用者不明）'; },
     getClient(clientId) { return this.clientList.find(c=>c.id===clientId)||null; },
     getAreaColor(clientId) { return this.getClient(clientId)?.areaColor||''; },
+
+    // 住所から市区町村を抽出
+    extractArea(address) {
+      if (!address) return '';
+      // 都道府県を除去
+      let addr = address.trim().replace(/^.+?[都道府県]/, '');
+      // 数字より前の部分（番地等を除く）
+      const beforeDigit = addr.split(/[\d０-９]/)[0];
+      // 最後の 市/区/町/村 まで
+      const m = beforeDigit.match(/^(.*[市区町村])/);
+      return m ? m[1] : (beforeDigit.slice(0,6) || address.slice(0,6));
+    },
+
+    // エリア→カラーのマップをlocalStorageで管理
+    getAreaColorMap() {
+      try { return JSON.parse(localStorage.getItem('area_color_map')||'{}'); } catch { return {}; }
+    },
+    saveAreaColorMap(map) { localStorage.setItem('area_color_map', JSON.stringify(map)); },
+
+    // 住所からエリアカラーを自動取得・割り当て
+    autoAssignAreaColor(address) {
+      const area = this.extractArea(address);
+      if (!area) return '';
+      const map = this.getAreaColorMap();
+      if (map[area]) return map[area];
+      // 未使用の色を順番に割り当て
+      const used = new Set(Object.values(map));
+      const next = COLOR_OPTIONS.find(c=>!used.has(c)) || COLOR_OPTIONS[Object.keys(map).length % COLOR_OPTIONS.length];
+      map[area] = next;
+      this.saveAreaColorMap(map);
+      return next;
+    },
+
+    // 住所入力時に自動でエリアカラーを設定
+    onClientAddressChange() {
+      if (!this.clientModal.areaColor && this.clientModal.address) {
+        this.clientModal.areaColor = this.autoAssignAreaColor(this.clientModal.address);
+      }
+    },
+
     hexToRgba(hex, alpha) {
       if (!hex||hex.length<7) return 'white';
       const r=parseInt(hex.slice(1,3),16);
