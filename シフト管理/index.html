@@ -190,7 +190,7 @@
                   class="tl-task-dot"
                   :class="'task-cat-' + t.category"
                   :title="t.label"
-                ></span>
+                >{{ t.label.charAt(0) }}</span>
               </div>
               <div class="tl-visit-client">{{ getClientName(item.visit.clientId) }}</div>
             </div>

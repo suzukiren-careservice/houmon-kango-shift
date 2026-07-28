@@ -564,7 +564,8 @@ createApp({
           const idx=this.visits.findIndex(v=>v.id===this.visitModal.visitId);
           if (idx!==-1) this.visits.splice(idx,1,{
             ...this.visits[idx],
-            clientId:payload.client_id, location:payload.location,
+            staffId:payload.staff_id, clientId:payload.client_id,
+            period:payload.period, location:payload.location,
             startTime:payload.start_time, endTime:payload.end_time,
             notes:payload.notes, specialTasks:payload.special_tasks,
           });
