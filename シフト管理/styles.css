@@ -1327,6 +1327,8 @@ html, body {
 }
 
 .modal-wide { max-width: 600px; }
+.map-modal { max-width: 360px; width: 95%; }
+.area-map-svg { width: 100%; display: block; border-radius: 8px; }
 
 .bulk-period-btns,
 .bulk-staff-mode {

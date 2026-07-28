@@ -78,6 +78,7 @@ createApp({
         freqType: 'week', onHold: false,
         specialTasks: [], areaColor: '',
       },
+      mapModal: { show: false },
       bulkModal: {
         show: false,
         clientId: '',

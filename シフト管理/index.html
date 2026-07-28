@@ -95,6 +95,7 @@
       <button class="btn btn-secondary" @click="tlNextDay">翌日 &#9654;</button>
       <input type="date" v-model="timelineDate" class="tl-date-input" />
       <button v-if="isAdmin" class="btn btn-accent" @click="openBulkModal">一括入力/削除</button>
+      <button class="btn btn-secondary" @click="mapModal.show=true">🗺️ 地図</button>
       <button class="btn btn-secondary" @click="printSchedule">&#128438; 印刷</button>
     </div>
 
@@ -497,6 +498,48 @@
           <button class="btn btn-cancel" @click="closeVisitModal">{{ isAdmin ? 'キャンセル' : '閉じる' }}</button>
           <button v-if="isAdmin" class="btn btn-primary" @click="saveVisit">保存</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MAP MODAL ========== -->
+  <div v-if="mapModal.show" class="modal-overlay" @click.self="mapModal.show=false">
+    <div class="modal map-modal">
+      <div class="modal-header">
+        <h3>🗺️ 地区カラーマップ</h3>
+        <button class="modal-close" @click="mapModal.show=false">✕</button>
+      </div>
+      <div class="modal-body" style="padding:16px;">
+        <p style="font-size:12px;color:#64748B;margin-bottom:12px;text-align:center;">概略図です。実際の地形とは異なります。</p>
+        <svg viewBox="0 0 300 410" xmlns="http://www.w3.org/2000/svg" class="area-map-svg">
+          <!-- 白川町 -->
+          <polygon points="10,25 80,25 80,120 10,120" fill="#6A1B9A" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
+          <text x="45" y="78" text-anchor="middle" font-size="10" fill="white" font-weight="700">白川町</text>
+          <!-- 七宗町 -->
+          <polygon points="80,10 210,10 210,130 80,130" fill="#C62828" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
+          <text x="145" y="75" text-anchor="middle" font-size="13" fill="white" font-weight="700">七宗町</text>
+          <!-- 八百津町 -->
+          <polygon points="210,15 290,15 290,215 210,215" fill="#1565C0" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
+          <text x="250" y="100" text-anchor="middle" font-size="10" fill="white" font-weight="700">八百津町</text>
+          <!-- 川辺町 -->
+          <polygon points="10,120 135,120 135,220 10,220" fill="#E65100" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
+          <text x="72" y="175" text-anchor="middle" font-size="12" fill="white" font-weight="700">川辺町</text>
+          <!-- 美濃加茂市 -->
+          <polygon points="135,130 210,130 210,220 135,220" fill="#AD1457" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
+          <text x="172" y="169" text-anchor="middle" font-size="9" fill="white" font-weight="700">美濃</text>
+          <text x="172" y="181" text-anchor="middle" font-size="9" fill="white" font-weight="700">加茂市</text>
+          <!-- 坂祝町 -->
+          <polygon points="10,220 100,220 100,252 10,252" fill="#2E7D32" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
+          <text x="55" y="240" text-anchor="middle" font-size="9" fill="white" font-weight="700">坂祝町</text>
+          <!-- 可児市 -->
+          <polygon points="10,252 210,252 210,400 10,400" fill="#00838F" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
+          <text x="110" y="335" text-anchor="middle" font-size="16" fill="white" font-weight="700">可児市</text>
+          <!-- 御嵩町 -->
+          <polygon points="210,215 290,215 290,400 210,400" fill="#795548" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
+          <text x="250" y="310" text-anchor="middle" font-size="10" fill="white" font-weight="700">御嵩町</text>
+          <!-- 北マーク -->
+          <text x="16" y="18" font-size="11" fill="#94A3B8" font-weight="600">↑ 北</text>
+        </svg>
       </div>
     </div>
   </div>
