@@ -509,36 +509,71 @@
         <h3>🗺️ 地区カラーマップ</h3>
         <button class="modal-close" @click="mapModal.show=false">✕</button>
       </div>
-      <div class="modal-body" style="padding:16px;">
-        <p style="font-size:12px;color:#64748B;margin-bottom:12px;text-align:center;">概略図です。実際の地形とは異なります。</p>
-        <svg viewBox="0 0 300 410" xmlns="http://www.w3.org/2000/svg" class="area-map-svg">
+      <div class="modal-body" style="padding:12px 16px 16px;">
+        <svg viewBox="0 0 320 445" xmlns="http://www.w3.org/2000/svg" class="area-map-svg">
+          <defs>
+            <filter id="mapshadow">
+              <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.18"/>
+            </filter>
+          </defs>
+          <!-- 地図背景 -->
+          <rect width="320" height="445" fill="#DBE9F4" rx="10"/>
+
+          <!-- ===== エリア ===== -->
           <!-- 白川町 -->
-          <polygon points="10,25 80,25 80,120 10,120" fill="#6A1B9A" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
-          <text x="45" y="78" text-anchor="middle" font-size="10" fill="white" font-weight="700">白川町</text>
+          <polygon points="12,32 82,22 88,60 92,118 16,124" fill="#6A1B9A" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="50" y="70" text-anchor="middle" font-size="10" fill="white" font-weight="700" font-family="sans-serif">白川町</text>
+          <text x="50" y="83" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.85)" font-family="sans-serif">1名</text>
+
           <!-- 七宗町 -->
-          <polygon points="80,10 210,10 210,130 80,130" fill="#C62828" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
-          <text x="145" y="75" text-anchor="middle" font-size="13" fill="white" font-weight="700">七宗町</text>
+          <polygon points="82,12 214,14 212,78 205,140 92,135 88,60 82,22" fill="#C62828" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="148" y="74" text-anchor="middle" font-size="14" fill="white" font-weight="700" font-family="sans-serif">七宗町</text>
+          <text x="148" y="90" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.9)" font-family="sans-serif">15名</text>
+
           <!-- 八百津町 -->
-          <polygon points="210,15 290,15 290,215 210,215" fill="#1565C0" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
-          <text x="250" y="100" text-anchor="middle" font-size="10" fill="white" font-weight="700">八百津町</text>
+          <polygon points="214,14 308,18 306,84 302,220 205,215 205,140 212,78" fill="#1565C0" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="257" y="105" text-anchor="middle" font-size="10" fill="white" font-weight="700" font-family="sans-serif">八百津町</text>
+          <text x="257" y="119" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.9)" font-family="sans-serif">16名</text>
+
           <!-- 川辺町 -->
-          <polygon points="10,120 135,120 135,220 10,220" fill="#E65100" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
-          <text x="72" y="175" text-anchor="middle" font-size="12" fill="white" font-weight="700">川辺町</text>
+          <polygon points="16,124 92,135 140,138 138,230 12,228" fill="#E65100" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="76" y="182" text-anchor="middle" font-size="13" fill="white" font-weight="700" font-family="sans-serif">川辺町</text>
+          <text x="76" y="197" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.9)" font-family="sans-serif">16名</text>
+
           <!-- 美濃加茂市 -->
-          <polygon points="135,130 210,130 210,220 135,220" fill="#AD1457" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
-          <text x="172" y="169" text-anchor="middle" font-size="9" fill="white" font-weight="700">美濃</text>
-          <text x="172" y="181" text-anchor="middle" font-size="9" fill="white" font-weight="700">加茂市</text>
+          <polygon points="140,138 205,140 205,230 138,230" fill="#AD1457" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="172" y="178" text-anchor="middle" font-size="9" fill="white" font-weight="700" font-family="sans-serif">美濃加茂市</text>
+          <text x="172" y="191" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.9)" font-family="sans-serif">21名</text>
+
           <!-- 坂祝町 -->
-          <polygon points="10,220 100,220 100,252 10,252" fill="#2E7D32" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
-          <text x="55" y="240" text-anchor="middle" font-size="9" fill="white" font-weight="700">坂祝町</text>
+          <polygon points="12,228 100,228 97,262 12,262" fill="#2E7D32" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="55" y="249" text-anchor="middle" font-size="9" fill="white" font-weight="700" font-family="sans-serif">坂祝町 3名</text>
+
           <!-- 可児市 -->
-          <polygon points="10,252 210,252 210,400 10,400" fill="#00838F" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
-          <text x="110" y="335" text-anchor="middle" font-size="16" fill="white" font-weight="700">可児市</text>
+          <polygon points="12,262 205,260 208,433 12,433" fill="#00838F" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="108" y="350" text-anchor="middle" font-size="17" fill="white" font-weight="700" font-family="sans-serif">可児市</text>
+          <text x="108" y="370" text-anchor="middle" font-size="12" fill="rgba(255,255,255,0.9)" font-family="sans-serif">35名</text>
+
           <!-- 御嵩町 -->
-          <polygon points="210,215 290,215 290,400 210,400" fill="#795548" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
-          <text x="250" y="310" text-anchor="middle" font-size="10" fill="white" font-weight="700">御嵩町</text>
-          <!-- 北マーク -->
-          <text x="16" y="18" font-size="11" fill="#94A3B8" font-weight="600">↑ 北</text>
+          <polygon points="205,215 302,220 308,433 208,433" fill="#795548" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="258" y="326" text-anchor="middle" font-size="11" fill="white" font-weight="700" font-family="sans-serif">御嵩町</text>
+          <text x="258" y="341" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.9)" font-family="sans-serif">11名</text>
+
+          <!-- ===== 木曽川 ===== -->
+          <path d="M 268,18 Q 260,55 252,90 Q 240,130 218,162 Q 196,192 168,210 Q 140,225 108,228 Q 72,230 44,240" fill="none" stroke="#60A5FA" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+          <text x="192" y="208" font-size="8" fill="#3B82F6" font-weight="600" font-family="sans-serif" transform="rotate(-32,192,208)">木曽川</text>
+
+          <!-- ===== コンパス ===== -->
+          <g transform="translate(290,40)">
+            <circle r="16" fill="white" fill-opacity="0.92" stroke="#CBD5E1" stroke-width="1"/>
+            <polygon points="0,-13 3,-5 0,-8 -3,-5" fill="#EF4444"/>
+            <polygon points="0,13 3,5 0,8 -3,5" fill="#94A3B8"/>
+            <text x="0" y="-2" text-anchor="middle" font-size="8" fill="#1E293B" font-weight="800" font-family="sans-serif">北</text>
+            <text x="0" y="8" text-anchor="middle" font-size="7" fill="#94A3B8" font-family="sans-serif">南</text>
+          </g>
+
+          <!-- 注記 -->
+          <text x="160" y="441" text-anchor="middle" font-size="8" fill="#64748B" font-family="sans-serif">※ 概略図（地形は実際と異なります）</text>
         </svg>
       </div>
     </div>
