@@ -836,6 +836,16 @@ html, body {
   box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
 }
 
+/* 住所表示（読み取り専用） */
+.visit-location-display {
+  padding: 8px 12px;
+  background: #F8FAFC;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: #64748B;
+  font-size: 13px;
+}
+
 /* Client notes reference box */
 .client-notes-ref {
   background: var(--orange-light);

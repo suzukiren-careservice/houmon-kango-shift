@@ -437,6 +437,12 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
+          <label>担当スタッフ</label>
+          <select v-model="visitModal.staffId" class="form-select" @change="visitModal.staffName = staffList.find(s=>s.id===visitModal.staffId)?.name||''">
+            <option v-for="s in staffList.filter(s=>s.active)" :key="s.id" :value="s.id">{{ s.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>利用者 <span class="required">*</span></label>
           <select v-model="visitModal.clientId" @change="onVisitClientChange" class="form-select">
             <option value="">― 選択してください ―</option>
@@ -447,21 +453,21 @@
           <span class="notes-ref-label">特記事項（利用者情報）：</span>
           <span class="notes-ref-text">{{ visitModal.clientNotes }}</span>
         </div>
-        <div class="form-group">
-          <label>場所・住所</label>
-          <input type="text" v-model="visitModal.location" class="form-input" placeholder="住所を入力" />
+        <div v-if="visitModal.location" class="form-group">
+          <label style="color:#94A3B8; font-size:12px;">📍 住所（利用者登録情報）</label>
+          <div class="visit-location-display">{{ visitModal.location }}</div>
         </div>
         <div class="form-group">
           <label>訪問時刻</label>
           <div style="display:flex; align-items:center; gap:8px;">
             <select v-model="visitModal.startTime" class="form-select" style="flex:1;">
               <option value="">― 開始未設定 ―</option>
-              <option v-for="t in currentTimeOptions" :key="t" :value="t">{{ t }}</option>
+              <option v-for="t in allTimeOptions" :key="t" :value="t">{{ t }}</option>
             </select>
             <span style="color:#64748B; font-size:14px; flex-shrink:0;">〜</span>
             <select v-model="visitModal.endTime" class="form-select" style="flex:1;">
               <option value="">― 終了未設定 ―</option>
-              <option v-for="t in currentTimeOptions" :key="t" :value="t">{{ t }}</option>
+              <option v-for="t in allTimeOptions" :key="t" :value="t">{{ t }}</option>
             </select>
           </div>
         </div>
