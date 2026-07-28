@@ -836,14 +836,27 @@ html, body {
   box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.15);
 }
 
+/* 閲覧モード通知 */
+.visit-readonly-notice {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #1D4ED8;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
 /* 住所表示（読み取り専用） */
 .visit-location-display {
-  padding: 8px 12px;
+  padding: 7px 12px;
   background: #F8FAFC;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: #64748B;
   font-size: 13px;
+  margin-bottom: 12px;
 }
 
 /* Client notes reference box */

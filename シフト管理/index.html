@@ -141,7 +141,7 @@
               :key="visit.id"
               class="tl-notime-item"
               :style="{ borderLeftColor: staff.color }"
-              @click="isAdmin ? openEditVisit(visit) : null"
+              @click="openEditVisit(visit)"
             >
               <span class="tl-notime-period">{{ visit.period === 'morning' ? '午前' : '午後' }}</span>
               <span class="tl-notime-client">{{ getClientName(visit.clientId) }}</span>
@@ -180,7 +180,7 @@
               :key="item.visit.id"
               class="tl-visit-block"
               :style="[item.style, { borderLeftColor: staff.color, background: getAreaColor(item.visit.clientId) ? hexToRgba(getAreaColor(item.visit.clientId), 0.15) : 'white' }]"
-              @click="isAdmin ? openEditVisit(item.visit) : null"
+              @click="openEditVisit(item.visit)"
             >
               <!-- 特別作業カテゴリドット -->
               <div v-if="getVisitDisplayTasks(item.visit).length" class="tl-task-dots">
@@ -193,7 +193,6 @@
                 ></span>
               </div>
               <div class="tl-visit-client">{{ getClientName(item.visit.clientId) }}</div>
-              <div class="tl-visit-time">{{ item.visit.startTime }}〜{{ item.visit.endTime || '?' }}</div>
             </div>
           </div>
 
@@ -436,33 +435,36 @@
         <button class="modal-close" @click="closeVisitModal">✕</button>
       </div>
       <div class="modal-body">
+        <div v-if="!isAdmin" class="visit-readonly-notice">閲覧のみ（編集は管理者のみ）</div>
         <div class="form-group">
           <label>担当スタッフ</label>
-          <select v-model="visitModal.staffId" class="form-select" @change="visitModal.staffName = staffList.find(s=>s.id===visitModal.staffId)?.name||''">
+          <select v-model="visitModal.staffId" class="form-select" :disabled="!isAdmin" @change="visitModal.staffName = staffList.find(s=>s.id===visitModal.staffId)?.name||''">
             <option v-for="s in staffList.filter(s=>s.active)" :key="s.id" :value="s.id">{{ s.name }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>利用者 <span class="required">*</span></label>
-          <select v-model="visitModal.clientId" @change="onVisitClientChange" class="form-select">
+          <label>利用者 <span v-if="isAdmin" class="required">*</span></label>
+          <select v-model="visitModal.clientId" :disabled="!isAdmin" @change="onVisitClientChange" class="form-select">
             <option value="">― 選択してください ―</option>
             <option v-for="c in clientList" :key="c.id" :value="c.id">{{ c.name }}</option>
           </select>
+        </div>
+        <div v-if="visitModal.location" class="visit-location-display">
+          <span class="visit-location-icon">📍</span> {{ visitModal.location }}
         </div>
         <div v-if="visitModal.clientNotes" class="client-notes-ref">
           <span class="notes-ref-label">特記事項（利用者情報）：</span>
           <span class="notes-ref-text">{{ visitModal.clientNotes }}</span>
         </div>
-
         <div class="form-group">
           <label>訪問時刻</label>
           <div style="display:flex; align-items:center; gap:8px;">
-            <select v-model="visitModal.startTime" class="form-select" style="flex:1;">
+            <select v-model="visitModal.startTime" class="form-select" style="flex:1;" :disabled="!isAdmin">
               <option value="">― 開始未設定 ―</option>
               <option v-for="t in allTimeOptions" :key="t" :value="t">{{ t }}</option>
             </select>
             <span style="color:#64748B; font-size:14px; flex-shrink:0;">〜</span>
-            <select v-model="visitModal.endTime" class="form-select" style="flex:1;">
+            <select v-model="visitModal.endTime" class="form-select" style="flex:1;" :disabled="!isAdmin">
               <option value="">― 終了未設定 ―</option>
               <option v-for="t in allTimeOptions" :key="t" :value="t">{{ t }}</option>
             </select>
@@ -470,12 +472,12 @@
         </div>
         <div class="form-group">
           <label>訪問特記事項</label>
-          <textarea v-model="visitModal.notes" class="form-textarea" rows="3" placeholder="この訪問に関するメモ"></textarea>
+          <textarea v-model="visitModal.notes" class="form-textarea" rows="3" placeholder="この訪問に関するメモ" :disabled="!isAdmin"></textarea>
         </div>
         <!-- ② 特別作業 -->
         <div class="form-group">
           <label>② 特別作業</label>
-          <p class="form-hint">利用者デフォルトを引継ぎ。この訪問だけ変更できます。</p>
+          <p v-if="isAdmin" class="form-hint">利用者デフォルトを引継ぎ。この訪問だけ変更できます。</p>
           <div class="task-toggle-grid">
             <button
               v-for="task in specialTasks"
@@ -483,16 +485,17 @@
               type="button"
               class="task-toggle-btn"
               :class="['task-cat-' + task.category, { 'task-toggle-on': visitModal.specialTasks.includes(task.id) }]"
-              @click="toggleVisitTask(task.id)"
+              :disabled="!isAdmin"
+              @click="isAdmin ? toggleVisitTask(task.id) : null"
             >{{ task.label }}</button>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button v-if="visitModal.isEdit" class="btn btn-danger" @click="deleteVisit">削除</button>
+        <button v-if="isAdmin && visitModal.isEdit" class="btn btn-danger" @click="deleteVisit">削除</button>
         <div class="modal-footer-right">
-          <button class="btn btn-cancel" @click="closeVisitModal">キャンセル</button>
-          <button class="btn btn-primary" @click="saveVisit">保存</button>
+          <button class="btn btn-cancel" @click="closeVisitModal">{{ isAdmin ? 'キャンセル' : '閉じる' }}</button>
+          <button v-if="isAdmin" class="btn btn-primary" @click="saveVisit">保存</button>
         </div>
       </div>
     </div>
