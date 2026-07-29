@@ -615,6 +615,194 @@ body {
   background: #e53e3e;
 }
 
+/* ===== 感触チップ（入力フォーム） ===== */
+.impression-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.impression-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #e2e8f0;
+  background: #f7fafc;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.impression-chip input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.impression-chip:hover {
+  border-color: #cbd5e0;
+}
+
+.impression-chip.imp-good_more:has(input:checked) { background: #fff5f0; border-color: #ed8936; color: #c05621; font-weight: 700; }
+.impression-chip.imp-good:has(input:checked)      { background: #f0fff4; border-color: #48bb78; color: #276749; font-weight: 700; }
+.impression-chip.imp-neutral:has(input:checked)   { background: #f7fafc; border-color: #a0aec0; color: #4a5568; font-weight: 700; }
+.impression-chip.imp-bad:has(input:checked)       { background: #ebf8ff; border-color: #4299e1; color: #2b6cb0; font-weight: 700; }
+.impression-chip.imp-stop:has(input:checked)      { background: #fff5f5; border-color: #e53e3e; color: #c53030; font-weight: 700; }
+
+/* ===== 感触バッジ（一覧・詳細・表） ===== */
+.imp-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.imp-badge.imp-good_more { background: #fff5f0; color: #c05621; }
+.imp-badge.imp-good      { background: #f0fff4; color: #276749; }
+.imp-badge.imp-neutral   { background: #f7fafc; color: #4a5568; }
+.imp-badge.imp-bad       { background: #ebf8ff; color: #2b6cb0; }
+.imp-badge.imp-stop      { background: #fff5f5; color: #c53030; }
+
+/* ===== 実績タブ ===== */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #4299e1;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #718096;
+  font-weight: 500;
+}
+
+.stats-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  border: 1px solid #e2e8f0;
+}
+
+.stats-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a2640;
+  margin-bottom: 16px;
+}
+
+.impression-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.breakdown-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.breakdown-bar-track {
+  background: #edf2f7;
+  border-radius: 6px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.breakdown-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+}
+
+.breakdown-count {
+  text-align: right;
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.stats-table th {
+  text-align: left;
+  padding: 10px 12px;
+  color: #718096;
+  font-weight: 600;
+  font-size: 12px;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.stats-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #edf2f7;
+  color: #2d3748;
+  white-space: nowrap;
+}
+
+.stats-table tbody tr:hover {
+  background: #f7fafc;
+}
+
+.follow-up-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #fff5f0;
+  border: 1px solid #fbd38d;
+  margin-bottom: 8px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.follow-up-card .fu-client {
+  font-weight: 700;
+  color: #1a2640;
+}
+
+.follow-up-card .fu-days {
+  color: #c05621;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 @media (max-width: 700px) {
   .form-grid { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }

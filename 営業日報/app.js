@@ -9,6 +9,16 @@ let reports = [];
 let editingId = null;
 let currentDetailId = null;
 
+const IMPRESSION_LABELS = {
+  good_more: { label: '🔥 もっと通うべき',        short: '🔥 もっと通うべき',  color: '#ed8936' },
+  good:      { label: '😊 良い感触',              short: '😊 良い感触',        color: '#48bb78' },
+  neutral:   { label: '😐 普通・様子見',          short: '😐 普通',            color: '#a0aec0' },
+  bad:       { label: '😕 反応薄い',              short: '😕 反応薄い',        color: '#4299e1' },
+  stop:      { label: '🚫 もう行かない方が良い',  short: '🚫 行かない方が良い', color: '#e53e3e' }
+};
+const IMPRESSION_ORDER = ['good_more', 'good', 'neutral', 'bad', 'stop'];
+const FOLLOW_UP_DAYS = 30;
+
 // ===== 初期化 =====
 document.addEventListener('DOMContentLoaded', async () => {
   initDate();
@@ -41,6 +51,16 @@ function restoreLastStaff() {
   if (last) document.getElementById('staff').value = last;
 }
 
+function getImpression() {
+  const el = document.querySelector('input[name="impression"]:checked');
+  return el ? el.value : 'neutral';
+}
+
+function setImpression(value) {
+  const el = document.querySelector(`input[name="impression"][value="${value}"]`);
+  if (el) el.checked = true;
+}
+
 // ===== ビュー切替 =====
 function showView(viewName) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -49,6 +69,7 @@ function showView(viewName) {
   document.querySelector(`[data-view="${viewName}"]`).classList.add('active');
 
   if (viewName === 'list') renderList();
+  if (viewName === 'stats') renderStats();
 }
 
 // ===== フォーム保存 =====
@@ -61,7 +82,8 @@ async function saveReport(event) {
     client_name:      document.getElementById('clientName').value,
     contact_person:   document.getElementById('contactPerson').value,
     content:          document.getElementById('content').value,
-    items_given:      document.getElementById('itemsGiven').value
+    items_given:      document.getElementById('itemsGiven').value,
+    impression:       getImpression()
   };
 
   const submitBtn = document.getElementById('submitBtn');
@@ -136,6 +158,7 @@ function renderList() {
       <div class="report-meta">
         <span class="badge badge-blue">👤 ${escapeHtml(r.staff || '-')}</span>
         ${r.contact_person ? `<span class="badge badge-gray">先方: ${escapeHtml(r.contact_person)}</span>` : ''}
+        ${impressionBadge(r.impression)}
       </div>
       ${r.content ? `<div class="report-content-preview">${escapeHtml(r.content)}</div>` : ''}
     </div>
@@ -155,6 +178,7 @@ function openDetailModal(id) {
   document.getElementById('detailContactPerson').textContent = r.contact_person || '-';
   document.getElementById('detailContent').textContent = r.content || '-';
   document.getElementById('detailItemsGiven').textContent = r.items_given || '-';
+  document.getElementById('detailImpression').innerHTML = impressionBadge(r.impression);
 
   document.getElementById('detailModal').classList.add('open');
 }
@@ -175,6 +199,7 @@ function editReport() {
   document.getElementById('contactPerson').value = r.contact_person || '';
   document.getElementById('content').value = r.content || '';
   document.getElementById('itemsGiven').value = r.items_given || '';
+  setImpression(r.impression || 'neutral');
 
   document.getElementById('editModeBanner').style.display = 'flex';
   document.getElementById('editModeName').textContent = r.client_name || '';
@@ -195,6 +220,156 @@ async function deleteReport() {
   closeDetailModal();
   await loadData();
   renderList();
+}
+
+// ===== 実績 =====
+function renderStats() {
+  const now = new Date();
+  const totalVisits = reports.length;
+
+  // 営業先ごとに集計（訪問回数・最終訪問日・最新の感触・最新の先方担当者）
+  const clientMap = new Map();
+  reports.forEach(r => {
+    const key = r.client_name || '（営業先未入力）';
+    if (!clientMap.has(key)) {
+      clientMap.set(key, { count: 0, lastDate: null, lastImpression: 'neutral', lastContact: '' });
+    }
+    const c = clientMap.get(key);
+    c.count++;
+    if (!c.lastDate || r.visit_date > c.lastDate) {
+      c.lastDate = r.visit_date;
+      c.lastImpression = r.impression;
+      c.lastContact = r.contact_person;
+    }
+  });
+  const ranking = Array.from(clientMap.entries()).sort((a, b) => b[1].count - a[1].count);
+
+  const followUp = ranking
+    .filter(([, c]) => isGoodImpression(c.lastImpression) && daysSince(c.lastDate) >= FOLLOW_UP_DAYS)
+    .sort((a, b) => daysSince(b[1].lastDate) - daysSince(a[1].lastDate));
+
+  const thisMonthVisits = reports.filter(r => {
+    if (!r.visit_date) return false;
+    const d = new Date(r.visit_date + 'T00:00:00');
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).length;
+
+  document.getElementById('statCards').innerHTML = [
+    statCard(totalVisits, '総訪問回数'),
+    statCard(clientMap.size, '営業先数'),
+    statCard(thisMonthVisits, '今月の訪問数'),
+    statCard(followUp.length, '要フォロー')
+  ].join('');
+
+  renderImpressionBreakdown();
+  renderFollowUpList(followUp);
+  renderClientRanking(ranking);
+  renderGoodContacts();
+}
+
+function statCard(value, label) {
+  return `<div class="stat-card"><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`;
+}
+
+function isGoodImpression(key) {
+  return key === 'good_more' || key === 'good';
+}
+
+function daysSince(dateStr) {
+  if (!dateStr) return Infinity;
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function impressionBadge(key) {
+  const info = IMPRESSION_LABELS[key] || IMPRESSION_LABELS.neutral;
+  return `<span class="imp-badge imp-${key}">${info.short}</span>`;
+}
+
+function renderImpressionBreakdown() {
+  const container = document.getElementById('impressionBreakdown');
+  const total = reports.length;
+  if (total === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-text">データがありません</div></div>`;
+    return;
+  }
+  const counts = {};
+  reports.forEach(r => { counts[r.impression] = (counts[r.impression] || 0) + 1; });
+
+  container.innerHTML = IMPRESSION_ORDER.map(key => {
+    const c = counts[key] || 0;
+    const pct = Math.round((c / total) * 100);
+    const info = IMPRESSION_LABELS[key];
+    return `
+      <div class="breakdown-row">
+        <span>${info.label}</span>
+        <div class="breakdown-bar-track"><div class="breakdown-bar-fill" style="width:${pct}%; background:${info.color}"></div></div>
+        <span class="breakdown-count">${c}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderFollowUpList(followUp) {
+  const container = document.getElementById('followUpList');
+  if (followUp.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="padding:20px 0"><div class="empty-state-text">現在フォロー推奨の先はありません</div></div>`;
+    return;
+  }
+  container.innerHTML = followUp.map(([name, c]) => `
+    <div class="follow-up-card">
+      <div><span class="fu-client">${escapeHtml(name)}</span> ${impressionBadge(c.lastImpression)}</div>
+      <div class="fu-days">最終訪問から ${daysSince(c.lastDate)} 日</div>
+    </div>
+  `).join('');
+}
+
+function renderClientRanking(ranking) {
+  const tbody = document.querySelector('#clientRankingTable tbody');
+  if (ranking.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#a0aec0;padding:24px">データがありません</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = ranking.map(([name, c]) => `
+    <tr>
+      <td>${escapeHtml(name)}</td>
+      <td>${c.count}</td>
+      <td>${formatDate(c.lastDate)}</td>
+      <td>${impressionBadge(c.lastImpression)}</td>
+      <td>${escapeHtml(c.lastContact || '-')}</td>
+    </tr>
+  `).join('');
+}
+
+function renderGoodContacts() {
+  const tbody = document.querySelector('#goodContactsTable tbody');
+  const contactMap = new Map();
+  reports.forEach(r => {
+    if (!r.contact_person || !isGoodImpression(r.impression)) return;
+    const key = r.contact_person + '||' + r.client_name;
+    if (!contactMap.has(key)) {
+      contactMap.set(key, { contact: r.contact_person, client: r.client_name, count: 0, lastDate: null, lastImpression: r.impression });
+    }
+    const c = contactMap.get(key);
+    c.count++;
+    if (!c.lastDate || r.visit_date > c.lastDate) {
+      c.lastDate = r.visit_date;
+      c.lastImpression = r.impression;
+    }
+  });
+  const list = Array.from(contactMap.values()).sort((a, b) => b.count - a.count);
+
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#a0aec0;padding:24px">データがありません</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td>${escapeHtml(c.contact)}</td>
+      <td>${escapeHtml(c.client)}</td>
+      <td>${c.count}</td>
+      <td>${impressionBadge(c.lastImpression)}</td>
+    </tr>
+  `).join('');
 }
 
 // ===== ユーティリティ =====

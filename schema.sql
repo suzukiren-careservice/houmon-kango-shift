@@ -207,7 +207,10 @@ CREATE TABLE sales_reports (
   client_name     TEXT        NOT NULL DEFAULT '',
   contact_person  TEXT        DEFAULT '',
   content         TEXT        DEFAULT '',
-  items_given     TEXT        DEFAULT ''
+  items_given     TEXT        DEFAULT '',
+  -- 訪問者の感触: 'good_more'(もっと通うべき) | 'good'(良い感触) | 'neutral'(普通) | 'bad'(反応薄い) | 'stop'(もう行かない方が良い)
+  impression      TEXT        NOT NULL DEFAULT 'neutral'
+                              CHECK (impression IN ('good_more', 'good', 'neutral', 'bad', 'stop'))
 );
 
 ALTER TABLE sales_reports DISABLE ROW LEVEL SECURITY;

@@ -38,6 +38,9 @@
         <button class="nav-btn" data-view="list" onclick="showView('list')">
           <span class="nav-icon">📋</span><span>一覧</span>
         </button>
+        <button class="nav-btn" data-view="stats" onclick="showView('stats')">
+          <span class="nav-icon">📊</span><span>実績</span>
+        </button>
       </nav>
       <div class="sidebar-footer">
         <div class="record-count" id="sidebarCount">0 件の記録</div>
@@ -88,6 +91,31 @@
                 <label>渡したもの</label>
                 <textarea id="itemsGiven" rows="2" placeholder="パンフレット、名刺など"></textarea>
               </div>
+              <div class="form-group full-width">
+                <label>訪問した感触</label>
+                <div class="impression-group" id="impressionGroup">
+                  <label class="impression-chip imp-good_more">
+                    <input type="radio" name="impression" value="good_more">
+                    <span>🔥 もっと通うべき</span>
+                  </label>
+                  <label class="impression-chip imp-good">
+                    <input type="radio" name="impression" value="good">
+                    <span>😊 良い感触</span>
+                  </label>
+                  <label class="impression-chip imp-neutral">
+                    <input type="radio" name="impression" value="neutral" checked>
+                    <span>😐 普通・様子見</span>
+                  </label>
+                  <label class="impression-chip imp-bad">
+                    <input type="radio" name="impression" value="bad">
+                    <span>😕 反応薄い</span>
+                  </label>
+                  <label class="impression-chip imp-stop">
+                    <input type="radio" name="impression" value="stop">
+                    <span>🚫 もう行かない方が良い</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -110,6 +138,61 @@
         </div>
 
         <div id="reportListContainer" class="report-list"></div>
+      </div>
+
+      <!-- ===== 実績 ===== -->
+      <div id="view-stats" class="view">
+        <div class="view-header">
+          <h1 class="view-title">実績</h1>
+          <div class="view-subtitle">営業訪問の積み重ねを可視化</div>
+        </div>
+
+        <div class="stat-cards" id="statCards"></div>
+
+        <div class="stats-section">
+          <div class="stats-section-title">感触の内訳</div>
+          <div id="impressionBreakdown" class="impression-breakdown"></div>
+        </div>
+
+        <div class="stats-section">
+          <div class="stats-section-title">🔥 フォロー推奨（好感触なのに間が空いている先）</div>
+          <div id="followUpList"></div>
+        </div>
+
+        <div class="stats-section">
+          <div class="stats-section-title">営業先ランキング（訪問回数順）</div>
+          <div class="table-wrap">
+            <table class="stats-table" id="clientRankingTable">
+              <thead>
+                <tr>
+                  <th>営業先</th>
+                  <th>訪問回数</th>
+                  <th>最終訪問日</th>
+                  <th>最新の感触</th>
+                  <th>先方担当者（直近）</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="stats-section" style="margin-bottom:40px">
+          <div class="stats-section-title">😊 好感触の先方担当者</div>
+          <div class="table-wrap">
+            <table class="stats-table" id="goodContactsTable">
+              <thead>
+                <tr>
+                  <th>先方担当者</th>
+                  <th>営業先</th>
+                  <th>訪問回数</th>
+                  <th>最新の感触</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
     </main>
@@ -148,6 +231,10 @@
             <div class="detail-item full">
               <div class="detail-label">渡したもの</div>
               <div class="detail-value" id="detailItemsGiven">-</div>
+            </div>
+            <div class="detail-item full">
+              <div class="detail-label">訪問した感触</div>
+              <div class="detail-value" id="detailImpression">-</div>
             </div>
           </div>
         </div>
