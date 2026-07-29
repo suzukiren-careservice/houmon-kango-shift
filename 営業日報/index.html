@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>営業日報</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config.js"></script>
+</head>
+<body>
+
+  <!-- パスワード画面 -->
+  <div id="passwordScreen" class="password-screen">
+    <div class="password-box">
+      <div class="password-logo">📋</div>
+      <div class="password-title">営業日報</div>
+      <div class="password-subtitle">パスワードを入力してください</div>
+      <div class="password-input-wrap">
+        <input type="password" id="passwordInput" placeholder="パスワード" onkeydown="if(event.key==='Enter')checkPassword()">
+      </div>
+      <div id="passwordError" class="password-error"></div>
+      <button class="password-btn" onclick="checkPassword()">ログイン</button>
+    </div>
+  </div>
+
+  <div class="app-container" id="appContainer" style="display:none">
+    <!-- サイドバー -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">📋</div>
+        <div class="sidebar-title">営業日報</div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-view="form" onclick="showView('form')">
+          <span class="nav-icon">✏️</span><span>新規入力</span>
+        </button>
+        <button class="nav-btn" data-view="list" onclick="showView('list')">
+          <span class="nav-icon">📋</span><span>一覧</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="record-count" id="sidebarCount">0 件の記録</div>
+      </div>
+    </aside>
+
+    <!-- メインコンテンツ -->
+    <main class="main-content">
+
+      <!-- ===== 新規入力 ===== -->
+      <div id="view-form" class="view active">
+        <div class="view-header">
+          <h1 class="view-title">新規入力</h1>
+          <div class="view-subtitle">営業先での訪問内容を記録します</div>
+        </div>
+
+        <!-- 編集モードバナー -->
+        <div id="editModeBanner" class="edit-mode-banner" style="display:none">
+          <span>✏️ 編集中：<strong id="editModeName"></strong></span>
+          <button type="button" class="btn btn-outline btn-sm" onclick="cancelEdit()">編集キャンセル</button>
+        </div>
+
+        <form id="reportForm" onsubmit="saveReport(event)">
+          <div class="form-section">
+            <div class="section-title">訪問情報</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>訪問日 <span style="color:#e53e3e">*</span></label>
+                <input type="date" id="visitDate" required>
+              </div>
+              <div class="form-group">
+                <label>担当者（記入者） <span style="color:#e53e3e">*</span></label>
+                <input type="text" id="staff" placeholder="例：鈴木" required>
+              </div>
+              <div class="form-group">
+                <label>営業先 <span style="color:#e53e3e">*</span></label>
+                <input type="text" id="clientName" placeholder="例：〇〇病院 地域連携室" required>
+              </div>
+              <div class="form-group">
+                <label>先方担当者</label>
+                <input type="text" id="contactPerson" placeholder="例：〇〇様">
+              </div>
+              <div class="form-group full-width">
+                <label>話した内容</label>
+                <textarea id="content" rows="5" placeholder="話した内容・先方の反応など"></textarea>
+              </div>
+              <div class="form-group full-width">
+                <label>渡したもの</label>
+                <textarea id="itemsGiven" rows="2" placeholder="パンフレット、名刺など"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="resetForm()">クリア</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn">保存する</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ===== 一覧 ===== -->
+      <div id="view-list" class="view">
+        <div class="view-header">
+          <h1 class="view-title">一覧</h1>
+          <div class="view-subtitle">これまでの訪問記録</div>
+        </div>
+
+        <div class="list-controls">
+          <input type="text" class="search-input" id="searchInput" placeholder="営業先・担当者・内容で検索" oninput="renderList()">
+        </div>
+
+        <div id="reportListContainer" class="report-list"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 詳細モーダル -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="detailModalTitle">訪問記録</h2>
+        <button class="modal-close" onclick="closeDetailModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-section">
+          <div class="detail-grid">
+            <div class="detail-item">
+              <div class="detail-label">訪問日</div>
+              <div class="detail-value" id="detailVisitDate">-</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">担当者</div>
+              <div class="detail-value" id="detailStaff">-</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">営業先</div>
+              <div class="detail-value" id="detailClientName">-</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">先方担当者</div>
+              <div class="detail-value" id="detailContactPerson">-</div>
+            </div>
+            <div class="detail-item full">
+              <div class="detail-label">話した内容</div>
+              <div class="detail-value" id="detailContent">-</div>
+            </div>
+            <div class="detail-item full">
+              <div class="detail-label">渡したもの</div>
+              <div class="detail-value" id="detailItemsGiven">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger btn-sm" onclick="deleteReport()">削除</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary btn-sm" onclick="closeDetailModal()">閉じる</button>
+          <button class="btn btn-primary btn-sm" onclick="editReport()">編集する</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+  <script>
+    (function() {
+      if (localStorage.getItem('eigyo_auth') === '1') {
+        document.getElementById('passwordScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = '';
+      }
+    })();
+    function checkPassword() {
+      const val = document.getElementById('passwordInput').value;
+      if (val === 'careful7570') {
+        localStorage.setItem('eigyo_auth', '1');
+        document.getElementById('passwordScreen').style.display = 'none';
+        document.getElementById('appContainer').style.display = '';
+      } else {
+        const err = document.getElementById('passwordError');
+        err.textContent = 'パスワードが違います';
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('passwordInput').focus();
+      }
+    }
+  </script>
+</body>
+</html>

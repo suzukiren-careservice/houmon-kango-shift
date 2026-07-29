@@ -195,3 +195,19 @@ CREATE TABLE welfare_visits (
 
 ALTER TABLE welfare_residents DISABLE ROW LEVEL SECURITY;
 ALTER TABLE welfare_visits    DISABLE ROW LEVEL SECURITY;
+
+-- =============================================
+-- 営業日報テーブル
+-- =============================================
+CREATE TABLE sales_reports (
+  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  visit_date      DATE        NOT NULL,
+  staff           TEXT        NOT NULL DEFAULT '',
+  client_name     TEXT        NOT NULL DEFAULT '',
+  contact_person  TEXT        DEFAULT '',
+  content         TEXT        DEFAULT '',
+  items_given     TEXT        DEFAULT ''
+);
+
+ALTER TABLE sales_reports DISABLE ROW LEVEL SECURITY;
