@@ -428,12 +428,10 @@
             <div class="print-period">
               <div class="print-period-label">午前</div>
               <template v-if="getShift(staff.id, day.dateStr).morning">
-                <template v-for="(item, idx) in getPrintVisitsWithGaps(staff.id, day.dateStr, 'morning')" :key="idx">
-                  <div v-if="item.type==='gap'" class="print-gap">{{ item.label }}</div>
-                  <div v-else class="print-visit">
-                    <span v-if="item.visit.startTime || item.visit.endTime" class="print-time">{{ item.visit.startTime || '?' }}〜{{ item.visit.endTime || '?' }} </span><strong>{{ getClientName(item.visit.clientId) }}</strong>
-                  </div>
-                </template>
+                <div v-for="(item, idx) in getPrintVisitsWithGaps(staff.id, day.dateStr, 'morning')" :key="idx"
+                     :class="item.type === 'gap' ? 'print-gap' : 'print-visit'">
+                  <span v-if="item.type === 'visit' && (item.visit.startTime || item.visit.endTime)" class="print-time">{{ item.visit.startTime || '?' }}〜{{ item.visit.endTime || '?' }} </span><strong v-if="item.type === 'visit'">{{ getClientName(item.visit.clientId) }}</strong>{{ item.type === 'gap' ? item.label : '' }}
+                </div>
                 <div v-if="getVisits(staff.id, day.dateStr, 'morning').length === 0" class="print-empty">―</div>
               </template>
               <div v-else class="print-off">休み</div>
@@ -441,12 +439,10 @@
             <div class="print-period">
               <div class="print-period-label">午後</div>
               <template v-if="getShift(staff.id, day.dateStr).afternoon">
-                <template v-for="(item, idx) in getPrintVisitsWithGaps(staff.id, day.dateStr, 'afternoon')" :key="idx">
-                  <div v-if="item.type==='gap'" class="print-gap">{{ item.label }}</div>
-                  <div v-else class="print-visit">
-                    <span v-if="item.visit.startTime || item.visit.endTime" class="print-time">{{ item.visit.startTime || '?' }}〜{{ item.visit.endTime || '?' }} </span><strong>{{ getClientName(item.visit.clientId) }}</strong>
-                  </div>
-                </template>
+                <div v-for="(item, idx) in getPrintVisitsWithGaps(staff.id, day.dateStr, 'afternoon')" :key="idx"
+                     :class="item.type === 'gap' ? 'print-gap' : 'print-visit'">
+                  <span v-if="item.type === 'visit' && (item.visit.startTime || item.visit.endTime)" class="print-time">{{ item.visit.startTime || '?' }}〜{{ item.visit.endTime || '?' }} </span><strong v-if="item.type === 'visit'">{{ getClientName(item.visit.clientId) }}</strong>{{ item.type === 'gap' ? item.label : '' }}
+                </div>
                 <div v-if="getVisits(staff.id, day.dateStr, 'afternoon').length === 0" class="print-empty">―</div>
               </template>
               <div v-else class="print-off">休み</div>
