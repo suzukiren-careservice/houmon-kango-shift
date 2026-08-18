@@ -1007,200 +1007,71 @@ html, body {
   display: none;
 }
 
-/* 週間印刷テンプレート（画面では非表示） */
-.print-weekly-tl {
-  display: none;
-}
 
 /* ===== PRINT STYLES ===== */
 @media print {
-  @page {
-    size: A3 landscape;
-    margin: 8mm 10mm;
-  }
+  @page { size: A3 landscape; margin: 8mm 10mm; }
 
-  html, body {
-    background: white;
-    height: auto !important;
-  }
+  html, body { background: white; height: auto !important; }
+  #app { min-height: 0 !important; height: auto !important; overflow: visible !important; }
 
-  #app {
-    min-height: 0 !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-
-  /* ヘッダー・他タブ・モーダル・旧印刷テーブルを非表示 */
-  .no-print      { display: none !important; }
-  .print-only    { display: none !important; }
+  /* 画面用コンテンツを非表示 */
+  .no-print            { display: none !important; }
+  .view-timeline       { display: none !important; }
   .emergency-notice-bar { display: none !important; }
-  .modal-overlay { display: none !important; }
+  .modal-overlay       { display: none !important; }
 
-  /* タイムライン本体を表示・スクロール解除 */
-  .view-timeline {
-    display: flex !important;
-    flex-direction: column;
-    overflow: visible !important;
-    height: auto !important;
-  }
+  /* 印刷用テーブルを表示 */
+  .print-only { display: block !important; }
 
-  /* navはボタン・日付入力を隠して日付ラベルだけ表示 */
-  .tl-nav .btn,
-  .tl-nav input[type="date"] { display: none !important; }
-  .tl-nav { border-bottom: 1px solid #CBD5E1; }
-  .tl-date-label { font-size: 16px; font-weight: 700; color: #1E293B; }
-
-  /* スクロールコンテナ解除 */
-  .tl-scroll-wrap {
-    overflow: visible !important;
-    flex: none !important;
-  }
-
-  /* stickyヘッダー解除 */
-  .tl-staff-header {
-    position: relative !important;
-    top: auto !important;
-  }
-
-  /* 管理者ボタン類を非表示 */
-  .tl-staff-footer { display: none !important; }
-  .tl-add-btn     { display: none !important; }
-  .shift-toggle   { display: none !important; }
-
-  /* ===== 週間印刷モード ===== */
-  /* 週間印刷モード時：通常タイムラインを隠して週間テンプレートを表示 */
-  .weekly-print-mode .view-timeline { display: none !important; }
-  .weekly-print-mode .print-weekly-tl { display: block !important; }
-
-  /* 1日ページ：改ページ */
-  .print-day-page {
-    width: 100%;
-    break-after: page;
-    page-break-after: always;
-    display: flex;
-    flex-direction: column;
-  }
-  .print-day-page:last-child {
-    break-after: avoid;
-    page-break-after: avoid;
-  }
-
-  /* 日付ヘッダー */
-  .print-day-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    padding: 2px 0 5px;
-    border-bottom: 2px solid #1E293B;
-    margin-bottom: 3px;
-  }
-  .print-day-date {
-    font-size: 16px;
+  /* 印刷テーブル見出し */
+  .print-heading {
+    font-size: 17px;
     font-weight: 700;
+    margin-bottom: 8px;
     color: #1E293B;
   }
-  .print-day-weekend { color: #DC2626; }
-  .print-day-header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+
+  /* 印刷テーブル本体 */
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
   }
-  .print-day-week-range {
-    font-size: 9px;
-    color: #64748B;
+  .print-table th,
+  .print-table td {
+    border: 1px solid #CBD5E1;
+    padding: 5px 6px;
+    vertical-align: top;
   }
-  .print-day-num {
+  .print-table th {
+    background: #F1F5F9;
+    font-weight: 700;
+    text-align: center;
     font-size: 10px;
-    color: #94A3B8;
+    line-height: 1.5;
   }
-
-  /* タイムライングリッド */
-  .print-day-tl {
-    display: flex;
-    overflow: visible;
-  }
-
-  /* 時刻軸 */
-  .print-tl-time-col {
-    width: 40px;
-    flex-shrink: 0;
-  }
-  .print-tl-name-placeholder { height: 30px; }
-  .print-tl-axis { position: relative; }
-  .print-tl-hour-mark {
-    position: absolute;
-    right: 3px;
-    transform: translateY(-50%);
-    font-size: 7px;
-    color: #64748B;
-    white-space: nowrap;
-  }
-
-  /* スタッフ列 */
-  .print-tl-staff-col {
-    flex: 1;
-    border-left: 1px solid #E2E8F0;
-    min-width: 0;
-  }
-  .print-tl-staff-name {
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
+  .print-staff-th { width: 60px; }
+  .print-weekend-th { background: #FFF1F2; }
+  .print-staff-name-td {
     font-weight: 700;
-    border-bottom: 2px solid #94A3B8;
-    padding: 0 3px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    gap: 3px;
-  }
-  .print-tl-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  /* タイムラインレーン */
-  .print-tl-lane {
-    position: relative;
-    overflow: visible;
-  }
-  .print-tl-grid-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: #E2E8F0;
-  }
-
-  /* 訪問ブロック */
-  .print-tl-visit {
-    position: absolute;
-    left: 2px;
-    right: 2px;
+    font-size: 10px;
     border-left: 3px solid;
-    border-radius: 2px;
-    padding: 1px 3px;
-    overflow: hidden;
-    box-sizing: border-box;
+    vertical-align: middle;
+    text-align: center;
   }
-  .print-tl-visit-client {
+  .print-weekend-td { background: #FFF5F5; }
+  .print-visit-item {
+    line-height: 1.4;
+    margin-bottom: 2px;
+  }
+  .print-visit-time {
     font-size: 8px;
-    font-weight: 700;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    line-height: 1.3;
-  }
-  .print-tl-visit-time {
-    font-size: 7px;
     color: #475569;
-    line-height: 1.2;
+    margin-right: 2px;
   }
+  .print-visit-name { font-size: 9px; }
+  .print-empty-cell { color: #CBD5E1; text-align: center; font-size: 9px; }
 }
 
 /* ===== SCROLLBAR STYLING ===== */

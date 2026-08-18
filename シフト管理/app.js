@@ -81,7 +81,6 @@ createApp({
       now: new Date(),
       mapModal: { show: false },
       printModal: { show: false, weekOffset: 0 },
-      printWeeklyMode: false,
       bulkModal: {
         show: false,
         clientId: '',
@@ -157,33 +156,6 @@ createApp({
       const s = this.printWeekStart;
       const e = new Date(s); e.setDate(s.getDate()+6);
       return `${s.getFullYear()}年 ${s.getMonth()+1}月${s.getDate()}日〜${e.getMonth()+1}月${e.getDate()}日`;
-    },
-
-    // 現在表示中の日付が含まれる週の7日間（週間印刷用）
-    printWeekDaysForTimeline() {
-      const today = new Date(); today.setHours(0,0,0,0);
-      const base = new Date(this.timelineDate + 'T00:00:00');
-      const dow = base.getDay();
-      const monday = new Date(base);
-      monday.setDate(base.getDate() - ((dow+6)%7));
-      return Array.from({length:7}, (_,i) => {
-        const d = new Date(monday); d.setDate(monday.getDate()+i);
-        const dw = d.getDay();
-        return {
-          date: d,
-          dateStr: this.formatDateStr(d),
-          dayName: DAY_NAMES_JP[dw]+'曜日',
-          shortDate: `${d.getMonth()+1}/${d.getDate()}`,
-          isToday: d.getTime()===today.getTime(),
-          isWeekend: dw===0||dw===6,
-        };
-      });
-    },
-    printWeekLabelForTimeline() {
-      const days = this.printWeekDaysForTimeline;
-      if (!days.length) return '';
-      const s = days[0].date, e = days[6].date;
-      return `${s.getFullYear()}年 ${s.getMonth()+1}月${s.getDate()}日（月）〜${e.getMonth()+1}月${e.getDate()}日（日）`;
     },
 
     activeStaff() { return this.staffList.filter(s => s.active); },
@@ -914,40 +886,7 @@ createApp({
         this.crossConflicts=conflicts;
       } catch(e) { console.warn('他チームデータ取得エラー:',e); }
     },
-    printSchedule() { window.print(); },
-
-    // 日付パラメータを受け取るタイムラインレイアウト（週間印刷用）
-    tlLaneLayoutForDate(staffId, dateStr) {
-      const visits = this.getVisitsWithTime(staffId, dateStr);
-      if (!visits.length) return [];
-      const toMin = t => { const [h,m]=t.split(':').map(Number); return h*60+m; };
-      const colEnds = [];
-      const placed = visits.map(v => {
-        const startMin = toMin(v.startTime);
-        const endMin   = v.endTime ? toMin(v.endTime) : startMin+30;
-        let col = colEnds.findIndex(e => startMin >= e);
-        if (col === -1) col = colEnds.length;
-        colEnds[col] = endMin;
-        return { visit: v, col };
-      });
-      const totalCols = colEnds.length;
-      return placed.map(({ visit, col }) => ({
-        visit,
-        style: {
-          ...this.tlBlockStyle(visit),
-          left:  `calc(${(col/totalCols)*100}% + 2px)`,
-          right: `calc(${((totalCols-col-1)/totalCols)*100}% + 2px)`,
-        },
-      }));
-    },
-
-    printWeeklySchedule() {
-      this.printWeeklyMode = true;
-      this.$nextTick(() => {
-        window.print();
-        this.printWeeklyMode = false;
-      });
-    },
+    printSchedule() { this.printModal.show = false; window.print(); },
   },
 
   unmounted() {
