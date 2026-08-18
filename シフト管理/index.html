@@ -87,7 +87,7 @@
   </header>
 
   <!-- ========== TIMELINE VIEW ========== -->
-  <main v-if="currentTab === 'timeline'" class="view-timeline no-print">
+  <main v-if="currentTab === 'timeline'" class="view-timeline">
     <div class="tl-nav">
       <button class="btn btn-secondary" @click="tlPrevDay">&#9664; 前日</button>
       <button class="btn btn-secondary" @click="tlToday">今日</button>
@@ -433,30 +433,6 @@
         </tr>
       </tbody>
     </table>
-  </div>
-
-  <!-- ========== PRINT MODAL ========== -->
-  <div v-if="printModal.show" class="modal-overlay" @click.self="printModal.show=false">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>🖨️ 印刷する週を選択</h3>
-        <button class="modal-close" @click="printModal.show=false">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="print-week-nav">
-          <button class="btn btn-secondary" @click="printModal.weekOffset--">&#9664; 前週</button>
-          <span class="print-week-nav-label">{{ printWeekLabel }}</span>
-          <button class="btn btn-secondary" @click="printModal.weekOffset++">次週 &#9654;</button>
-        </div>
-        <div style="text-align:center;margin-top:8px;">
-          <button class="btn btn-secondary btn-sm" @click="printModal.weekOffset=0">今週に戻す</button>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" @click="printModal.show=false">キャンセル</button>
-        <button class="btn btn-primary" @click="doPrint">この週を印刷</button>
-      </div>
-    </div>
   </div>
 
   <!-- ========== VISIT MODAL ========== -->

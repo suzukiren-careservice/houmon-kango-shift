@@ -1007,13 +1007,6 @@ html, body {
   display: none;
 }
 
-/* ===== NO-PRINT ===== */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-}
-
 /* ===== PRINT STYLES ===== */
 @media print {
   @page {
@@ -1021,112 +1014,44 @@ html, body {
     margin: 8mm 10mm;
   }
 
-  html, body {
-    background: white;
-    font-size: 12px;
+  html, body { background: white; }
+
+  /* ヘッダー・他タブ・モーダル・旧印刷テーブルを非表示 */
+  .no-print      { display: none !important; }
+  .print-only    { display: none !important; }
+  .emergency-notice-bar { display: none !important; }
+  .modal-overlay { display: none !important; }
+
+  /* タイムライン本体を表示・スクロール解除 */
+  .view-timeline {
+    display: flex !important;
+    flex-direction: column;
+    overflow: visible !important;
+    height: auto !important;
   }
 
-  .print-only {
-    display: block !important;
+  /* navはボタン・日付入力を隠して日付ラベルだけ表示 */
+  .tl-nav .btn,
+  .tl-nav input[type="date"] { display: none !important; }
+  .tl-nav { border-bottom: 1px solid #CBD5E1; }
+  .tl-date-label { font-size: 16px; font-weight: 700; color: #1E293B; }
+
+  /* スクロールコンテナ解除 */
+  .tl-scroll-wrap {
+    overflow: visible !important;
+    flex: none !important;
   }
 
-  .print-title {
-    text-align: center;
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    color: #1A3C6E;
+  /* stickyヘッダー解除 */
+  .tl-staff-header {
+    position: relative !important;
+    top: auto !important;
   }
 
-  .print-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-  }
-
-  .print-table th,
-  .print-table td {
-    border: 1px solid #BDBDBD;
-    padding: 5px 7px;
-    vertical-align: top;
-    font-size: 11px;
-    word-break: break-all;
-  }
-
-  .print-table th {
-    background: #1A3C6E;
-    color: white;
-    text-align: center;
-    font-weight: 700;
-    font-size: 12px;
-    padding: 6px 4px;
-  }
-
-  .print-staff-col {
-    width: 9%;
-  }
-
-  .print-day-col {
-    text-align: center;
-    width: 13%;
-  }
-
-  .print-staff-name {
-    font-weight: 700;
-    font-size: 12px;
-    background: #F0F4F8;
-    vertical-align: middle;
-  }
-
-  .print-period {
-    margin-bottom: 5px;
-    padding-bottom: 5px;
-    border-bottom: 1px dashed #D1D5DB;
-  }
-
-  .print-period:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-  }
-
-  .print-period-label {
-    font-size: 9px;
-    font-weight: 700;
-    color: #6B7280;
-    background: #F3F4F6;
-    display: inline-block;
-    padding: 1px 4px;
-    border-radius: 3px;
-    margin-bottom: 3px;
-  }
-
-  .print-visit {
-    font-size: 11px;
-    margin-bottom: 2px;
-    line-height: 1.4;
-  }
-
-  .print-time {
-    font-size: 11px;
-    font-weight: 700;
-    color: #1565C0;
-    margin-right: 3px;
-  }
-
-  .print-empty {
-    font-size: 10px;
-    color: #9CA3AF;
-  }
-
-  .print-off {
-    font-size: 11px;
-    color: #9CA3AF;
-    font-style: italic;
-    text-align: center;
-    display: block;
-    padding: 4px 0;
-  }
+  /* 管理者ボタン類を非表示 */
+  .tl-staff-footer { display: none !important; }
+  .tl-add-btn     { display: none !important; }
+  .shift-toggle   { display: none !important; }
 }
 
 /* ===== SCROLLBAR STYLING ===== */

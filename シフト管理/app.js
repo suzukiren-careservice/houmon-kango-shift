@@ -886,23 +886,7 @@ createApp({
         this.crossConflicts=conflicts;
       } catch(e) { console.warn('他チームデータ取得エラー:',e); }
     },
-    printSchedule() {
-      // タイムラインの現在表示週を初期値にしてモーダルを開く
-      const d = new Date(this.timelineDate + 'T00:00:00');
-      const today = new Date(); today.setHours(0,0,0,0);
-      const dow = today.getDay();
-      const thisMonday = new Date(today);
-      thisMonday.setDate(today.getDate() - ((dow+6)%7));
-      const tdow = d.getDay();
-      const targetMonday = new Date(d);
-      targetMonday.setDate(d.getDate() - ((tdow+6)%7));
-      this.printModal.weekOffset = Math.round((targetMonday - thisMonday) / (7*24*60*60*1000));
-      this.printModal.show = true;
-    },
-    doPrint() {
-      this.printModal.show = false;
-      this.$nextTick(() => window.print());
-    },
+    printSchedule() { window.print(); },
   },
 
   unmounted() {
