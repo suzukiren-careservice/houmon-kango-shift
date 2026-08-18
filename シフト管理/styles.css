@@ -1014,7 +1014,16 @@ html, body {
     margin: 8mm 10mm;
   }
 
-  html, body { background: white; }
+  html, body {
+    background: white;
+    height: auto !important;
+  }
+
+  #app {
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
 
   /* ヘッダー・他タブ・モーダル・旧印刷テーブルを非表示 */
   .no-print      { display: none !important; }
