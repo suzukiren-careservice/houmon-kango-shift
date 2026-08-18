@@ -798,7 +798,7 @@ html, body {
 }
 .print-week-nav-label {
   font-size: 16px; font-weight: 700; color: var(--primary);
-  min-width: 160px; text-align: center;
+  min-width: 160px; text-align: center; white-space: nowrap;
 }
 
 /* ===== FORM ELEMENTS ===== */
