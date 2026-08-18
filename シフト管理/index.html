@@ -110,7 +110,7 @@
               v-for="h in tlHours"
               :key="h"
               class="tl-hour-mark"
-              :style="{ top: ((h - 8) * 60 * 0.8) + 'px' }"
+              :style="{ top: ((h - 8) * 60 * 1.5) + 'px' }"
             >{{ String(h).padStart(2,'0') }}:00</div>
           </div>
           <div class="tl-time-footer-placeholder"></div>
@@ -155,7 +155,7 @@
           <!-- タイムライン本体 -->
           <div class="tl-lane" :style="{ height: tlTotalHeight + 'px' }">
             <!-- グリッド線 -->
-            <div v-for="h in tlHours" :key="h" class="tl-grid-line" :style="{ top: ((h - 8) * 60 * 0.8) + 'px' }"></div>
+            <div v-for="h in tlHours" :key="h" class="tl-grid-line" :style="{ top: ((h - 8) * 60 * 1.5) + 'px' }"></div>
 
             <!-- 休日オーバーレイ -->
             <div v-if="!getShift(staff.id, timelineDate).morning" class="tl-off-overlay" style="top:0;height:192px">
@@ -179,8 +179,8 @@
             <div
               v-for="item in tlLaneLayout(staff.id)"
               :key="item.visit.id"
-              class="tl-visit-block"
-              :style="[item.style, { borderLeftColor: staff.color, background: getAreaColor(item.visit.clientId) ? hexToRgba(getAreaColor(item.visit.clientId), 0.15) : 'white' }]"
+              :class="['tl-visit-block', { 'tl-visit-emergency': item.visit.isEmergency }]"
+              :style="[item.style, { borderLeftColor: item.visit.isEmergency ? '#ef4444' : staff.color, background: item.visit.isEmergency ? 'rgba(254,242,242,0.95)' : (getAreaColor(item.visit.clientId) ? hexToRgba(getAreaColor(item.visit.clientId), 0.15) : 'white') }]"
               @click="openEditVisit(item.visit)"
             >
               <!-- 特別作業カテゴリドット -->
@@ -206,6 +206,17 @@
         <div v-if="activeStaff.length === 0" class="tl-empty-msg">
           スタッフが登録されていません
         </div>
+      </div>
+    </div>
+
+    <!-- 緊急訪問通知バー -->
+    <div v-if="activeEmergencies.length > 0" class="emergency-notice-bar">
+      <span class="emergency-notice-icon">🚨</span>
+      <div class="emergency-notice-text">
+        <strong>緊急訪問が登録されています：</strong>
+        <span v-for="(v, i) in activeEmergencies" :key="v.id">
+          {{ getClientName(v.clientId) }}（{{ v.startTime }}〜{{ v.endTime }}）<span v-if="i < activeEmergencies.length - 1">、</span>
+        </span>
       </div>
     </div>
   </main>
@@ -384,12 +395,12 @@
 
   <!-- ========== PRINT VIEW ========== -->
   <div class="print-only" id="print-area">
-    <div class="print-title">訪問看護週間スケジュール ― {{ weekLabel }}</div>
+    <div class="print-title">訪問看護週間スケジュール ― {{ printWeekLabel }}</div>
     <table class="print-table">
       <thead>
         <tr>
           <th class="print-staff-col">スタッフ</th>
-          <th v-for="day in weekDays" :key="day.dateStr" class="print-day-col">
+          <th v-for="day in printWeekDays" :key="day.dateStr" class="print-day-col">
             {{ day.dayName }}<br/>{{ day.shortDate }}
           </th>
         </tr>
@@ -397,7 +408,7 @@
       <tbody>
         <tr v-for="staff in activeStaff" :key="staff.id">
           <td class="print-staff-name">{{ staff.name }}</td>
-          <td v-for="day in weekDays" :key="day.dateStr" class="print-cell">
+          <td v-for="day in printWeekDays" :key="day.dateStr" class="print-cell">
             <div class="print-period">
               <div class="print-period-label">午前</div>
               <template v-if="getShift(staff.id, day.dateStr).morning">
@@ -422,6 +433,30 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- ========== PRINT MODAL ========== -->
+  <div v-if="printModal.show" class="modal-overlay" @click.self="printModal.show=false">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🖨️ 印刷する週を選択</h3>
+        <button class="modal-close" @click="printModal.show=false">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="print-week-nav">
+          <button class="btn btn-secondary" @click="printModal.weekOffset--">&#9664; 前週</button>
+          <span class="print-week-nav-label">{{ printWeekLabel }}</span>
+          <button class="btn btn-secondary" @click="printModal.weekOffset++">次週 &#9654;</button>
+        </div>
+        <div style="text-align:center;margin-top:8px;">
+          <button class="btn btn-secondary btn-sm" @click="printModal.weekOffset=0">今週に戻す</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" @click="printModal.show=false">キャンセル</button>
+        <button class="btn btn-primary" @click="doPrint">この週を印刷</button>
+      </div>
+    </div>
   </div>
 
   <!-- ========== VISIT MODAL ========== -->
@@ -475,6 +510,18 @@
           <label>訪問特記事項</label>
           <textarea v-model="visitModal.notes" class="form-textarea" rows="3" placeholder="この訪問に関するメモ" :disabled="!isAdmin"></textarea>
         </div>
+        <!-- 緊急訪問 -->
+        <div class="form-group" v-if="isAdmin">
+          <button
+            type="button"
+            class="emergency-toggle-btn"
+            :class="{ 'is-emergency': visitModal.isEmergency }"
+            @click="visitModal.isEmergency = !visitModal.isEmergency"
+          >
+            🚨 {{ visitModal.isEmergency ? '緊急訪問（ON）― タップして解除' : '緊急訪問として登録する' }}
+          </button>
+        </div>
+
         <!-- ② 特別作業 -->
         <div class="form-group">
           <label>② 特別作業</label>
@@ -510,70 +557,73 @@
         <button class="modal-close" @click="mapModal.show=false">✕</button>
       </div>
       <div class="modal-body" style="padding:12px 16px 16px;">
-        <svg viewBox="0 0 320 445" xmlns="http://www.w3.org/2000/svg" class="area-map-svg">
+        <svg viewBox="0 0 380 465" xmlns="http://www.w3.org/2000/svg" class="area-map-svg">
           <defs>
             <filter id="mapshadow">
-              <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.18"/>
+              <feDropShadow dx="1" dy="1" stdDeviation="2" flood-opacity="0.15"/>
             </filter>
           </defs>
-          <!-- 地図背景 -->
-          <rect width="320" height="445" fill="#DBE9F4" rx="10"/>
+          <rect width="380" height="465" fill="#D6E8F5" rx="10"/>
 
-          <!-- ===== エリア ===== -->
-          <!-- 白川町 -->
-          <polygon points="12,32 82,22 88,60 92,118 16,124" fill="#6A1B9A" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
-          <text x="50" y="70" text-anchor="middle" font-size="10" fill="white" font-weight="700" font-family="sans-serif">白川町</text>
-          <text x="50" y="83" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.85)" font-family="sans-serif">1名</text>
+          <!-- 参考エリア（担当外・点線グレー） -->
+          <!-- 関市（西側） -->
+          <polygon points="10,88 72,80 72,295 10,295" fill="#9CA3AF" fill-opacity="0.45" stroke="#B0BEC5" stroke-width="1.2" stroke-dasharray="5,3"/>
+          <text x="41" y="185" text-anchor="middle" font-size="12" fill="#4B5563" font-weight="700" font-family="sans-serif">関市</text>
+          <text x="41" y="201" text-anchor="middle" font-size="8" fill="#6B7280" font-family="sans-serif">（参考）</text>
 
-          <!-- 七宗町 -->
-          <polygon points="82,12 214,14 212,78 205,140 92,135 88,60 82,22" fill="#C62828" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
-          <text x="148" y="74" text-anchor="middle" font-size="14" fill="white" font-weight="700" font-family="sans-serif">七宗町</text>
-          <text x="148" y="90" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.9)" font-family="sans-serif">15名</text>
+          <!-- 富加町（美濃加茂の左上・関市と美濃加茂の間） -->
+          <polygon points="72,155 108,153 108,225 72,225" fill="#9CA3AF" fill-opacity="0.45" stroke="#B0BEC5" stroke-width="1.2" stroke-dasharray="5,3"/>
+          <text x="90" y="188" text-anchor="middle" font-size="7" fill="#4B5563" font-weight="700" font-family="sans-serif">富加町</text>
 
-          <!-- 八百津町 -->
-          <polygon points="214,14 308,18 306,84 302,220 205,215 205,140 212,78" fill="#1565C0" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
-          <text x="257" y="105" text-anchor="middle" font-size="10" fill="white" font-weight="700" font-family="sans-serif">八百津町</text>
-          <text x="257" y="119" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.9)" font-family="sans-serif">16名</text>
+          <!-- 多治見市（可児の直下） -->
+          <polygon points="72,415 225,415 225,450 72,450" fill="#9CA3AF" fill-opacity="0.45" stroke="#B0BEC5" stroke-width="1.2" stroke-dasharray="5,3"/>
+          <text x="148" y="435" text-anchor="middle" font-size="11" fill="#4B5563" font-weight="700" font-family="sans-serif">多治見市</text>
+          <text x="148" y="448" text-anchor="middle" font-size="7" fill="#6B7280" font-family="sans-serif">（参考）</text>
 
-          <!-- 川辺町 -->
-          <polygon points="16,124 92,135 140,138 138,230 12,228" fill="#E65100" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
-          <text x="76" y="182" text-anchor="middle" font-size="13" fill="white" font-weight="700" font-family="sans-serif">川辺町</text>
-          <text x="76" y="197" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.9)" font-family="sans-serif">16名</text>
+          <!-- 訪問担当エリア -->
+          <!-- 七宗町：北・中央。白川の左（西）、川辺の上（北）。 -->
+          <polygon points="72,10 225,10 225,155 72,155 72,80" fill="#C62828" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="148" y="79" text-anchor="middle" font-size="15" fill="white" font-weight="700" font-family="sans-serif">七宗町</text>
 
-          <!-- 美濃加茂市 -->
-          <polygon points="140,138 205,140 205,230 138,230" fill="#AD1457" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
-          <text x="172" y="178" text-anchor="middle" font-size="9" fill="white" font-weight="700" font-family="sans-serif">美濃加茂市</text>
-          <text x="172" y="191" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.9)" font-family="sans-serif">21名</text>
+          <!-- 白川町：北東。七宗の右（東）に隣接。 -->
+          <polygon points="225,10 380,18 378,195 225,190 225,155" fill="#6A1B9A" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="302" y="97" text-anchor="middle" font-size="11" fill="white" font-weight="700" font-family="sans-serif">白川町</text>
 
-          <!-- 坂祝町 -->
-          <polygon points="12,228 100,228 97,262 12,262" fill="#2E7D32" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
-          <text x="55" y="249" text-anchor="middle" font-size="9" fill="white" font-weight="700" font-family="sans-serif">坂祝町 3名</text>
+          <!-- 坂祝町：美濃加茂の左下（関市と美濃加茂の間・下部）。 -->
+          <polygon points="72,225 108,225 108,295 72,295" fill="#2E7D32" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="90" y="258" text-anchor="middle" font-size="7" fill="white" font-weight="700" font-family="sans-serif">坂祝町</text>
 
-          <!-- 可児市 -->
-          <polygon points="12,262 205,260 208,433 12,433" fill="#00838F" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
-          <text x="108" y="350" text-anchor="middle" font-size="17" fill="white" font-weight="700" font-family="sans-serif">可児市</text>
-          <text x="108" y="370" text-anchor="middle" font-size="12" fill="rgba(255,255,255,0.9)" font-family="sans-serif">35名</text>
+          <!-- 美濃加茂市：富加・坂祝の右、川辺の左。 -->
+          <polygon points="108,155 155,155 155,295 108,295" fill="#AD1457" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="131" y="218" text-anchor="middle" font-size="8" fill="white" font-weight="700" font-family="sans-serif">美濃加茂市</text>
 
-          <!-- 御嵩町 -->
-          <polygon points="205,215 302,220 308,433 208,433" fill="#795548" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
-          <text x="258" y="326" text-anchor="middle" font-size="11" fill="white" font-weight="700" font-family="sans-serif">御嵩町</text>
-          <text x="258" y="341" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.9)" font-family="sans-serif">11名</text>
+          <!-- 川辺町：七宗の南、美濃加茂の右（東）。 -->
+          <polygon points="155,155 225,155 225,295 155,295" fill="#E65100" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="190" y="222" text-anchor="middle" font-size="12" fill="white" font-weight="700" font-family="sans-serif">川辺町</text>
 
-          <!-- ===== 木曽川 ===== -->
-          <path d="M 268,18 Q 260,55 252,90 Q 240,130 218,162 Q 196,192 168,210 Q 140,225 108,228 Q 72,230 44,240" fill="none" stroke="#60A5FA" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
-          <text x="192" y="208" font-size="8" fill="#3B82F6" font-weight="600" font-family="sans-serif" transform="rotate(-32,192,208)">木曽川</text>
+          <!-- 八百津町：白川の南、川辺の右（東）に接する縦長エリア。 -->
+          <polygon points="225,190 378,195 376,295 225,295" fill="#1565C0" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="302" y="242" text-anchor="middle" font-size="10" fill="white" font-weight="700" font-family="sans-serif">八百津町</text>
 
-          <!-- ===== コンパス ===== -->
-          <g transform="translate(290,40)">
-            <circle r="16" fill="white" fill-opacity="0.92" stroke="#CBD5E1" stroke-width="1"/>
-            <polygon points="0,-13 3,-5 0,-8 -3,-5" fill="#EF4444"/>
-            <polygon points="0,13 3,5 0,8 -3,5" fill="#94A3B8"/>
-            <text x="0" y="-2" text-anchor="middle" font-size="8" fill="#1E293B" font-weight="800" font-family="sans-serif">北</text>
-            <text x="0" y="8" text-anchor="middle" font-size="7" fill="#94A3B8" font-family="sans-serif">南</text>
+          <!-- 可児市：南の大エリア。 -->
+          <polygon points="72,295 225,295 225,415 72,415" fill="#00838F" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="148" y="355" text-anchor="middle" font-size="18" fill="white" font-weight="700" font-family="sans-serif">可児市</text>
+
+          <!-- 御嵩町：八百津の南、可児の右（東）。 -->
+          <polygon points="225,295 376,295 376,415 225,415" fill="#795548" fill-opacity="0.82" stroke="white" stroke-width="1.5" filter="url(#mapshadow)"/>
+          <text x="300" y="357" text-anchor="middle" font-size="12" fill="white" font-weight="700" font-family="sans-serif">御嵩町</text>
+
+          <!-- コンパス（左上の空きスペース） -->
+          <g transform="translate(42,44)">
+            <circle r="17" fill="white" fill-opacity="0.92" stroke="#CBD5E1" stroke-width="1.2"/>
+            <polygon points="0,-14 3.5,-5 0,-8 -3.5,-5" fill="#EF4444"/>
+            <polygon points="0,14 3.5,5 0,8 -3.5,5" fill="#94A3B8"/>
+            <text x="0" y="-1" text-anchor="middle" font-size="8" fill="#1E293B" font-weight="800" font-family="sans-serif">北</text>
+            <text x="0" y="11" text-anchor="middle" font-size="7" fill="#94A3B8" font-family="sans-serif">南</text>
           </g>
 
           <!-- 注記 -->
-          <text x="160" y="441" text-anchor="middle" font-size="8" fill="#64748B" font-family="sans-serif">※ 概略図（地形は実際と異なります）</text>
+          <text x="190" y="462" text-anchor="middle" font-size="8" fill="#64748B" font-family="sans-serif">※ 概略図（実際の地形とは異なります）点線＝参考エリア</text>
         </svg>
       </div>
     </div>

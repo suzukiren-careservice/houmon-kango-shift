@@ -27,7 +27,7 @@ const SPECIAL_TASKS = [
   { id:'catheter',  label:'バルーン交換', category:'procedure' },
 ];
 
-const TL_PX_PER_MIN = 0.8; // 1分=0.8px → 48px/h
+const TL_PX_PER_MIN = 1.5; // 1分=1.5px → 90px/h（30分訪問でも名前＋作業バッジを表示可能）
 const TL_START_H = 8;
 const TL_END_H   = 18;
 
@@ -78,7 +78,9 @@ createApp({
         freqType: 'week', onHold: false,
         specialTasks: [], areaColor: '',
       },
+      now: new Date(),
       mapModal: { show: false },
+      printModal: { show: false, weekOffset: 0 },
       bulkModal: {
         show: false,
         clientId: '',
@@ -129,7 +131,46 @@ createApp({
       return `${s.getFullYear()}年 ${s.getMonth()+1}月${s.getDate()}日（月）〜 ${e.getMonth()+1}月${e.getDate()}日（日）`;
     },
 
+    printWeekStart() {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const dow = today.getDay();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - ((dow+6)%7) + this.printModal.weekOffset*7);
+      return monday;
+    },
+    printWeekDays() {
+      const today = new Date(); today.setHours(0,0,0,0);
+      return Array.from({length:7}, (_,i) => {
+        const d = new Date(this.printWeekStart); d.setDate(this.printWeekStart.getDate()+i);
+        const dow = d.getDay();
+        return {
+          date: d, dateStr: this.formatDateStr(d),
+          dayName: DAY_NAMES_JP[dow]+'曜日',
+          shortDate: `${d.getMonth()+1}/${d.getDate()}`,
+          isToday: d.getTime()===today.getTime(),
+          isWeekend: dow===0||dow===6,
+        };
+      });
+    },
+    printWeekLabel() {
+      const s = this.printWeekStart;
+      const e = new Date(s); e.setDate(s.getDate()+6);
+      return `${s.getFullYear()}年 ${s.getMonth()+1}月${s.getDate()}日〜${e.getMonth()+1}月${e.getDate()}日`;
+    },
+
     activeStaff() { return this.staffList.filter(s => s.active); },
+
+    activeEmergencies() {
+      return this.visits.filter(v => {
+        if (!v.isEmergency) return false;
+        if (v.date !== this.timelineDate) return false;
+        if (!v.endTime) return true;
+        const [eh,em]=v.endTime.split(':').map(Number);
+        const end=new Date(this.timelineDate);
+        end.setHours(eh,em,0,0);
+        return end > this.now;
+      });
+    },
 
     tlHours() {
       const hours = [];
@@ -338,6 +379,7 @@ createApp({
           location:v.location||'', startTime:v.start_time||'', endTime:v.end_time||'',
           notes:v.notes||'', order:v.order||0,
           specialTasks:Array.isArray(v.special_tasks)?v.special_tasks:[],
+          isEmergency:v.is_emergency||false,
         }));
 
         await this.loadCrossTeamData();
@@ -510,7 +552,7 @@ createApp({
         staffId, staffName:staff?.name||'',
         dateStr, dateLabel:this.formatDateJp(dateStr),
         period, clientId:'', clientNotes:'',
-        location:'', startTime:'', endTime:'', notes:'', specialTasks:[],
+        location:'', startTime:'', endTime:'', notes:'', specialTasks:[], isEmergency:false,
       };
     },
 
@@ -526,7 +568,7 @@ createApp({
         clientNotes:client?.notes||'',
         location:visit.location||'', startTime:visit.startTime||'',
         endTime:visit.endTime||'', notes:visit.notes||'',
-        specialTasks:[...tasks],
+        specialTasks:[...tasks], isEmergency:visit.isEmergency||false,
       };
     },
 
@@ -557,6 +599,7 @@ createApp({
         end_time:   this.visitModal.endTime,
         notes:      this.visitModal.notes,
         special_tasks: this.visitModal.specialTasks,
+        is_emergency: this.visitModal.isEmergency||false,
       };
       try {
         if (this.visitModal.isEdit) {
@@ -569,6 +612,7 @@ createApp({
             period:payload.period, location:payload.location,
             startTime:payload.start_time, endTime:payload.end_time,
             notes:payload.notes, specialTasks:payload.special_tasks,
+            isEmergency:payload.is_emergency||false,
           });
         } else {
           const order=this.getVisits(payload.staff_id,payload.date,payload.period).length;
@@ -580,6 +624,7 @@ createApp({
             location:data.location||'', startTime:data.start_time||'',
             endTime:data.end_time||'', notes:data.notes||'',
             order:data.order||0, specialTasks:data.special_tasks||[],
+            isEmergency:data.is_emergency||false,
           });
         }
       } catch(e) { console.error(e); alert('訪問の保存に失敗しました'); return; }
@@ -841,10 +886,31 @@ createApp({
         this.crossConflicts=conflicts;
       } catch(e) { console.warn('他チームデータ取得エラー:',e); }
     },
-    printSchedule(){ window.print(); },
+    printSchedule() {
+      // タイムラインの現在表示週を初期値にしてモーダルを開く
+      const d = new Date(this.timelineDate + 'T00:00:00');
+      const today = new Date(); today.setHours(0,0,0,0);
+      const dow = today.getDay();
+      const thisMonday = new Date(today);
+      thisMonday.setDate(today.getDate() - ((dow+6)%7));
+      const tdow = d.getDay();
+      const targetMonday = new Date(d);
+      targetMonday.setDate(d.getDate() - ((tdow+6)%7));
+      this.printModal.weekOffset = Math.round((targetMonday - thisMonday) / (7*24*60*60*1000));
+      this.printModal.show = true;
+    },
+    doPrint() {
+      this.printModal.show = false;
+      this.$nextTick(() => window.print());
+    },
+  },
+
+  unmounted() {
+    clearInterval(this._nowTimer);
   },
 
   async mounted() {
+    this._nowTimer = setInterval(() => { this.now = new Date(); }, 60000);
     this.timelineDate=this.formatDateStr(new Date());
     const {data:pwdData}=await db.from('settings').select('value').eq('key','app_password').single();
     this.appPassword=pwdData?.value||'';

@@ -791,6 +791,16 @@ html, body {
   margin-left: auto;
 }
 
+/* ===== PRINT WEEK NAV ===== */
+.print-week-nav {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 12px 0;
+}
+.print-week-nav-label {
+  font-size: 16px; font-weight: 700; color: var(--primary);
+  min-width: 240px; text-align: center;
+}
+
 /* ===== FORM ELEMENTS ===== */
 .form-group {
   margin-bottom: 16px;
@@ -1008,12 +1018,12 @@ html, body {
 @media print {
   @page {
     size: A3 landscape;
-    margin: 10mm;
+    margin: 8mm 10mm;
   }
 
   html, body {
     background: white;
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .print-only {
@@ -1022,55 +1032,56 @@ html, body {
 
   .print-title {
     text-align: center;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     margin-bottom: 10px;
-    color: var(--primary-dark);
+    color: #1A3C6E;
   }
 
   .print-table {
     width: 100%;
     border-collapse: collapse;
-    page-break-inside: avoid;
+    table-layout: fixed;
   }
 
   .print-table th,
   .print-table td {
     border: 1px solid #BDBDBD;
-    padding: 4px 6px;
+    padding: 5px 7px;
     vertical-align: top;
-    font-size: 10px;
+    font-size: 11px;
+    word-break: break-all;
   }
 
   .print-table th {
-    background: var(--primary);
+    background: #1A3C6E;
     color: white;
     text-align: center;
     font-weight: 700;
+    font-size: 12px;
+    padding: 6px 4px;
   }
 
   .print-staff-col {
-    width: 80px;
-    min-width: 80px;
+    width: 9%;
   }
 
   .print-day-col {
     text-align: center;
+    width: 13%;
   }
 
   .print-staff-name {
     font-weight: 700;
-    background: #F5F5F5;
-  }
-
-  .print-cell {
-    min-width: 120px;
+    font-size: 12px;
+    background: #F0F4F8;
+    vertical-align: middle;
   }
 
   .print-period {
-    margin-bottom: 4px;
-    padding-bottom: 4px;
-    border-bottom: 1px dashed #E0E0E0;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #D1D5DB;
   }
 
   .print-period:last-child {
@@ -1082,18 +1093,22 @@ html, body {
   .print-period-label {
     font-size: 9px;
     font-weight: 700;
-    color: #888;
-    margin-bottom: 2px;
+    color: #6B7280;
+    background: #F3F4F6;
+    display: inline-block;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-bottom: 3px;
   }
 
   .print-visit {
-    font-size: 10px;
-    margin-bottom: 1px;
-    line-height: 1.3;
+    font-size: 11px;
+    margin-bottom: 2px;
+    line-height: 1.4;
   }
 
   .print-time {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     color: #1565C0;
     margin-right: 3px;
@@ -1101,13 +1116,16 @@ html, body {
 
   .print-empty {
     font-size: 10px;
-    color: #BDBDBD;
+    color: #9CA3AF;
   }
 
   .print-off {
-    font-size: 10px;
-    color: #BDBDBD;
+    font-size: 11px;
+    color: #9CA3AF;
     font-style: italic;
+    text-align: center;
+    display: block;
+    padding: 4px 0;
   }
 }
 
@@ -1517,6 +1535,38 @@ html, body {
   display: flex; flex-direction: column; justify-content: flex-start;
 }
 .tl-visit-block:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+/* 緊急訪問ブロック */
+.tl-visit-emergency {
+  border-left-width: 4px !important;
+  animation: emergency-pulse 2s ease-in-out infinite;
+}
+@keyframes emergency-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+  50%       { box-shadow: 0 0 0 4px rgba(239,68,68,0); }
+}
+
+/* 緊急訪問通知バー */
+.emergency-notice-bar {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #fef2f2; border-top: 2px solid #ef4444;
+  padding: 10px 16px; font-size: 13px; color: #991b1b;
+  font-weight: 600; position: sticky; bottom: 0; z-index: 100;
+}
+.emergency-notice-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.emergency-notice-text { line-height: 1.5; }
+
+/* 緊急訪問トグルボタン（モーダル内） */
+.emergency-toggle-btn {
+  width: 100%; padding: 10px 14px; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  border: 2px solid #e2e8f0; background: #f8fafc; color: #64748b;
+  text-align: center; transition: all 0.2s;
+}
+.emergency-toggle-btn:hover { border-color: #fca5a5; color: #dc2626; }
+.emergency-toggle-btn.is-emergency {
+  background: #fef2f2; border-color: #ef4444; color: #dc2626;
+}
 
 .tl-visit-client {
   font-size: 11px; font-weight: 700; color: #1E293B;
