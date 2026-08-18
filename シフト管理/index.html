@@ -223,7 +223,7 @@
 
   <!-- ========== 印刷モーダル（週選択） ========== -->
   <div v-if="printModal.show" class="modal-overlay no-print" @click.self="printModal.show=false">
-    <div class="modal" style="max-width:420px;text-align:center;padding:28px 32px;">
+    <div style="background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.25);padding:24px 28px;text-align:center;max-width:360px;width:100%;">
       <h2 style="margin-bottom:18px;font-size:18px;">&#128438; 週を選択して印刷</h2>
       <div class="print-week-nav">
         <button class="btn btn-secondary" @click="printModal.weekOffset--">&#9664; 前週</button>
