@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div id="app">
+<div id="app" :class="{ 'weekly-print-mode': printWeeklyMode }">
 
   <!-- ========== ローディング ========== -->
   <div v-if="loading" class="loading-overlay">
@@ -97,6 +97,7 @@
       <button v-if="isAdmin" class="btn btn-accent" @click="openBulkModal">一括入力/削除</button>
       <button class="btn btn-secondary" @click="mapModal.show=true">🗺️ 地図</button>
       <button class="btn btn-secondary" @click="printSchedule">&#128438; 印刷</button>
+      <button class="btn btn-secondary" @click="printWeeklySchedule">&#128197; 週間印刷</button>
     </div>
 
     <div class="tl-scroll-wrap">
@@ -220,6 +221,66 @@
       </div>
     </div>
   </main>
+
+  <!-- ========== 週間印刷テンプレート（画面非表示・印刷専用） ========== -->
+  <div v-if="printWeeklyMode" class="print-weekly-tl">
+    <div v-for="(day, idx) in printWeekDaysForTimeline" :key="day.dateStr" class="print-day-page">
+
+      <!-- 日付ヘッダー -->
+      <div class="print-day-header">
+        <div class="print-day-header-left">
+          <span :class="['print-day-date', { 'print-day-weekend': day.isWeekend }]">{{ day.dayName }}　{{ day.shortDate }}</span>
+        </div>
+        <div class="print-day-header-right">
+          <span class="print-day-week-range">{{ printWeekLabelForTimeline }}</span>
+          <span class="print-day-num">{{ idx + 1 }} / 7</span>
+        </div>
+      </div>
+
+      <!-- タイムライングリッド -->
+      <div class="print-day-tl">
+
+        <!-- 時刻軸 -->
+        <div class="print-tl-time-col">
+          <div class="print-tl-name-placeholder"></div>
+          <div class="print-tl-axis" :style="{ height: tlTotalHeight + 'px' }">
+            <div v-for="h in tlHours" :key="h" class="print-tl-hour-mark"
+                 :style="{ top: ((h - 8) * 60 * 1.5) + 'px' }">
+              {{ String(h).padStart(2,'0') }}:00
+            </div>
+          </div>
+        </div>
+
+        <!-- スタッフ列 -->
+        <div v-for="staff in activeStaff" :key="staff.id" class="print-tl-staff-col">
+          <!-- スタッフ名 -->
+          <div class="print-tl-staff-name" :style="{ borderBottomColor: staff.color }">
+            <span class="print-tl-dot" :style="{ background: staff.color }"></span>
+            {{ staff.name }}
+          </div>
+          <!-- タイムラインレーン -->
+          <div class="print-tl-lane" :style="{ height: tlTotalHeight + 'px' }">
+            <!-- グリッド線 -->
+            <div v-for="h in tlHours" :key="h" class="print-tl-grid-line"
+                 :style="{ top: ((h - 8) * 60 * 1.5) + 'px' }"></div>
+            <!-- 訪問ブロック -->
+            <div v-for="item in tlLaneLayoutForDate(staff.id, day.dateStr)"
+                 :key="item.visit.id"
+                 class="print-tl-visit"
+                 :style="[item.style, { borderLeftColor: staff.color, background: getAreaColor(item.visit.clientId) ? hexToRgba(getAreaColor(item.visit.clientId), 0.15) : '#EFF6FF' }]">
+              <div class="print-tl-visit-client">{{ getClientName(item.visit.clientId) }}</div>
+              <div v-if="item.visit.startTime" class="print-tl-visit-time">
+                {{ item.visit.startTime }}<span v-if="item.visit.endTime">〜{{ item.visit.endTime }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- スタッフ0の場合 -->
+        <div v-if="activeStaff.length === 0" style="padding:20px;color:#94A3B8;">スタッフが登録されていません</div>
+      </div>
+    </div>
+  </div>
 
   <!-- ========== CLIENT VIEW ========== -->
   <main v-if="currentTab === 'clientview'" class="view-clientview no-print">
