@@ -223,7 +223,7 @@
 
   <!-- ========== 印刷モーダル（週選択） ========== -->
   <div v-if="printModal.show" class="modal-overlay no-print" @click.self="printModal.show=false">
-    <div class="modal-card" style="max-width:420px;text-align:center;">
+    <div class="modal" style="max-width:420px;text-align:center;padding:28px 32px;">
       <h2 style="margin-bottom:18px;font-size:18px;">&#128438; 週を選択して印刷</h2>
       <div class="print-week-nav">
         <button class="btn btn-secondary" @click="printModal.weekOffset--">&#9664; 前週</button>
@@ -235,36 +235,6 @@
         <button class="btn btn-primary" @click="printSchedule">&#128438; 印刷する</button>
       </div>
     </div>
-  </div>
-
-  <!-- ========== 印刷用テーブル（画面非表示・印刷専用） ========== -->
-  <div class="print-only">
-    <div class="print-heading">週間シフト表　{{ printWeekLabel }}</div>
-    <table class="print-table">
-      <thead>
-        <tr>
-          <th class="print-staff-th">スタッフ</th>
-          <th v-for="day in printWeekDays" :key="day.dateStr"
-              :class="{ 'print-weekend-th': day.isWeekend }">
-            <div>{{ day.dayName.replace('曜日','曜') }}</div>
-            <div style="font-weight:400;font-size:9px;">{{ day.shortDate }}</div>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="staff in activeStaff" :key="staff.id">
-          <td class="print-staff-name-td" :style="{ borderLeftColor: staff.color }">{{ staff.name }}</td>
-          <td v-for="day in printWeekDays" :key="day.dateStr"
-              :class="{ 'print-weekend-td': day.isWeekend }">
-            <div v-for="visit in getVisitsForDay(staff.id, day.dateStr)" :key="visit.id" class="print-visit-item">
-              <span v-if="visit.startTime" class="print-visit-time">{{ visit.startTime }}</span>
-              <span class="print-visit-name">{{ getClientName(visit.clientId) }}</span>
-            </div>
-            <div v-if="!getVisitsForDay(staff.id, day.dateStr).length" class="print-empty-cell">—</div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 
   <!-- ========== CLIENT VIEW ========== -->
