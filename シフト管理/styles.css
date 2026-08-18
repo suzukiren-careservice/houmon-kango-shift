@@ -1008,6 +1008,18 @@ html, body {
 }
 
 
+/* 空き時間ラベル（印刷テーブル内） */
+.print-gap {
+  font-size: 7px;
+  color: #94A3B8;
+  text-align: center;
+  padding: 2px 0;
+  border-top: 1px dashed #E2E8F0;
+  border-bottom: 1px dashed #E2E8F0;
+  margin: 2px 0;
+  letter-spacing: 0.03em;
+}
+
 /* ===== PRINT STYLES ===== */
 @media print {
   @page { size: A3 landscape; margin: 8mm 10mm; }

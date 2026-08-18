@@ -887,6 +887,28 @@ createApp({
       } catch(e) { console.warn('他チームデータ取得エラー:',e); }
     },
     printSchedule() { this.printModal.show = false; window.print(); },
+
+    // 印刷テーブル用：訪問リストに空き時間ラベルを挟んで返す
+    getPrintVisitsWithGaps(staffId, dateStr, period) {
+      const visits = this.getVisits(staffId, dateStr, period);
+      if (!visits.length) return [];
+      const toMin = t => { const [h,m]=t.split(':').map(Number); return h*60+m; };
+      const result = [];
+      let prevEnd = null;
+      for (const v of visits) {
+        if (v.startTime && prevEnd !== null) {
+          const gap = toMin(v.startTime) - prevEnd;
+          if (gap > 0) {
+            const h = Math.floor(gap/60), m = gap%60;
+            result.push({ type:'gap', label: h>0 ? `空き ${h}時間${m>0?m+'分':''}` : `空き ${m}分` });
+          }
+        }
+        result.push({ type:'visit', visit:v });
+        if (v.endTime) prevEnd = Math.max(prevEnd||0, toMin(v.endTime));
+        else prevEnd = null;
+      }
+      return result;
+    },
   },
 
   unmounted() {
