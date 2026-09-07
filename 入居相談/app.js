@@ -9,19 +9,31 @@ let consultations = [];
 let charts = {};
 let currentDetailId = null;
 let editingId = null;
+let currentOrg = '';
+
+const ORG_NAMES = { careservice: 'ケアサービス', fukuwarai: 'ふくわらい' };
 
 // ===== 初期化 =====
 document.addEventListener('DOMContentLoaded', async () => {
+  const org = localStorage.getItem('nyukyo_org');
+  if (org) await initApp(org);
+});
+
+async function initApp(org) {
+  currentOrg = org;
+  const badge = document.getElementById('sidebarOrgBadge');
+  if (badge) badge.textContent = ORG_NAMES[org] || org;
   initDatetime();
   await loadData();
   updateSidebarCount();
   populateMonthFilter();
-});
+}
 
 async function loadData() {
   const { data, error } = await db
     .from('consultations')
     .select('*')
+    .eq('org', currentOrg)
     .order('consult_date', { ascending: false });
   if (error) { showToast('データ読み込みエラー', 'error'); return; }
   consultations = data || [];
@@ -121,6 +133,7 @@ async function saveConsultation(event) {
     notes:              document.getElementById('notes').value,
     facility:           getRadio('facility'),
     progress_status:    document.getElementById('progressStatus').value,
+    org:                currentOrg,
   };
 
   const btn = document.querySelector('.btn-primary');

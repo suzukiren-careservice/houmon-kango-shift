@@ -25,12 +25,32 @@
     </div>
   </div>
 
+  <!-- 事業所選択画面 -->
+  <div id="orgSelectScreen" class="org-select-screen" style="display:none">
+    <div class="org-select-box">
+      <div class="org-select-logo">🏠</div>
+      <div class="org-select-title">入居相談管理システム</div>
+      <div class="org-select-subtitle">事業所を選択してください</div>
+      <div class="org-cards">
+        <button class="org-card" onclick="selectOrg('careservice')">
+          <div class="org-card-icon">🏢</div>
+          <div class="org-card-name">ケアサービス</div>
+        </button>
+        <button class="org-card" onclick="selectOrg('fukuwarai')">
+          <div class="org-card-icon">🌸</div>
+          <div class="org-card-name">ふくわらい</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="app-container" id="appContainer" style="display:none">
     <!-- サイドバー -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo">🏠</div>
         <div class="sidebar-title">入居相談<br>管理システム</div>
+        <div class="sidebar-org-badge" id="sidebarOrgBadge"></div>
       </div>
       <nav class="sidebar-nav">
         <button class="nav-btn active" data-view="form" onclick="showView('form')">
@@ -46,6 +66,7 @@
       <div class="sidebar-footer">
         <div class="record-count" id="sidebarCount">0 件の記録</div>
         <a href="print-form.html" target="_blank" class="print-form-btn">🖨️ 手書き用紙を印刷</a>
+        <button class="switch-org-btn" onclick="switchOrg()">🔄 事業所を切替</button>
       </div>
     </aside>
 
@@ -560,22 +581,41 @@
   <script>
     (function() {
       if (localStorage.getItem('nyukyo_auth') === '1') {
+        const org = localStorage.getItem('nyukyo_org');
         document.getElementById('passwordScreen').style.display = 'none';
-        document.getElementById('appContainer').style.display = '';
+        if (org) {
+          document.getElementById('appContainer').style.display = '';
+        } else {
+          document.getElementById('orgSelectScreen').style.display = 'flex';
+        }
       }
     })();
+
     function checkPassword() {
       const val = document.getElementById('passwordInput').value;
       if (val === 'careful7570') {
         localStorage.setItem('nyukyo_auth', '1');
         document.getElementById('passwordScreen').style.display = 'none';
-        document.getElementById('appContainer').style.display = '';
+        document.getElementById('orgSelectScreen').style.display = 'flex';
       } else {
         const err = document.getElementById('passwordError');
         err.textContent = 'パスワードが違います';
         document.getElementById('passwordInput').value = '';
         document.getElementById('passwordInput').focus();
       }
+    }
+
+    function selectOrg(org) {
+      localStorage.setItem('nyukyo_org', org);
+      document.getElementById('orgSelectScreen').style.display = 'none';
+      document.getElementById('appContainer').style.display = '';
+      initApp(org);
+    }
+
+    function switchOrg() {
+      localStorage.removeItem('nyukyo_org');
+      document.getElementById('appContainer').style.display = 'none';
+      document.getElementById('orgSelectScreen').style.display = 'flex';
     }
   </script>
 </body>

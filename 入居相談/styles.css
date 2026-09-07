@@ -86,6 +86,84 @@ body {
   background: #2b6cb0;
 }
 
+/* ===== 事業所選択画面 ===== */
+.org-select-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #2c5282 0%, #2b6cb0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.org-select-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 48px 40px;
+  text-align: center;
+  width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.org-select-logo { font-size: 48px; margin-bottom: 12px; }
+.org-select-title { font-size: 18px; font-weight: 700; color: #2d3748; margin-bottom: 4px; }
+.org-select-subtitle { font-size: 13px; color: #718096; margin-bottom: 28px; }
+.org-cards {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+.org-card {
+  flex: 1;
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.org-card:hover {
+  border-color: #3182ce;
+  background: #ebf8ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(49,130,206,0.2);
+}
+.org-card-icon { font-size: 36px; }
+.org-card-name { font-size: 15px; font-weight: 700; color: #2d3748; }
+
+/* サイドバー 事業所バッジ */
+.sidebar-org-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 3px 10px;
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+
+/* 事業所切替ボタン */
+.switch-org-btn {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+.switch-org-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
 /* ===== 編集モードバナー ===== */
 .edit-mode-banner {
   display: flex;
