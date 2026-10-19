@@ -152,7 +152,7 @@
             :disabled="answered"
             @click="selectAnswer(i)"
           >
-            <span class="choice-alpha">{{ ['A','B','C','D'][i] }}</span>
+            <span class="choice-alpha">{{ ['A','B','C','D','E'][i] }}</span>
             <span class="choice-text">{{ choice }}</span>
           </button>
         </div>
@@ -166,7 +166,7 @@
           </div>
 
           <div v-if="selectedIndex !== currentQuestion.correct_index" class="correct-hint">
-            正解：<strong>{{ ['A','B','C','D'][currentQuestion.correct_index] }}. {{ currentQuestion.choices[currentQuestion.correct_index] }}</strong>
+            正解：<strong>{{ ['A','B','C','D','E'][currentQuestion.correct_index] }}. {{ currentQuestion.choices[currentQuestion.correct_index] }}</strong>
           </div>
 
           <div v-if="currentQuestion.explanation" class="explanation-box">
@@ -211,7 +211,7 @@
           <div v-for="(q, i) in wrongAnswers" :key="i" class="wrong-card">
             <p class="wrong-q">{{ q.question_text }}</p>
             <p class="wrong-ans">
-              正解：<strong>{{ ['A','B','C','D'][q.correct_index] }}. {{ q.choices[q.correct_index] }}</strong>
+              正解：<strong>{{ ['A','B','C','D','E'][q.correct_index] }}. {{ q.choices[q.correct_index] }}</strong>
             </p>
             <p v-if="q.explanation" class="wrong-exp">{{ q.explanation }}</p>
           </div>
