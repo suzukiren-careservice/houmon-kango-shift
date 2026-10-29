@@ -1,6 +1,10 @@
 // =============================================
 // Supabase 接続情報
 // =============================================
+
+// Anthropic API キー（FAX読み取りAI機能用）
+// platform.claude.com でAPIキーを取得して 'YOUR_ANTHROPIC_API_KEY' を差し替えてください
+const ANTHROPIC_API_KEY = 'YOUR_ANTHROPIC_API_KEY';
 const SUPABASE_URL  = 'https://pxukxjqzdkgbtiudkwzn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4dWt4anF6ZGtnYnRpdWRrd3puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzExNjMsImV4cCI6MjA4OTg0NzE2M30.HcA4RP_NFq_VUsWe66KWQDnX1OGQ4K_kE9YW1h7uXPw';
 

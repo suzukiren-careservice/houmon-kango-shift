@@ -88,6 +88,33 @@
 
         <form id="consultationForm" onsubmit="saveConsultation(event)">
 
+          <!-- FAX自動入力セクション -->
+          <div class="fax-section" id="faxSection">
+            <div class="fax-section-header">
+              <div class="fax-section-title">📎 FAXから自動入力（AI）</div>
+              <div class="fax-section-desc">FAXや書類の写真をアップロードすると、AIが内容を読み取って自動入力します</div>
+            </div>
+            <div class="fax-upload-area">
+              <label class="fax-upload-btn" for="faxFileInput">📁 ファイルを選択</label>
+              <input type="file" id="faxFileInput" accept="image/*" style="display:none" onchange="onFaxFileSelected(this)">
+            </div>
+            <div id="faxPreviewArea" style="display:none" class="fax-preview-area">
+              <img id="faxPreviewImg" class="fax-preview-img" alt="FAXプレビュー">
+              <div class="fax-preview-actions">
+                <button type="button" class="btn btn-success fax-extract-btn" onclick="startFaxExtraction()">🤖 AIで読み取る</button>
+                <button type="button" class="btn btn-outline" onclick="clearFaxPreview()">キャンセル</button>
+              </div>
+            </div>
+            <div id="faxLoadingArea" style="display:none" class="fax-loading-area">
+              <div class="fax-loading-spinner"></div>
+              <div>AIが読み取っています...（数秒かかります）</div>
+            </div>
+            <div id="faxDoneArea" style="display:none" class="fax-done-area">
+              ✅ 読み取り完了。内容を確認して保存してください。
+              <a href="#" id="faxImageLink" class="fax-image-link" target="_blank" style="display:none">📷 FAX画像を確認</a>
+            </div>
+          </div>
+
           <!-- セクション①：基本情報 -->
           <div class="form-section">
             <div class="section-title">① 基本情報</div>

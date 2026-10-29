@@ -993,6 +993,124 @@ body {
   background: #38a169;
 }
 
+/* ===== FAX自動入力セクション ===== */
+.fax-section {
+  background: linear-gradient(135deg, #ebf8ff 0%, #e6f3ff 100%);
+  border: 2px dashed #63b3ed;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.fax-section-header { margin-bottom: 14px; }
+
+.fax-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2b6cb0;
+  margin-bottom: 4px;
+}
+
+.fax-section-desc {
+  font-size: 12px;
+  color: #4a5568;
+}
+
+.fax-upload-area { margin-bottom: 0; }
+
+.fax-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: #4299e1;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.fax-upload-btn:hover { background: #3182ce; }
+
+.fax-preview-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.fax-preview-img {
+  max-width: 280px;
+  max-height: 180px;
+  border-radius: 8px;
+  border: 1px solid #bee3f8;
+  object-fit: contain;
+  background: white;
+}
+
+.fax-preview-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-success {
+  background: #48bb78;
+  color: white;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-success:hover { background: #38a169; }
+
+.fax-loading-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #2b6cb0;
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.fax-loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #bee3f8;
+  border-top-color: #4299e1;
+  border-radius: 50%;
+  animation: fax-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes fax-spin { to { transform: rotate(360deg); } }
+
+.fax-done-area {
+  background: #f0fff4;
+  border: 1px solid #9ae6b4;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #276749;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fax-image-link {
+  color: #2b6cb0;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
 .toast.error {
   background: #e53e3e;
 }

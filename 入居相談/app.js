@@ -10,6 +10,8 @@ let charts = {};
 let currentDetailId = null;
 let editingId = null;
 let currentOrg = '';
+let faxFile = null;
+let faxImageUrl = null;
 
 const ORG_NAMES = { careservice: 'ケアサービス', fukuwarai: 'ふくわらい' };
 
@@ -134,7 +136,19 @@ async function saveConsultation(event) {
     facility:           getRadio('facility'),
     progress_status:    document.getElementById('progressStatus').value,
     org:                currentOrg,
+    fax_image_url:      faxImageUrl,
   };
+
+  // FAX画像があればアップロード
+  if (faxFile) {
+    try {
+      const uploadedUrl = await uploadFaxImage(faxFile);
+      record.fax_image_url = uploadedUrl;
+      faxImageUrl = uploadedUrl;
+    } catch (uploadErr) {
+      showToast('FAX画像のアップロードに失敗しました：' + uploadErr.message, 'error');
+    }
+  }
 
   const btn = document.querySelector('.btn-primary');
   btn.textContent = editingId ? '更新中...' : '保存中...';
@@ -157,6 +171,8 @@ async function saveConsultation(event) {
 
   const wasEditing = !!editingId;
   editingId = null;
+  faxFile = null;
+  faxImageUrl = null;
   document.getElementById('editModeBanner').style.display = 'none';
   btn.textContent = '保存する';
 
@@ -169,6 +185,8 @@ async function saveConsultation(event) {
 function clearForm() {
   document.getElementById('consultationForm').reset();
   initDatetime();
+  clearFaxPreview();
+  faxImageUrl = null;
 }
 
 // ===== 一覧表示 =====
@@ -385,6 +403,13 @@ function openDetail(id) {
       <div class="detail-section-title">備考</div>
       <p style="font-size:13px;color:#2d3748;white-space:pre-wrap">${c.notes}</p>
     </div>` : ''}
+    ${c.fax_image_url ? `
+    <div class="detail-section">
+      <div class="detail-section-title">📎 FAX画像</div>
+      <a href="${c.fax_image_url}" target="_blank">
+        <img src="${c.fax_image_url}" style="max-width:100%;max-height:320px;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer;margin-top:8px;display:block;">
+      </a>
+    </div>` : ''}
   `;
 
   document.getElementById('modalDeleteBtn').onclick = () => deleteConsultation(id);
@@ -479,6 +504,18 @@ function editConsultation(id) {
   document.getElementById('conf3Attend').value = c.conf3_attend || '';
 
   document.getElementById('notes').value = c.notes || '';
+
+  // 既存のFAX画像をセット
+  faxFile = null;
+  faxImageUrl = c.fax_image_url || null;
+  clearFaxPreview();
+  if (faxImageUrl) {
+    const doneArea = document.getElementById('faxDoneArea');
+    const link = document.getElementById('faxImageLink');
+    doneArea.style.display = 'block';
+    link.href = faxImageUrl;
+    link.style.display = 'inline';
+  }
 
   document.getElementById('editModeBanner').style.display = 'flex';
   document.getElementById('editModeName').textContent = c.user_name || '（氏名未入力）';
@@ -643,6 +680,179 @@ function showToast(msg, type = '') {
   el.textContent = msg;
   el.className = `toast ${type} show`;
   setTimeout(() => { el.classList.remove('show'); }, 2500);
+}
+
+// ===== FAX自動入力 =====
+function onFaxFileSelected(input) {
+  if (!input.files || !input.files[0]) return;
+  faxFile = input.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('faxPreviewImg').src = e.target.result;
+    document.getElementById('faxPreviewArea').style.display = 'flex';
+    document.getElementById('faxDoneArea').style.display = 'none';
+  };
+  reader.readAsDataURL(faxFile);
+}
+
+function clearFaxPreview() {
+  faxFile = null;
+  const input = document.getElementById('faxFileInput');
+  if (input) input.value = '';
+  const areas = ['faxPreviewArea', 'faxLoadingArea'];
+  areas.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const done = document.getElementById('faxDoneArea');
+  if (done) done.style.display = 'none';
+}
+
+async function startFaxExtraction() {
+  if (!faxFile) return;
+  if (!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY === 'YOUR_ANTHROPIC_API_KEY') {
+    showToast('APIキーが未設定です。config.jsに設定してください。', 'error');
+    return;
+  }
+  document.getElementById('faxPreviewArea').style.display = 'none';
+  document.getElementById('faxLoadingArea').style.display = 'flex';
+  try {
+    const base64 = await fileToBase64(faxFile);
+    const mimeType = faxFile.type || 'image/jpeg';
+    const extracted = await extractFaxData(base64, mimeType);
+    applyFaxData(extracted);
+    document.getElementById('faxLoadingArea').style.display = 'none';
+    const doneArea = document.getElementById('faxDoneArea');
+    doneArea.style.display = 'block';
+    const link = document.getElementById('faxImageLink');
+    link.style.display = 'none';
+    showToast('FAXの内容を読み取りました', 'success');
+  } catch (err) {
+    document.getElementById('faxLoadingArea').style.display = 'none';
+    document.getElementById('faxPreviewArea').style.display = 'flex';
+    showToast('読み取りエラー：' + err.message, 'error');
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function extractFaxData(imageBase64, mimeType) {
+  const validMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const safeMime = validMimes.includes(mimeType) ? mimeType : 'image/jpeg';
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-5-5',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: safeMime, data: imageBase64 } },
+          { type: 'text', text: `この画像は介護・医療サービス利用に関するFAXや書類です。
+以下の情報を読み取って、JSONのみで返してください。読み取れない項目はnullにしてください。
+{
+  "userName": "利用予定者の氏名",
+  "gender": "男 または 女",
+  "gengou": "T または S または H または R（大正/昭和/平成/令和）",
+  "birthYear": "生年の数字のみ",
+  "birthMonth": "生月の数字のみ",
+  "birthDay": "生日の数字のみ",
+  "age": "年齢の数字のみ",
+  "disease": "病名・疾患名",
+  "currentStatus": "入院中 または 在宅 または 施設",
+  "hospitalName": "入院先・施設名",
+  "careLevel": "要支援1/要支援2/要介護1/要介護2/要介護3/要介護4/要介護5/申請中/申請未のいずれか",
+  "caseworker": "担当相談員名",
+  "careManager": "担当ケアマネージャー名",
+  "careOffice": "居宅介護支援事業所名",
+  "medicalMemo": "病状・医療的ケアのメモ",
+  "homeAddress": "自宅住所",
+  "keyPerson": "キーパーソンの名前",
+  "keyPersonRelation": "続柄",
+  "keyPersonContact": "キーパーソンの電話番号",
+  "consultantName": "相談者名",
+  "relationship": "相談者と利用予定者の関係"
+}` },
+        ],
+      }],
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`APIエラー(${response.status})`);
+  }
+  const data = await response.json();
+  const text = data.content[0].text.trim();
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('AIの応答からJSONを取得できませんでした');
+  return JSON.parse(match[0]);
+}
+
+function applyFaxData(d) {
+  const setRadio = (name, value) => {
+    if (!value) return;
+    const el = document.querySelector(`input[name="${name}"][value="${value}"]`);
+    if (el) el.checked = true;
+  };
+  const setVal = (id, value) => {
+    if (value === null || value === undefined) return;
+    const el = document.getElementById(id);
+    if (el) el.value = String(value);
+  };
+  const setSelect = (id, value) => {
+    if (!value) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    for (let i = 0; i < el.options.length; i++) {
+      if (el.options[i].value === value) { el.value = value; return; }
+    }
+  };
+
+  setVal('userName', d.userName);
+  setRadio('gender', d.gender);
+  setSelect('gengou', d.gengou);
+  setVal('birthYear', d.birthYear);
+  setVal('birthMonth', d.birthMonth);
+  setVal('birthDay', d.birthDay);
+  setVal('age', d.age);
+  setVal('disease', d.disease);
+  setRadio('currentStatus', d.currentStatus);
+  setVal('hospitalName', d.hospitalName);
+  setSelect('careLevel', d.careLevel);
+  setVal('caseworker', d.caseworker);
+  setVal('careManager', d.careManager);
+  setVal('careOffice', d.careOffice);
+  setVal('medicalMemo', d.medicalMemo);
+  setVal('homeAddress', d.homeAddress);
+  setVal('keyPerson', d.keyPerson);
+  setVal('keyPersonRelation', d.keyPersonRelation);
+  setVal('keyPersonContact', d.keyPersonContact);
+  setVal('consultantName', d.consultantName);
+  setVal('relationship', d.relationship);
+}
+
+async function uploadFaxImage(file) {
+  const ext = file.name.split('.').pop() || 'jpg';
+  const fileName = `${currentOrg}/${Date.now()}.${ext}`;
+  const { error } = await db.storage.from('fax-images').upload(fileName, file, { contentType: file.type });
+  if (error) throw error;
+  const { data } = db.storage.from('fax-images').getPublicUrl(fileName);
+  return data.publicUrl;
 }
 
 // ===== CSVエクスポート =====
