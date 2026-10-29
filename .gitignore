@@ -5,3 +5,11 @@ Thumbs.db
 # Editor
 .vscode/
 *.swp
+
+# Anthropic APIキー（GitHubに上げない）
+anthropic-key.js
+
+# 利用者数ボード 同期（合言葉・ログ）
+利用者数ボード/sync/config.json
+利用者数ボード/sync/state.json
+利用者数ボード/sync/sync.log
