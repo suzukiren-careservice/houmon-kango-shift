@@ -56,8 +56,18 @@ exports.handler = async (event) => {
     });
 
     const data = await response.json();
+
+    if (!response.ok) {
+      const errMsg = data.error ? data.error.message : JSON.stringify(data);
+      return {
+        statusCode: 500,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: `Anthropic API エラー(${response.status}): ${errMsg}` })
+      };
+    }
+
     return {
-      statusCode: response.status,
+      statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     };

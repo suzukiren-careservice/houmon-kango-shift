@@ -771,10 +771,15 @@ async function extractFaxData(imageBase64, mimeType) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ imageBase64, mimeType: safeMime }),
     });
-    if (!res.ok) throw new Error(`読み取りエラー(${res.status})`);
     responseData = await res.json();
+    if (!res.ok || responseData.error) {
+      throw new Error(responseData.error || `読み取りエラー(${res.status})`);
+    }
   }
 
+  if (!responseData.content || !responseData.content[0]) {
+    throw new Error('AIからの応答が不正です: ' + JSON.stringify(responseData).slice(0, 200));
+  }
   const text = responseData.content[0].text.trim();
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('AIの応答からJSONを取得できませんでした');
