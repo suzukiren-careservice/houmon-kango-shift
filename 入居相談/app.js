@@ -777,10 +777,14 @@ async function extractFaxData(imageBase64, mimeType) {
     }
   }
 
-  if (!responseData.content || !responseData.content[0]) {
+  if (!responseData.content || !Array.isArray(responseData.content)) {
     throw new Error('AIからの応答が不正です: ' + JSON.stringify(responseData).slice(0, 200));
   }
-  const text = responseData.content[0].text.trim();
+  const textBlock = responseData.content.find(block => block.type === 'text');
+  if (!textBlock || !textBlock.text) {
+    throw new Error('テキスト応答が見つかりません: ' + JSON.stringify(responseData).slice(0, 200));
+  }
+  const text = textBlock.text.trim();
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('AIの応答からJSONを取得できませんでした');
   return JSON.parse(match[0]);
