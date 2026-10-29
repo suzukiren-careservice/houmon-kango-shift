@@ -20,7 +20,6 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({
         model: 'claude-haiku-5-5',
-        thinking: { type: 'disabled' },
         max_tokens: 1024,
         messages: [{
           role: 'user',
