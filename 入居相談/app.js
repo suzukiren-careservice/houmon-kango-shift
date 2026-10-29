@@ -710,10 +710,7 @@ function clearFaxPreview() {
 
 async function startFaxExtraction() {
   if (!faxFile) return;
-  if (!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY === 'YOUR_ANTHROPIC_API_KEY') {
-    showToast('APIキーが未設定です。config.jsに設定してください。', 'error');
-    return;
-  }
+  // ローカルでもNetlify経由でも動作するのでキーチェック不要
   document.getElementById('faxPreviewArea').style.display = 'none';
   document.getElementById('faxLoadingArea').style.display = 'flex';
   try {
@@ -747,22 +744,47 @@ async function extractFaxData(imageBase64, mimeType) {
   const validMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   const safeMime = validMimes.includes(mimeType) ? mimeType : 'image/jpeg';
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-5-5',
-      max_tokens: 1024,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: safeMime, data: imageBase64 } },
-          { type: 'text', text: `この画像は介護・医療サービス利用に関するFAXや書類です。
+  let responseData;
+
+  if (ANTHROPIC_API_KEY && ANTHROPIC_API_KEY !== '') {
+    // ローカル：直接API呼び出し
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-5-5',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: buildFaxContent(imageBase64, safeMime) }]
+      }),
+    });
+    if (!res.ok) throw new Error(`APIエラー(${res.status})`);
+    responseData = await res.json();
+  } else {
+    // 本番（Netlify）：サーバーサイド関数経由
+    const res = await fetch('/.netlify/functions/ai-extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64, mimeType: safeMime }),
+    });
+    if (!res.ok) throw new Error(`読み取りエラー(${res.status})`);
+    responseData = await res.json();
+  }
+
+  const text = responseData.content[0].text.trim();
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('AIの応答からJSONを取得できませんでした');
+  return JSON.parse(match[0]);
+}
+
+function buildFaxContent(imageBase64, mimeType) {
+  return [
+    { type: 'image', source: { type: 'base64', media_type: mimeType, data: imageBase64 } },
+    { type: 'text', text: `この画像は介護・医療サービス利用に関するFAXや書類です。
 以下の情報を読み取って、JSONのみで返してください。読み取れない項目はnullにしてください。
 {
   "userName": "利用予定者の氏名",
@@ -786,21 +808,8 @@ async function extractFaxData(imageBase64, mimeType) {
   "keyPersonContact": "キーパーソンの電話番号",
   "consultantName": "相談者名",
   "relationship": "相談者と利用予定者の関係"
-}` },
-        ],
-      }],
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`APIエラー(${response.status})`);
-  }
-  const data = await response.json();
-  const text = data.content[0].text.trim();
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('AIの応答からJSONを取得できませんでした');
-  return JSON.parse(match[0]);
+}` }
+  ];
 }
 
 function applyFaxData(d) {
