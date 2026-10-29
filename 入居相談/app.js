@@ -695,6 +695,13 @@ function onFaxFileSelected(input) {
   reader.readAsDataURL(faxFile);
 }
 
+function skipFaxExtraction() {
+  document.getElementById('faxPreviewArea').style.display = 'none';
+  const doneArea = document.getElementById('faxDoneArea');
+  doneArea.style.display = 'block';
+  doneArea.textContent = '📎 写真添付済み。フォームを手動で入力して保存してください。';
+}
+
 function clearFaxPreview() {
   faxFile = null;
   const input = document.getElementById('faxFileInput');
@@ -758,7 +765,7 @@ async function extractFaxData(imageBase64, mimeType) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-5-5',
-        max_tokens: 1024,
+        max_tokens: 16000,
         messages: [{ role: 'user', content: buildFaxContent(imageBase64, safeMime) }]
       }),
     });

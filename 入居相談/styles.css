@@ -1068,6 +1068,19 @@ body {
 }
 .btn-success:hover { background: #38a169; }
 
+.btn-secondary {
+  background: #718096;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-secondary:hover { background: #4a5568; }
+
 .fax-loading-area {
   display: flex;
   align-items: center;
